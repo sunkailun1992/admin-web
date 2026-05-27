@@ -73,7 +73,7 @@ AI 处理本项目任务时，优先读取：
 | 角色管理 | `/system/role` | `/auth/manage/roles` |
 | 权限资源 | `/system/resource` | `/auth/manage/resources` |
 | 用户绑定角色 | 用户管理弹窗 | `POST /auth/manage/user-roles` |
-| 角色绑定资源 | 角色管理弹窗 | `POST /auth/manage/role-resources` |
+| 角色绑定资源 | 角色管理弹窗 | `GET /auth/manage/role-resources`、`PUT /auth/manage/role-resources` |
 | 编码生成 | 租户/角色/资源表单 | `GET /auth/manage/codes/generate` |
 
 ## 后端约定

@@ -200,6 +200,12 @@ declare namespace API {
     resourceId: string;
   }
 
+  interface AuthRoleResourceSyncBO {
+    tenantId: string;
+    roleId: string;
+    resourceIds: string[];
+  }
+
   interface AuthCodeGenerateQuery {
     target: CodeGenerateTarget;
     tenantId?: string;

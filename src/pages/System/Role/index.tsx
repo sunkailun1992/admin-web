@@ -2,12 +2,13 @@ import TenantSelect from '@/components/TenantSelect';
 import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
-  bindRoleResource,
   createRole,
   generateCode,
+  listRoleResourceIds,
   listResources,
   queryRoles,
   removeRole,
+  syncRoleResources,
   updateRole,
 } from '@/services/auth';
 import { toResourceSelectTree } from '@/utils/resourceTree';
@@ -24,21 +25,48 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+type RoleResourceForm = API.AuthRoleResourceSyncBO & {
+  roleName?: string;
+  tenantName?: string;
+  resourceIds: string[];
+};
 
 export default function RolePage() {
   const actionRef = useRef<ActionType>();
   const formRef = useRef<ProFormInstance<API.AuthRoleBO>>();
+  const grantFormRef = useRef<ProFormInstance<RoleResourceForm>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthRoleVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthRoleVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
+  const [grantResourceLoading, setGrantResourceLoading] = useState(false);
   const { getTenantName, tenantValueEnum } = useTenantOptions();
 
-  type RoleResourceForm = Omit<API.AuthRoleResourceBO, 'resourceId'> & {
-    resourceIds: string[];
-  };
+  useEffect(() => {
+    if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {
+      return;
+    }
+    setGrantResourceLoading(true);
+    listRoleResourceIds({
+      tenantId: grantRecord.tenantId,
+      roleId: grantRecord.id,
+    })
+      .then((resourceIds) => {
+        grantFormRef.current?.setFieldsValue({
+          tenantId: grantRecord.tenantId,
+          tenantName: getTenantName(grantRecord.tenantId),
+          roleId: grantRecord.id,
+          roleName: `${grantRecord.name || grantRecord.id}（${grantRecord.code || grantRecord.id}）`,
+          resourceIds,
+        });
+      })
+      .finally(() => {
+        setGrantResourceLoading(false);
+      });
+  }, [getTenantName, grantOpen, grantRecord]);
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -207,27 +235,28 @@ export default function RolePage() {
         />
       </ModalForm>
       <ModalForm<RoleResourceForm>
+        formRef={grantFormRef}
         key={grantRecord?.id || 'grant'}
         initialValues={{
           tenantId: grantRecord?.tenantId,
           tenantName: getTenantName(grantRecord?.tenantId),
           roleId: grantRecord?.id,
+          roleName: grantRecord
+            ? `${grantRecord.name || grantRecord.id}（${grantRecord.code || grantRecord.id}）`
+            : undefined,
+          resourceIds: [],
         }}
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setGrantOpen(false),
         }}
         onFinish={async (values) => {
-          await Promise.all(
-            values.resourceIds.map((resourceId) =>
-              bindRoleResource({
-                tenantId: values.tenantId,
-                roleId: values.roleId,
-                resourceId,
-              }),
-            ),
-          );
-          message.success('绑定成功');
+          await syncRoleResources({
+            tenantId: values.tenantId,
+            roleId: values.roleId,
+            resourceIds: values.resourceIds || [],
+          });
+          message.success('保存成功');
           setGrantOpen(false);
           return true;
         }}
@@ -235,7 +264,8 @@ export default function RolePage() {
         title="绑定角色资源"
         width={560}
       >
-        <ProFormText disabled label="角色 ID" name="roleId" />
+        <ProFormText hidden name="roleId" />
+        <ProFormText disabled label="角色" name="roleName" />
         <ProFormText hidden name="tenantId" />
         <ProFormText disabled label="租户" name="tenantName" />
         <ProFormTreeSelect
@@ -251,8 +281,8 @@ export default function RolePage() {
             });
             return toResourceSelectTree(resources);
           }}
-          rules={[{ required: true, message: '请选择资源' }]}
           fieldProps={{
+            loading: grantResourceLoading,
             multiple: true,
             showSearch: true,
             treeCheckable: true,

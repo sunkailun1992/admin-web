@@ -60,6 +60,7 @@ src/pages/System/Resource
 - 登录前租户下拉接口：`GET /auth/tenants`。
 - 当前用户资源接口：`GET /auth/resources`。
 - 管理接口统一位于 `/auth/manage/**`。
+- 角色资源编辑必须先用 `GET /auth/manage/role-resources` 回显历史资源，再用 `PUT /auth/manage/role-resources` 按完整勾选结果同步。
 - 编码生成接口：`GET /auth/manage/codes/generate`。
 - 请求头统一追加：
 

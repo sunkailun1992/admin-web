@@ -226,6 +226,25 @@ export async function bindRoleResource(data: API.AuthRoleResourceBO) {
   });
 }
 
+export async function listRoleResourceIds(
+  params: Pick<API.AuthRoleResourceSyncBO, 'tenantId' | 'roleId'>,
+) {
+  const response = await request<API.ApiResponse<string[]>>(
+    '/auth/manage/role-resources',
+    {
+      params,
+    },
+  );
+  return response.data || [];
+}
+
+export async function syncRoleResources(data: API.AuthRoleResourceSyncBO) {
+  return request<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
+    method: 'PUT',
+    data,
+  });
+}
+
 export async function generateCode(params: API.AuthCodeGenerateQuery) {
   const response = await request<API.ApiResponse<string>>(
     '/auth/manage/codes/generate',
