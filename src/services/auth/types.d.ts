@@ -3,6 +3,8 @@ declare namespace API {
 
   type ResourceCategory = 'FRONTEND' | 'BACKEND';
 
+  type CodeGenerateTarget = 'TENANT' | 'ROLE' | 'RESOURCE';
+
   interface ApiResponse<T> {
     success: boolean;
     code?: string | number;
@@ -196,5 +198,12 @@ declare namespace API {
     tenantId: string;
     roleId: string;
     resourceId: string;
+  }
+
+  interface AuthCodeGenerateQuery {
+    target: CodeGenerateTarget;
+    tenantId?: string;
+    resourceCategory?: ResourceCategory;
+    name?: string;
   }
 }

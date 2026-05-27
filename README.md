@@ -74,6 +74,7 @@ AI 处理本项目任务时，优先读取：
 | 权限资源 | `/system/resource` | `/auth/manage/resources` |
 | 用户绑定角色 | 用户管理弹窗 | `POST /auth/manage/user-roles` |
 | 角色绑定资源 | 角色管理弹窗 | `POST /auth/manage/role-resources` |
+| 编码生成 | 租户/角色/资源表单 | `GET /auth/manage/codes/generate` |
 
 ## 后端约定
 
@@ -109,6 +110,10 @@ password: 123456
 ```
 
 前端展示租户时使用租户名称，不直接向用户展示租户 ID；提交后端时仍使用 `tenantId`。
+
+权限资源使用 `parentId` 组装树形结构。权限资源列表是树形表格，角色绑定资源是树形多选。
+
+所有业务编码都由后端生成。前端表单只提供“生成”按钮调用 `/auth/manage/codes/generate`，不在浏览器内拼接随机编码。
 
 ## 权限模型
 
@@ -209,6 +214,7 @@ kill -9 <PID>
 - 编辑接口必须携带后端返回的 `version`。
 - 租户内资源提交必须携带 `tenantId`。
 - 展示层尽量显示租户名称，避免直接暴露租户 ID。
+- 编码字段使用后端生成接口，禁止前端自行生成。
 - 不提交 `node_modules/`、`dist/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
 
 更完整的 AI 编码规范见 [docs/AI_CODING_GUIDE.md](docs/AI_CODING_GUIDE.md)。

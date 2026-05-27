@@ -1,6 +1,7 @@
 import { STATE_VALUE_ENUM } from '@/constants/auth';
 import {
   createTenant,
+  generateCode,
   queryTenants,
   removeTenant,
   updateTenant,
@@ -11,6 +12,7 @@ import {
   ModalForm,
   PageContainer,
   ProColumns,
+  ProFormInstance,
   ProFormSelect,
   ProFormText,
   ProTable,
@@ -20,8 +22,23 @@ import { useRef, useState } from 'react';
 
 export default function TenantPage() {
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<ProFormInstance<API.AuthTenantBO>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthTenantVO>();
   const [formOpen, setFormOpen] = useState(false);
+  const [codeLoading, setCodeLoading] = useState(false);
+
+  const handleGenerateCode = async () => {
+    setCodeLoading(true);
+    try {
+      const code = await generateCode({
+        target: 'TENANT',
+        name: formRef.current?.getFieldValue('name'),
+      });
+      formRef.current?.setFieldValue('code', code);
+    } finally {
+      setCodeLoading(false);
+    }
+  };
 
   const columns: ProColumns<API.AuthTenantVO>[] = [
     {
@@ -98,6 +115,7 @@ export default function TenantPage() {
         ]}
       />
       <ModalForm<API.AuthTenantBO>
+        formRef={formRef}
         key={editingRecord?.id || 'new'}
         initialValues={editingRecord || { state: '启用' }}
         modalProps={{
@@ -128,6 +146,13 @@ export default function TenantPage() {
       >
         <ProFormText
           disabled={!!editingRecord}
+          fieldProps={{
+            addonAfter: editingRecord ? undefined : (
+              <Button loading={codeLoading} onClick={handleGenerateCode}>
+                生成
+              </Button>
+            ),
+          }}
           label="租户编码"
           name="code"
           rules={[{ required: true, message: '请输入租户编码' }]}

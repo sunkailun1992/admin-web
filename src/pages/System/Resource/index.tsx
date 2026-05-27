@@ -8,6 +8,7 @@ import {
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createResource,
+  generateCode,
   listResources,
   removeResource,
   updateResource,
@@ -24,6 +25,7 @@ import {
   PageContainer,
   ProColumns,
   ProFormDigit,
+  ProFormInstance,
   ProFormSelect,
   ProFormText,
   ProFormTreeSelect,
@@ -34,9 +36,26 @@ import { useRef, useState } from 'react';
 
 export default function ResourcePage() {
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<ProFormInstance<API.AuthResourceBO>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthResourceVO>();
   const [formOpen, setFormOpen] = useState(false);
+  const [codeLoading, setCodeLoading] = useState(false);
   const { tenantValueEnum } = useTenantOptions();
+
+  const handleGenerateCode = async () => {
+    setCodeLoading(true);
+    try {
+      const code = await generateCode({
+        target: 'RESOURCE',
+        tenantId: formRef.current?.getFieldValue('tenantId'),
+        resourceCategory: formRef.current?.getFieldValue('resourceCategory'),
+        name: formRef.current?.getFieldValue('name'),
+      });
+      formRef.current?.setFieldValue('code', code);
+    } finally {
+      setCodeLoading(false);
+    }
+  };
 
   const columns: ProColumns<API.AuthResourceVO>[] = [
     {
@@ -150,6 +169,7 @@ export default function ResourcePage() {
         ]}
       />
       <ModalForm<API.AuthResourceBO>
+        formRef={formRef}
         key={editingRecord?.id || 'new'}
         initialValues={
           editingRecord
@@ -194,6 +214,13 @@ export default function ResourcePage() {
         <TenantSelect disabled={!!editingRecord} />
         <ProFormText
           disabled={!!editingRecord}
+          fieldProps={{
+            addonAfter: editingRecord ? undefined : (
+              <Button loading={codeLoading} onClick={handleGenerateCode}>
+                生成
+              </Button>
+            ),
+          }}
           label="资源编码"
           name="code"
           rules={[{ required: true, message: '请输入资源编码' }]}

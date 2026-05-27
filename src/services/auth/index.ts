@@ -225,3 +225,13 @@ export async function bindRoleResource(data: API.AuthRoleResourceBO) {
     data,
   });
 }
+
+export async function generateCode(params: API.AuthCodeGenerateQuery) {
+  const response = await request<API.ApiResponse<string>>(
+    '/auth/manage/codes/generate',
+    {
+      params,
+    },
+  );
+  return response.data;
+}

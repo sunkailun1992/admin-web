@@ -60,6 +60,7 @@ src/pages/System/Resource
 - 登录前租户下拉接口：`GET /auth/tenants`。
 - 当前用户资源接口：`GET /auth/resources`。
 - 管理接口统一位于 `/auth/manage/**`。
+- 编码生成接口：`GET /auth/manage/codes/generate`。
 - 请求头统一追加：
 
 ```text
@@ -100,6 +101,14 @@ menu:resource
 - 租户内资源必须提交 `tenantId`。
 - 用户编辑不展示密码字段，新增用户必须填写密码。
 - 编码字段创建后默认不可编辑，避免破坏唯一约束和授权关系。
+- 所有需要输入业务编码的表单必须提供“生成”按钮，按钮只能调用后端 `GET /auth/manage/codes/generate`，禁止前端自行拼接或随机生成编码。
+- 编码生成请求必须传 `target`，租户用 `TENANT`，角色用 `ROLE`，权限资源用 `RESOURCE`；资源编码还要传 `resourceCategory`，便于后端生成 `menu:` 或 `api:` 命名空间。
+
+## 资源树规范
+
+- 权限资源以 `parentId` 组织树，不在前端新增其它父子字段。
+- 权限资源列表使用树形 `ProTable`，角色绑定资源使用树形多选。
+- 编辑资源父级时必须排除自身及子孙节点，避免形成循环树。
 
 ## 样式规范
 

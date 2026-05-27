@@ -64,6 +64,7 @@ src/main/resources/db/auth-schema.sql
 - Resources: `/auth/manage/resources`
 - Bind user role: `POST /auth/manage/user-roles`
 - Bind role resource: `POST /auth/manage/role-resources`
+- Generate code: `GET /auth/manage/codes/generate`
 
 The frontend uses Umi request `baseURL = http://localhost:7500`; API service paths stay relative to that origin, such as `/auth/login`.
 
@@ -99,6 +100,7 @@ Permission checks live in `src/access.ts`.
 - Use ProComponents for management UI.
 - Do not invent backend fields. Match backend `BO`, `Query`, and `VO`.
 - Use tenant names for display. Keep `tenantId` internal for API calls.
+- Use the backend code generator for code fields. Do not generate business codes in the browser.
 - Preserve optimistic locking by sending `version` on update.
 - Run `pnpm build` after functional changes.
 

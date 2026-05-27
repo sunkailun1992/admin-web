@@ -4,6 +4,7 @@ import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   bindRoleResource,
   createRole,
+  generateCode,
   listResources,
   queryRoles,
   removeRole,
@@ -16,6 +17,7 @@ import {
   ModalForm,
   PageContainer,
   ProColumns,
+  ProFormInstance,
   ProFormSelect,
   ProFormText,
   ProFormTreeSelect,
@@ -26,14 +28,30 @@ import { useRef, useState } from 'react';
 
 export default function RolePage() {
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<ProFormInstance<API.AuthRoleBO>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthRoleVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthRoleVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const [codeLoading, setCodeLoading] = useState(false);
   const { getTenantName, tenantValueEnum } = useTenantOptions();
 
   type RoleResourceForm = Omit<API.AuthRoleResourceBO, 'resourceId'> & {
     resourceIds: string[];
+  };
+
+  const handleGenerateCode = async () => {
+    setCodeLoading(true);
+    try {
+      const code = await generateCode({
+        target: 'ROLE',
+        tenantId: formRef.current?.getFieldValue('tenantId'),
+        name: formRef.current?.getFieldValue('name'),
+      });
+      formRef.current?.setFieldValue('code', code);
+    } finally {
+      setCodeLoading(false);
+    }
   };
 
   const columns: ProColumns<API.AuthRoleVO>[] = [
@@ -132,6 +150,7 @@ export default function RolePage() {
         ]}
       />
       <ModalForm<API.AuthRoleBO>
+        formRef={formRef}
         key={editingRecord?.id || 'new'}
         initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
         modalProps={{
@@ -164,6 +183,13 @@ export default function RolePage() {
         <TenantSelect disabled={!!editingRecord} />
         <ProFormText
           disabled={!!editingRecord}
+          fieldProps={{
+            addonAfter: editingRecord ? undefined : (
+              <Button loading={codeLoading} onClick={handleGenerateCode}>
+                生成
+              </Button>
+            ),
+          }}
           label="角色编码"
           name="code"
           rules={[{ required: true, message: '请输入角色编码' }]}
