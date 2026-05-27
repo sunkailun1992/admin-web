@@ -9,6 +9,7 @@ import {
   removeRole,
   updateRole,
 } from '@/services/auth';
+import { toResourceSelectTree } from '@/utils/resourceTree';
 import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
@@ -17,6 +18,7 @@ import {
   ProColumns,
   ProFormSelect,
   ProFormText,
+  ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message } from 'antd';
@@ -29,6 +31,10 @@ export default function RolePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
   const { getTenantName, tenantValueEnum } = useTenantOptions();
+
+  type RoleResourceForm = Omit<API.AuthRoleResourceBO, 'resourceId'> & {
+    resourceIds: string[];
+  };
 
   const columns: ProColumns<API.AuthRoleVO>[] = [
     {
@@ -174,7 +180,7 @@ export default function RolePage() {
           width="md"
         />
       </ModalForm>
-      <ModalForm<API.AuthRoleResourceBO>
+      <ModalForm<RoleResourceForm>
         key={grantRecord?.id || 'grant'}
         initialValues={{
           tenantId: grantRecord?.tenantId,
@@ -186,7 +192,15 @@ export default function RolePage() {
           onCancel: () => setGrantOpen(false),
         }}
         onFinish={async (values) => {
-          await bindRoleResource(values);
+          await Promise.all(
+            values.resourceIds.map((resourceId) =>
+              bindRoleResource({
+                tenantId: values.tenantId,
+                roleId: values.roleId,
+                resourceId,
+              }),
+            ),
+          );
           message.success('绑定成功');
           setGrantOpen(false);
           return true;
@@ -198,9 +212,9 @@ export default function RolePage() {
         <ProFormText disabled label="角色 ID" name="roleId" />
         <ProFormText hidden name="tenantId" />
         <ProFormText disabled label="租户" name="tenantName" />
-        <ProFormSelect
+        <ProFormTreeSelect
           label="资源"
-          name="resourceId"
+          name="resourceIds"
           request={async () => {
             if (!grantRecord?.tenantId) {
               return [];
@@ -209,13 +223,17 @@ export default function RolePage() {
               tenantId: grantRecord.tenantId,
               assignment: true,
             });
-            return resources.map((resource) => ({
-              label: `${resource.name || resource.id}（${resource.code || resource.id}）`,
-              value: resource.id,
-            }));
+            return toResourceSelectTree(resources);
           }}
           rules={[{ required: true, message: '请选择资源' }]}
-          showSearch
+          fieldProps={{
+            multiple: true,
+            showSearch: true,
+            treeCheckable: true,
+            showCheckedStrategy: 'SHOW_ALL',
+            treeDefaultExpandAll: true,
+            treeNodeFilterProp: 'title',
+          }}
           width="md"
         />
       </ModalForm>

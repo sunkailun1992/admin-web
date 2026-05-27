@@ -157,6 +157,7 @@ declare namespace API {
     stateDesc?: string;
     tenantId: string;
     version?: number;
+    children?: AuthResourceVO[];
   }
 
   interface AuthResourceQuery extends BaseQuery {

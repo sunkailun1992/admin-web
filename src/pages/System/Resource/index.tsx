@@ -9,10 +9,14 @@ import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createResource,
   listResources,
-  queryResources,
   removeResource,
   updateResource,
 } from '@/services/auth';
+import {
+  buildResourceTree,
+  collectResourceDescendantIds,
+  toResourceSelectTree,
+} from '@/utils/resourceTree';
 import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
@@ -22,6 +26,7 @@ import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
+  ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message } from 'antd';
@@ -113,14 +118,21 @@ export default function ResourcePage() {
       <ProTable<API.AuthResourceVO>
         actionRef={actionRef}
         columns={columns}
-        request={(params) =>
-          queryResources(
+        expandable={{ defaultExpandAllRows: true }}
+        pagination={false}
+        request={async (params) => {
+          const resources = await listResources(
             toPageQuery({
               tenantId: DEFAULT_TENANT_ID,
               ...params,
-            } as API.AuthResourceQuery & { pageSize?: number }),
-          )
-        }
+            } as API.AuthResourceQuery & { pageSize?: number }) as API.AuthResourceQuery,
+          );
+          return {
+            data: buildResourceTree(resources),
+            success: true,
+            total: resources.length,
+          };
+        }}
         rowKey="id"
         search={{ labelWidth: 96 }}
         options={false}
@@ -205,7 +217,7 @@ export default function ResourcePage() {
           valueEnum={HTTP_METHOD_VALUE_ENUM}
           width="md"
         />
-        <ProFormSelect
+        <ProFormTreeSelect
           label="父级资源"
           name="parentId"
           request={async ({ tenantId }) => {
@@ -215,14 +227,20 @@ export default function ResourcePage() {
               tenantId: currentTenantId,
               assignment: true,
             });
-            return resources
-              .filter((resource) => resource.id !== editingRecord?.id)
-              .map((resource) => ({
-                label: `${resource.name || resource.id}（${resource.code || resource.id}）`,
-                value: resource.id,
-              }));
+            const disabledIds = collectResourceDescendantIds(
+              resources,
+              editingRecord?.id,
+            );
+            return toResourceSelectTree(
+              resources.filter((resource) => !disabledIds.has(resource.id)),
+            );
           }}
-          showSearch
+          fieldProps={{
+            allowClear: true,
+            showSearch: true,
+            treeDefaultExpandAll: true,
+            treeNodeFilterProp: 'title',
+          }}
           width="md"
         />
         <ProFormDigit label="排序" min={0} name="sorting" width="md" />
