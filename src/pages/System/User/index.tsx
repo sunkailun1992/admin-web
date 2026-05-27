@@ -128,7 +128,7 @@ export default function UserPage() {
         key={editingRecord?.id || 'new'}
         initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
         }}
         onFinish={async (values) => {
@@ -184,7 +184,7 @@ export default function UserPage() {
           userId: grantRecord?.id,
         }}
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setGrantOpen(false),
         }}
         onFinish={async (values) => {

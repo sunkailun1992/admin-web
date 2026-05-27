@@ -128,7 +128,7 @@ export default function RolePage() {
         key={editingRecord?.id || 'new'}
         initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
         }}
         onFinish={async (values) => {
@@ -181,7 +181,7 @@ export default function RolePage() {
           roleId: grantRecord?.id,
         }}
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setGrantOpen(false),
         }}
         onFinish={async (values) => {

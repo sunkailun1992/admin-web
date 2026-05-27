@@ -100,7 +100,7 @@ export default function TenantPage() {
         key={editingRecord?.id || 'new'}
         initialValues={editingRecord || { state: '启用' }}
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
         }}
         onFinish={async (values) => {

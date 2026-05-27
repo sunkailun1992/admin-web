@@ -152,7 +152,7 @@ export default function ResourcePage() {
               }
         }
         modalProps={{
-          destroyOnClose: true,
+          destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
         }}
         onFinish={async (values) => {
