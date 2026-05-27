@@ -1,12 +1,15 @@
-import { DEFAULT_TENANT_ID } from '@/constants/auth';
-import { login } from '@/services/auth';
+import { listTenants, login } from '@/services/auth';
 import { setAccessToken, setStoredLoginInfo } from '@/utils/auth';
 import {
   LockOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { LoginForm, ProFormText } from '@ant-design/pro-components';
+import {
+  LoginForm,
+  ProFormSelect,
+  ProFormText,
+} from '@ant-design/pro-components';
 import { history, useModel } from '@umijs/max';
 import { message } from 'antd';
 import styles from './index.less';
@@ -25,7 +28,7 @@ export default function LoginPage() {
             </div>
             <LoginForm<API.LoginRequest>
               initialValues={{
-                tenantId: DEFAULT_TENANT_ID,
+                tenantCode: 'default',
                 username: 'admin',
               }}
               submitter={{
@@ -46,18 +49,35 @@ export default function LoginPage() {
                   name: loginInfo.nickname || loginInfo.username,
                 });
                 message.success('登录成功');
-                history.push('/dashboard');
+                history.replace('/dashboard');
                 return true;
               }}
             >
-              <ProFormText
+              <ProFormSelect
                 fieldProps={{
                   prefix: <SafetyCertificateOutlined />,
                 }}
-                label="租户 ID"
-                name="tenantId"
-                placeholder="默认租户 100"
-                rules={[{ required: true, message: '请输入租户 ID' }]}
+                label="租户"
+                name="tenantCode"
+                request={async () => {
+                  try {
+                    const tenants = await listTenants(
+                      { assignment: true },
+                      { skipErrorHandler: true },
+                    );
+                    const options = tenants.map((tenant) => ({
+                      label: tenant.name || tenant.code || tenant.id,
+                      value: tenant.code || tenant.id,
+                    }));
+                    return options.length > 0
+                      ? options
+                      : [{ label: '默认租户', value: 'default' }];
+                  } catch {
+                    return [{ label: '默认租户', value: 'default' }];
+                  }
+                }}
+                rules={[{ required: true, message: '请选择租户' }]}
+                showSearch
               />
               <ProFormText
                 fieldProps={{

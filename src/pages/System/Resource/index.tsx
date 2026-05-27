@@ -5,6 +5,7 @@ import {
   RESOURCE_CATEGORY_VALUE_ENUM,
   STATE_VALUE_ENUM,
 } from '@/constants/auth';
+import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createResource,
   listResources,
@@ -30,12 +31,14 @@ export default function ResourcePage() {
   const actionRef = useRef<ActionType>();
   const [editingRecord, setEditingRecord] = useState<API.AuthResourceVO>();
   const [formOpen, setFormOpen] = useState(false);
+  const { tenantValueEnum } = useTenantOptions();
 
   const columns: ProColumns<API.AuthResourceVO>[] = [
     {
-      title: '租户 ID',
+      title: '租户',
       dataIndex: 'tenantId',
       initialValue: DEFAULT_TENANT_ID,
+      valueEnum: tenantValueEnum,
     },
     {
       title: '资源编码',
@@ -112,7 +115,10 @@ export default function ResourcePage() {
         columns={columns}
         request={(params) =>
           queryResources(
-            toPageQuery(params as API.AuthResourceQuery & { pageSize?: number }),
+            toPageQuery({
+              tenantId: DEFAULT_TENANT_ID,
+              ...params,
+            } as API.AuthResourceQuery & { pageSize?: number }),
           )
         }
         rowKey="id"

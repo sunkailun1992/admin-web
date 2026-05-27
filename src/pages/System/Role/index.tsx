@@ -1,5 +1,6 @@
 import TenantSelect from '@/components/TenantSelect';
 import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
+import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   bindRoleResource,
   createRole,
@@ -27,12 +28,14 @@ export default function RolePage() {
   const [grantRecord, setGrantRecord] = useState<API.AuthRoleVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const { getTenantName, tenantValueEnum } = useTenantOptions();
 
   const columns: ProColumns<API.AuthRoleVO>[] = [
     {
-      title: '租户 ID',
+      title: '租户',
       dataIndex: 'tenantId',
       initialValue: DEFAULT_TENANT_ID,
+      valueEnum: tenantValueEnum,
     },
     {
       title: '角色编码',
@@ -99,7 +102,12 @@ export default function RolePage() {
         actionRef={actionRef}
         columns={columns}
         request={(params) =>
-          queryRoles(toPageQuery(params as API.AuthRoleQuery & { pageSize?: number }))
+          queryRoles(
+            toPageQuery({
+              tenantId: DEFAULT_TENANT_ID,
+              ...params,
+            } as API.AuthRoleQuery & { pageSize?: number }),
+          )
         }
         rowKey="id"
         search={{ labelWidth: 96 }}
@@ -169,6 +177,7 @@ export default function RolePage() {
         key={grantRecord?.id || 'grant'}
         initialValues={{
           tenantId: grantRecord?.tenantId,
+          tenantName: getTenantName(grantRecord?.tenantId),
           roleId: grantRecord?.id,
         }}
         modalProps={{
@@ -186,7 +195,8 @@ export default function RolePage() {
         width={560}
       >
         <ProFormText disabled label="角色 ID" name="roleId" />
-        <ProFormText disabled label="租户 ID" name="tenantId" />
+        <ProFormText hidden name="tenantId" />
+        <ProFormText disabled label="租户" name="tenantName" />
         <ProFormSelect
           label="资源"
           name="resourceId"

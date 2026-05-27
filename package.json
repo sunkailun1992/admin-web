@@ -1,4 +1,6 @@
 {
+  "name": "admin-web",
+  "description": "User center admin frontend built with Ant Design Pro and Umi Max.",
   "private": true,
   "author": "",
   "scripts": {

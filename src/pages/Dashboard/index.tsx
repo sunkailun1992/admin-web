@@ -1,4 +1,5 @@
 import { PageContainer, ProCard, StatisticCard } from '@ant-design/pro-components';
+import { DEFAULT_TENANT_ID } from '@/constants/auth';
 import { useModel } from '@umijs/max';
 import { List, Tag } from 'antd';
 
@@ -7,6 +8,8 @@ export default function DashboardPage() {
   const currentUser = initialState?.currentUser;
   const frontendResources = currentUser?.frontendResources || [];
   const backendResources = currentUser?.backendResources || [];
+  const tenantName =
+    currentUser?.tenantId === DEFAULT_TENANT_ID ? '默认租户' : currentUser?.tenantId || '-';
 
   return (
     <PageContainer title="工作台">
@@ -14,7 +17,7 @@ export default function DashboardPage() {
         <StatisticCard
           statistic={{
             title: '当前租户',
-            value: currentUser?.tenantId || '-',
+            value: tenantName,
           }}
         />
         <StatisticCard

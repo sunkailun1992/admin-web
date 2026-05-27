@@ -20,7 +20,7 @@ export default function TenantSelect({
       request={async () => {
         const tenants = await listTenants({ assignment: true });
         return tenants.map((tenant) => ({
-          label: `${tenant.name || tenant.id}（${tenant.code || tenant.id}）`,
+          label: tenant.name || tenant.code || tenant.id,
           value: tenant.id,
         }));
       }}

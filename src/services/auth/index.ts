@@ -32,11 +32,15 @@ export async function queryTenants(data: API.AuthTenantQuery) {
   );
 }
 
-export async function listTenants(params: API.AuthTenantQuery = {}) {
+export async function listTenants(
+  params: API.AuthTenantQuery = {},
+  options?: { [key: string]: any },
+) {
   const response = await request<API.ApiResponse<API.AuthTenantVO[]>>(
     '/auth/manage/tenants',
     {
       params,
+      ...(options || {}),
     },
   );
   return response.data || [];

@@ -71,7 +71,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     },
     onPageChange: () => {
       const { location } = history;
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
+      if (
+        !initialState?.currentUser &&
+        !getAccessToken() &&
+        location.pathname !== loginPath
+      ) {
         history.push(loginPath);
       }
     },
