@@ -17,6 +17,21 @@ import { message } from 'antd';
 
 const loginPath = '/login';
 
+type MenuItemWithTooltip = {
+  children?: MenuItemWithTooltip[];
+  disabledTooltip?: boolean;
+  [key: string]: unknown;
+};
+
+const disableMenuTooltip = (
+  items: MenuItemWithTooltip[],
+): MenuItemWithTooltip[] =>
+  items.map((item) => ({
+    ...item,
+    disabledTooltip: true,
+    children: item.children ? disableMenuTooltip(item.children) : item.children,
+  }));
+
 const authRequestInterceptor = (config: AxiosRequestConfig) => {
   const token = getAccessToken();
   if (token) {
@@ -70,6 +85,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     menu: {
       locale: false,
     },
+    menuDataRender: disableMenuTooltip,
     onPageChange: () => {
       const { location } = history;
       if (
