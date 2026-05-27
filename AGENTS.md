@@ -10,6 +10,7 @@ This file is the AI entrypoint for `admin-web`.
 - Package manager: `pnpm`
 - Backend repo: `/Users/sunkailun/Desktop/个人/GitHub/user`
 - Backend dev URL: `http://localhost:7500`
+- Request mode: direct `request.baseURL`, not Umi dev proxy
 
 ## What This App Does
 
@@ -55,6 +56,7 @@ src/main/resources/db/auth-schema.sql
 ## API Contract
 
 - Login: `POST /auth/login`
+- Public tenant list: `GET /auth/tenants`
 - Current resources: `GET /auth/resources`
 - Tenants: `/auth/manage/tenants`
 - Users: `/auth/manage/users`
@@ -63,7 +65,7 @@ src/main/resources/db/auth-schema.sql
 - Bind user role: `POST /auth/manage/user-roles`
 - Bind role resource: `POST /auth/manage/role-resources`
 
-The frontend proxies `/auth` to `http://localhost:7500`.
+The frontend uses Umi request `baseURL = http://localhost:7500`; API service paths stay relative to that origin, such as `/auth/login`.
 
 All authenticated requests use:
 

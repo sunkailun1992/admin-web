@@ -59,12 +59,6 @@ export default defineConfig({
       ],
     },
   ],
-  proxy: {
-    '/auth': {
-      target: 'http://localhost:7500',
-      changeOrigin: true,
-    },
-  },
   npmClient: 'pnpm',
   utoopack: {},
 });

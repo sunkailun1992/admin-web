@@ -57,6 +57,7 @@ src/pages/System/Resource
 ## 请求规范
 
 - 登录接口：`POST /auth/login`。
+- 登录前租户下拉接口：`GET /auth/tenants`。
 - 当前用户资源接口：`GET /auth/resources`。
 - 管理接口统一位于 `/auth/manage/**`。
 - 请求头统一追加：
@@ -67,7 +68,7 @@ Authorization: Bearer <token>
 
 - 后端统一响应 `success=false` 时必须抛错并展示 `errorMessage` 或 `msg`。
 - 401、403 必须清理本地登录态并跳转 `/login`。
-- 开发环境通过 Umi `proxy` 将 `/auth` 转发到后端 `http://localhost:7500`。
+- 前端通过 Umi request `baseURL` 直接请求后端 `http://localhost:7500`，不要再为 `/auth` 单独配置 dev proxy。
 
 ## 权限规范
 

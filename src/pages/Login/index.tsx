@@ -1,4 +1,4 @@
-import { listTenants, login } from '@/services/auth';
+import { listPublicTenants, login } from '@/services/auth';
 import { setAccessToken, setStoredLoginInfo } from '@/utils/auth';
 import {
   LockOutlined,
@@ -61,7 +61,7 @@ export default function LoginPage() {
                 name="tenantCode"
                 request={async () => {
                   try {
-                    const tenants = await listTenants(
+                    const tenants = await listPublicTenants(
                       { assignment: true },
                       { skipErrorHandler: true },
                     );

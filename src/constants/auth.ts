@@ -1,6 +1,7 @@
 export const ACCESS_TOKEN_KEY = 'admin_web_access_token';
 export const LOGIN_INFO_KEY = 'admin_web_login_info';
 
+export const BACKEND_BASE_URL = 'http://localhost:7500';
 export const DEFAULT_TENANT_ID = '100';
 
 export const STATE_VALUE_ENUM = {

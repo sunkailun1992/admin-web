@@ -1,3 +1,4 @@
+import { BACKEND_BASE_URL } from '@/constants/auth';
 import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
@@ -87,6 +88,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 };
 
 export const request: RequestConfig = {
+  baseURL: BACKEND_BASE_URL,
   timeout: 10000,
   errorConfig: {
     errorThrower: (res: API.ApiResponse<unknown>) => {
