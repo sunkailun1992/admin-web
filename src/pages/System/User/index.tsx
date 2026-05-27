@@ -111,6 +111,7 @@ export default function UserPage() {
         }
         rowKey="id"
         search={{ labelWidth: 96 }}
+        options={false}
         toolBarRender={() => [
           <Button
             key="new"

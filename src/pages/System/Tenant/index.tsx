@@ -83,6 +83,7 @@ export default function TenantPage() {
         request={(params) => queryTenants(toPageQuery(params))}
         rowKey="id"
         search={{ labelWidth: 96 }}
+        options={false}
         toolBarRender={() => [
           <Button
             key="new"
