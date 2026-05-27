@@ -1,16 +1,116 @@
-// 运行时配置
+import { currentResources } from '@/services/auth';
+import {
+  clearAccessToken,
+  getAccessToken,
+  getStoredLoginInfo,
+  setStoredLoginInfo,
+} from '@/utils/auth';
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  RequestConfig,
+  RunTimeLayoutConfig,
+} from '@umijs/max';
+import { history } from '@umijs/max';
+import { message } from 'antd';
 
-// 全局初始化数据配置，用于 Layout 用户信息和权限初始化
-// 更多信息见文档：https://umijs.org/docs/api/runtime-config#getinitialstate
-export async function getInitialState(): Promise<{ name: string }> {
-  return { name: '@umijs/max' };
+const loginPath = '/login';
+
+const authRequestInterceptor = (config: AxiosRequestConfig) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  return config;
+};
+
+export async function getInitialState(): Promise<{
+  currentUser?: API.CurrentUser;
+  name?: string;
+}> {
+  const token = getAccessToken();
+  if (!token) {
+    return {};
+  }
+
+  const storedLoginInfo = getStoredLoginInfo();
+  try {
+    const resourceResponse = await currentResources();
+    const resources = resourceResponse.data;
+    const currentUser: API.CurrentUser = {
+      ...(storedLoginInfo || {}),
+      userId: resources.userId,
+      username: storedLoginInfo?.username || resources.userId,
+      nickname: storedLoginInfo?.nickname,
+      tenantId: resources.tenantId,
+      permissions: resources.permissions,
+      frontendResources: resources.frontendResources,
+      backendResources: resources.backendResources,
+      token,
+      name: storedLoginInfo?.nickname || storedLoginInfo?.username || '管理员',
+    };
+    setStoredLoginInfo(currentUser);
+    return {
+      currentUser,
+      name: currentUser.name,
+    };
+  } catch {
+    clearAccessToken();
+    return {};
+  }
 }
 
-export const layout = () => {
+export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
-    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    logo: false,
     menu: {
       locale: false,
     },
+    onPageChange: () => {
+      const { location } = history;
+      if (!initialState?.currentUser && location.pathname !== loginPath) {
+        history.push(loginPath);
+      }
+    },
+    logout: () => {
+      clearAccessToken();
+      history.push(loginPath);
+    },
   };
+};
+
+export const request: RequestConfig = {
+  timeout: 10000,
+  errorConfig: {
+    errorThrower: (res: API.ApiResponse<unknown>) => {
+      if (res.success === false) {
+        const error = new Error(
+          res.errorMessage || res.msg || '请求处理失败',
+        ) as Error & { response?: API.ApiResponse<unknown> };
+        error.response = res;
+        throw error;
+      }
+    },
+    errorHandler: (error: AxiosError<API.ApiResponse<unknown>> | Error) => {
+      const response = 'response' in error ? error.response : undefined;
+      const status = response?.status;
+      const responseData = response?.data;
+      if (status === 401 || status === 403) {
+        clearAccessToken();
+        history.push(loginPath);
+        message.error('登录已失效，请重新登录');
+        return;
+      }
+      message.error(
+        responseData?.errorMessage ||
+          responseData?.msg ||
+          error?.message ||
+          '网络请求异常',
+      );
+    },
+  },
+  requestInterceptors: [authRequestInterceptor],
 };

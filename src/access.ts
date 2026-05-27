@@ -1,10 +1,13 @@
-export default (initialState: API.UserInfo) => {
-  // 在这里按照初始化数据定义项目中的权限，统一管理
-  // 参考文档 https://umijs.org/docs/max/access
-  const canSeeAdmin = !!(
-    initialState && initialState.name !== 'dontHaveAccess'
-  );
+export default (initialState: { currentUser?: API.CurrentUser }) => {
+  const resources = initialState.currentUser?.frontendResources || [];
+  const resourceCodes = new Set(resources.map((item) => item.code));
+  const permissions = new Set(initialState.currentUser?.permissions || []);
+  const canManage = permissions.has('user:auth:manage');
+
   return {
-    canSeeAdmin,
+    canSeeTenant: canManage && resourceCodes.has('menu:tenant'),
+    canSeeUser: canManage && resourceCodes.has('menu:user'),
+    canSeeRole: canManage && resourceCodes.has('menu:role'),
+    canSeeResource: canManage && resourceCodes.has('menu:resource'),
   };
 };

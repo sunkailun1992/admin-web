@@ -7,30 +7,64 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: 'User Admin',
   },
   routes: [
     {
       path: '/',
-      redirect: '/home',
+      redirect: '/dashboard',
     },
     {
-      name: '首页',
-      path: '/home',
-      component: './Home',
+      path: '/login',
+      component: './Login',
+      layout: false,
     },
     {
-      name: '权限演示',
-      path: '/access',
-      component: './Access',
+      name: '工作台',
+      path: '/dashboard',
+      component: './Dashboard',
     },
     {
-      name: ' CRUD 示例',
-      path: '/table',
-      component: './Table',
+      name: '系统管理',
+      path: '/system',
+      routes: [
+        {
+          path: '/system',
+          redirect: '/system/tenant',
+        },
+        {
+          name: '租户管理',
+          path: '/system/tenant',
+          component: './System/Tenant',
+          access: 'canSeeTenant',
+        },
+        {
+          name: '用户管理',
+          path: '/system/user',
+          component: './System/User',
+          access: 'canSeeUser',
+        },
+        {
+          name: '角色管理',
+          path: '/system/role',
+          component: './System/Role',
+          access: 'canSeeRole',
+        },
+        {
+          name: '权限资源',
+          path: '/system/resource',
+          component: './System/Resource',
+          access: 'canSeeResource',
+        },
+      ],
     },
   ],
+  proxy: {
+    '/auth': {
+      target: 'http://localhost:7500',
+      changeOrigin: true,
+    },
+  },
   npmClient: 'pnpm',
   utoopack: {},
 });
-
