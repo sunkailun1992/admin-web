@@ -39,6 +39,12 @@ export default defineConfig({
           access: 'canSeeTenant',
         },
         {
+          name: '部门管理',
+          path: '/system/dept',
+          component: './System/Dept',
+          access: 'canSeeDept',
+        },
+        {
           name: '用户管理',
           path: '/system/user',
           component: './System/User',

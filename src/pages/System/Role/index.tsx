@@ -1,16 +1,24 @@
 import TenantSelect from '@/components/TenantSelect';
-import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
+import {
+  DATA_SCOPE_VALUE_ENUM,
+  DEFAULT_TENANT_ID,
+  STATE_VALUE_ENUM,
+} from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createRole,
   generateCode,
+  listDepts,
+  listRoleDataScopeDeptIds,
   listRoleResourceIds,
   listResources,
   queryRoles,
   removeRole,
+  syncRoleDataScopes,
   syncRoleResources,
   updateRole,
 } from '@/services/auth';
+import { toDeptSelectTree } from '@/utils/deptTree';
 import { toResourceSelectTree } from '@/utils/resourceTree';
 import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
@@ -33,16 +41,26 @@ type RoleResourceForm = API.AuthRoleResourceSyncBO & {
   resourceIds: string[];
 };
 
+type RoleDataScopeForm = API.AuthRoleDataScopeSyncBO & {
+  roleName?: string;
+  tenantName?: string;
+  deptIds: string[];
+};
+
 export default function RolePage() {
   const actionRef = useRef<ActionType>();
   const formRef = useRef<ProFormInstance<API.AuthRoleBO>>();
   const grantFormRef = useRef<ProFormInstance<RoleResourceForm>>();
+  const dataScopeFormRef = useRef<ProFormInstance<RoleDataScopeForm>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthRoleVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthRoleVO>();
+  const [dataScopeRecord, setDataScopeRecord] = useState<API.AuthRoleVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const [dataScopeOpen, setDataScopeOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
   const [grantResourceLoading, setGrantResourceLoading] = useState(false);
+  const [dataScopeLoading, setDataScopeLoading] = useState(false);
   const { getTenantName, tenantValueEnum } = useTenantOptions();
 
   useEffect(() => {
@@ -67,6 +85,29 @@ export default function RolePage() {
         setGrantResourceLoading(false);
       });
   }, [getTenantName, grantOpen, grantRecord]);
+
+  useEffect(() => {
+    if (!dataScopeOpen || !dataScopeRecord?.id || !dataScopeRecord.tenantId) {
+      return;
+    }
+    setDataScopeLoading(true);
+    listRoleDataScopeDeptIds({
+      tenantId: dataScopeRecord.tenantId,
+      roleId: dataScopeRecord.id,
+    })
+      .then((deptIds) => {
+        dataScopeFormRef.current?.setFieldsValue({
+          tenantId: dataScopeRecord.tenantId,
+          tenantName: getTenantName(dataScopeRecord.tenantId),
+          roleId: dataScopeRecord.id,
+          roleName: `${dataScopeRecord.name || dataScopeRecord.id}（${dataScopeRecord.code || dataScopeRecord.id}）`,
+          deptIds,
+        });
+      })
+      .finally(() => {
+        setDataScopeLoading(false);
+      });
+  }, [dataScopeOpen, dataScopeRecord, getTenantName]);
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -99,6 +140,12 @@ export default function RolePage() {
       dataIndex: 'name',
     },
     {
+      title: '数据范围',
+      dataIndex: 'dataScope',
+      valueEnum: DATA_SCOPE_VALUE_ENUM,
+      width: 150,
+    },
+    {
       title: '状态',
       dataIndex: 'state',
       valueEnum: STATE_VALUE_ENUM,
@@ -113,7 +160,7 @@ export default function RolePage() {
     {
       title: '操作',
       valueType: 'option',
-      width: 220,
+      width: 280,
       render: (_, record) => (
         <Space>
           <a
@@ -131,6 +178,14 @@ export default function RolePage() {
             }}
           >
             绑定资源
+          </a>
+          <a
+            onClick={() => {
+              setDataScopeRecord(record);
+              setDataScopeOpen(true);
+            }}
+          >
+            数据范围
           </a>
           <Popconfirm
             title="删除角色"
@@ -180,7 +235,13 @@ export default function RolePage() {
       <ModalForm<API.AuthRoleBO>
         formRef={formRef}
         key={editingRecord?.id || 'new'}
-        initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
+        initialValues={
+          editingRecord || {
+            tenantId: DEFAULT_TENANT_ID,
+            dataScope: 'SELF',
+            state: '启用',
+          }
+        }
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
@@ -228,9 +289,74 @@ export default function RolePage() {
           rules={[{ required: true, message: '请输入角色名称' }]}
         />
         <ProFormSelect
+          label="数据范围"
+          name="dataScope"
+          valueEnum={DATA_SCOPE_VALUE_ENUM}
+          width="md"
+        />
+        <ProFormSelect
           label="状态"
           name="state"
           valueEnum={STATE_VALUE_ENUM}
+          width="md"
+        />
+      </ModalForm>
+      <ModalForm<RoleDataScopeForm>
+        formRef={dataScopeFormRef}
+        key={dataScopeRecord?.id || 'data-scope'}
+        initialValues={{
+          tenantId: dataScopeRecord?.tenantId,
+          tenantName: getTenantName(dataScopeRecord?.tenantId),
+          roleId: dataScopeRecord?.id,
+          roleName: dataScopeRecord
+            ? `${dataScopeRecord.name || dataScopeRecord.id}（${dataScopeRecord.code || dataScopeRecord.id}）`
+            : undefined,
+          deptIds: [],
+        }}
+        modalProps={{
+          destroyOnHidden: true,
+          onCancel: () => setDataScopeOpen(false),
+        }}
+        onFinish={async (values) => {
+          await syncRoleDataScopes({
+            tenantId: values.tenantId,
+            roleId: values.roleId,
+            deptIds: values.deptIds || [],
+          });
+          message.success('保存成功');
+          setDataScopeOpen(false);
+          return true;
+        }}
+        open={dataScopeOpen}
+        title="角色数据范围"
+        width={560}
+      >
+        <ProFormText hidden name="roleId" />
+        <ProFormText disabled label="角色" name="roleName" />
+        <ProFormText hidden name="tenantId" />
+        <ProFormText disabled label="租户" name="tenantName" />
+        <ProFormTreeSelect
+          label="可见部门"
+          name="deptIds"
+          request={async () => {
+            if (!dataScopeRecord?.tenantId) {
+              return [];
+            }
+            const depts = await listDepts({
+              tenantId: dataScopeRecord.tenantId,
+              assignment: true,
+            });
+            return toDeptSelectTree(depts);
+          }}
+          fieldProps={{
+            loading: dataScopeLoading,
+            multiple: true,
+            showSearch: true,
+            treeCheckable: true,
+            showCheckedStrategy: 'SHOW_ALL',
+            treeDefaultExpandAll: true,
+            treeNodeFilterProp: 'title',
+          }}
           width="md"
         />
       </ModalForm>

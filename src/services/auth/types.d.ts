@@ -3,7 +3,9 @@ declare namespace API {
 
   type ResourceCategory = 'FRONTEND' | 'BACKEND';
 
-  type CodeGenerateTarget = 'TENANT' | 'ROLE' | 'RESOURCE';
+  type DataScope = 'ALL' | 'SELF' | 'DEPT' | 'DEPT_TREE' | 'CUSTOM';
+
+  type CodeGenerateTarget = 'TENANT' | 'DEPT' | 'ROLE' | 'RESOURCE';
 
   interface ApiResponse<T> {
     success: boolean;
@@ -36,6 +38,9 @@ declare namespace API {
     username: string;
     nickname?: string;
     tenantId: string;
+    deptId?: string;
+    dataScope?: DataScope;
+    dataScopeDeptIds?: string[];
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
@@ -49,6 +54,9 @@ declare namespace API {
   interface AuthCurrentResourceVO {
     userId: string;
     tenantId: string;
+    deptId?: string;
+    dataScope?: DataScope;
+    dataScopeDeptIds?: string[];
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
@@ -94,6 +102,7 @@ declare namespace API {
     tenantId: string;
     username?: string;
     nickname?: string;
+    deptId?: string;
     state?: AuthState;
     stateDesc?: string;
     version?: number;
@@ -104,6 +113,7 @@ declare namespace API {
     id?: string;
     username?: string;
     nickname?: string;
+    deptId?: string;
     state?: AuthState;
   }
 
@@ -114,6 +124,7 @@ declare namespace API {
     username?: string;
     password?: string;
     nickname?: string;
+    deptId?: string;
     state?: AuthState;
   }
 
@@ -122,6 +133,8 @@ declare namespace API {
     tenantId: string;
     code?: string;
     name?: string;
+    dataScope?: DataScope;
+    dataScopeDesc?: string;
     state?: AuthState;
     stateDesc?: string;
     sorting?: number;
@@ -133,6 +146,7 @@ declare namespace API {
     id?: string;
     code?: string;
     name?: string;
+    dataScope?: DataScope;
     state?: AuthState;
   }
 
@@ -142,6 +156,40 @@ declare namespace API {
     tenantId: string;
     code?: string;
     name?: string;
+    dataScope?: DataScope;
+    state?: AuthState;
+  }
+
+  interface AuthDeptVO {
+    id: string;
+    tenantId: string;
+    code?: string;
+    name?: string;
+    parentId?: string;
+    state?: AuthState;
+    stateDesc?: string;
+    sorting?: number;
+    version?: number;
+    children?: AuthDeptVO[];
+  }
+
+  interface AuthDeptQuery extends BaseQuery {
+    tenantId: string;
+    id?: string;
+    code?: string;
+    name?: string;
+    parentId?: string;
+    state?: AuthState;
+  }
+
+  interface AuthDeptBO {
+    id?: string;
+    version?: number;
+    tenantId: string;
+    code?: string;
+    name?: string;
+    parentId?: string;
+    sorting?: number;
     state?: AuthState;
   }
 
@@ -204,6 +252,12 @@ declare namespace API {
     tenantId: string;
     roleId: string;
     resourceIds: string[];
+  }
+
+  interface AuthRoleDataScopeSyncBO {
+    tenantId: string;
+    roleId: string;
+    deptIds: string[];
   }
 
   interface AuthCodeGenerateQuery {

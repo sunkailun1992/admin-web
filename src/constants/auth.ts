@@ -14,6 +14,14 @@ export const RESOURCE_CATEGORY_VALUE_ENUM = {
   BACKEND: { text: '后端接口', status: 'Warning' },
 } as const;
 
+export const DATA_SCOPE_VALUE_ENUM = {
+  ALL: { text: '全部数据', status: 'Success' },
+  SELF: { text: '仅本人数据', status: 'Default' },
+  DEPT: { text: '本部门数据', status: 'Processing' },
+  DEPT_TREE: { text: '本部门及下级部门', status: 'Processing' },
+  CUSTOM: { text: '自定义部门数据', status: 'Warning' },
+} as const;
+
 export const HTTP_METHOD_VALUE_ENUM = {
   GET: { text: 'GET' },
   POST: { text: 'POST' },

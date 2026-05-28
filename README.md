@@ -2,7 +2,7 @@
 
 `admin-web` 是用户中心后台管理前端，基于 Ant Design Pro / Umi Max 构建，对接本地后端项目 `/Users/sunkailun/Desktop/个人/GitHub/user`。
 
-本项目负责登录认证、租户管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源授权操作。
+本项目负责登录认证、租户管理、部门管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源、角色数据范围授权操作。
 
 ## AI 快速识别
 
@@ -29,6 +29,7 @@ permissions:
   backendManage: user:auth:manage
   frontendMenus:
     - menu:tenant
+    - menu:dept
     - menu:user
     - menu:role
     - menu:resource
@@ -69,12 +70,14 @@ AI 处理本项目任务时，优先读取：
 | 当前资源 | 运行时初始化 | `GET /auth/resources` |
 | 工作台 | `/dashboard` | 登录态与资源数据 |
 | 租户管理 | `/system/tenant` | `/auth/manage/tenants` |
+| 部门管理 | `/system/dept` | `/auth/manage/depts` |
 | 用户管理 | `/system/user` | `/auth/manage/users` |
 | 角色管理 | `/system/role` | `/auth/manage/roles` |
 | 权限资源 | `/system/resource` | `/auth/manage/resources` |
 | 用户绑定角色 | 用户管理弹窗 | `POST /auth/manage/user-roles` |
 | 角色绑定资源 | 角色管理弹窗 | `GET /auth/manage/role-resources`、`PUT /auth/manage/role-resources` |
-| 编码生成 | 租户/角色/资源表单 | `GET /auth/manage/codes/generate` |
+| 角色数据范围 | 角色管理弹窗 | `GET /auth/manage/role-data-scopes`、`PUT /auth/manage/role-data-scopes` |
+| 编码生成 | 租户/部门/角色/资源表单 | `GET /auth/manage/codes/generate` |
 
 ## 后端约定
 
@@ -113,6 +116,8 @@ password: 123456
 
 权限资源使用 `parentId` 组装树形结构。权限资源列表是树形表格，角色绑定资源是树形多选。
 
+部门使用 `parentId` 组装树形结构。部门列表是树形表格，用户所属部门和角色自定义数据范围都使用部门树。
+
 所有业务编码都由后端生成。前端表单只提供“生成”按钮调用 `/auth/manage/codes/generate`，不在浏览器内拼接随机编码。
 
 ## 权限模型
@@ -133,6 +138,7 @@ user:auth:manage
 
 ```text
 menu:tenant
+menu:dept
 menu:user
 menu:role
 menu:resource

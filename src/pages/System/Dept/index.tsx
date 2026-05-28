@@ -2,21 +2,25 @@ import TenantSelect from '@/components/TenantSelect';
 import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
-  bindUserRole,
-  createUser,
+  createDept,
+  generateCode,
   listDepts,
-  listRoles,
-  queryUsers,
-  removeUser,
-  updateUser,
+  removeDept,
+  updateDept,
 } from '@/services/auth';
-import { toDeptSelectTree } from '@/utils/deptTree';
+import {
+  buildDeptTree,
+  collectDeptDescendantIds,
+  toDeptSelectTree,
+} from '@/utils/deptTree';
 import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
   ModalForm,
   PageContainer,
   ProColumns,
+  ProFormDigit,
+  ProFormInstance,
   ProFormSelect,
   ProFormText,
   ProFormTreeSelect,
@@ -25,15 +29,29 @@ import {
 import { Button, Popconfirm, Space, message } from 'antd';
 import { useRef, useState } from 'react';
 
-export default function UserPage() {
+export default function DeptPage() {
   const actionRef = useRef<ActionType>();
-  const [editingRecord, setEditingRecord] = useState<API.AuthUserVO>();
-  const [grantRecord, setGrantRecord] = useState<API.AuthUserVO>();
+  const formRef = useRef<ProFormInstance<API.AuthDeptBO>>();
+  const [editingRecord, setEditingRecord] = useState<API.AuthDeptVO>();
   const [formOpen, setFormOpen] = useState(false);
-  const [grantOpen, setGrantOpen] = useState(false);
-  const { getTenantName, tenantValueEnum } = useTenantOptions();
+  const [codeLoading, setCodeLoading] = useState(false);
+  const { tenantValueEnum } = useTenantOptions();
 
-  const columns: ProColumns<API.AuthUserVO>[] = [
+  const handleGenerateCode = async () => {
+    setCodeLoading(true);
+    try {
+      const code = await generateCode({
+        target: 'DEPT',
+        tenantId: formRef.current?.getFieldValue('tenantId'),
+        name: formRef.current?.getFieldValue('name'),
+      });
+      formRef.current?.setFieldValue('code', code);
+    } finally {
+      setCodeLoading(false);
+    }
+  };
+
+  const columns: ProColumns<API.AuthDeptVO>[] = [
     {
       title: '租户',
       dataIndex: 'tenantId',
@@ -41,19 +59,13 @@ export default function UserPage() {
       valueEnum: tenantValueEnum,
     },
     {
-      title: '用户名',
-      dataIndex: 'username',
+      title: '部门编码',
+      dataIndex: 'code',
       copyable: true,
     },
     {
-      title: '昵称',
-      dataIndex: 'nickname',
-    },
-    {
-      title: '部门',
-      dataIndex: 'deptId',
-      hideInSearch: true,
-      ellipsis: true,
+      title: '部门名称',
+      dataIndex: 'name',
     },
     {
       title: '状态',
@@ -62,15 +74,15 @@ export default function UserPage() {
       width: 120,
     },
     {
-      title: '版本',
-      dataIndex: 'version',
+      title: '排序',
+      dataIndex: 'sorting',
       hideInSearch: true,
       width: 90,
     },
     {
       title: '操作',
       valueType: 'option',
-      width: 220,
+      width: 160,
       render: (_, record) => (
         <Space>
           <a
@@ -81,19 +93,11 @@ export default function UserPage() {
           >
             编辑
           </a>
-          <a
-            onClick={() => {
-              setGrantRecord(record);
-              setGrantOpen(true);
-            }}
-          >
-            绑定角色
-          </a>
           <Popconfirm
-            title="删除用户"
-            description="确认删除该用户吗？"
+            title="删除部门"
+            description="确认删除该部门吗？"
             onConfirm={async () => {
-              await removeUser({ id: record.id, tenantId: record.tenantId });
+              await removeDept({ id: record.id, tenantId: record.tenantId });
               message.success('删除成功');
               actionRef.current?.reload();
             }}
@@ -106,18 +110,25 @@ export default function UserPage() {
   ];
 
   return (
-    <PageContainer title="用户管理">
-      <ProTable<API.AuthUserVO>
+    <PageContainer title="部门管理">
+      <ProTable<API.AuthDeptVO>
         actionRef={actionRef}
         columns={columns}
-        request={(params) =>
-          queryUsers(
+        expandable={{ defaultExpandAllRows: true }}
+        pagination={false}
+        request={async (params) => {
+          const depts = await listDepts(
             toPageQuery({
               tenantId: DEFAULT_TENANT_ID,
               ...params,
-            } as API.AuthUserQuery & { pageSize?: number }),
-          )
-        }
+            } as API.AuthDeptQuery & { pageSize?: number }) as API.AuthDeptQuery,
+          );
+          return {
+            data: buildDeptTree(depts),
+            success: true,
+            total: depts.length,
+          };
+        }}
         rowKey="id"
         search={{ labelWidth: 96 }}
         options={false}
@@ -130,20 +141,27 @@ export default function UserPage() {
               setFormOpen(true);
             }}
           >
-            新建用户
+            新建部门
           </Button>,
         ]}
       />
-      <ModalForm<API.AuthUserBO>
+      <ModalForm<API.AuthDeptBO>
+        formRef={formRef}
         key={editingRecord?.id || 'new'}
-        initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
+        initialValues={
+          editingRecord || {
+            tenantId: DEFAULT_TENANT_ID,
+            state: '启用',
+            sorting: 0,
+          }
+        }
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
         }}
         onFinish={async (values) => {
           if (editingRecord) {
-            await updateUser(
+            await updateDept(
               cleanPayload({
                 ...values,
                 id: editingRecord.id,
@@ -153,7 +171,7 @@ export default function UserPage() {
             );
             message.success('更新成功');
           } else {
-            await createUser(cleanPayload(values));
+            await createDept(cleanPayload(values));
             message.success('创建成功');
           }
           setFormOpen(false);
@@ -161,26 +179,31 @@ export default function UserPage() {
           return true;
         }}
         open={formOpen}
-        title={editingRecord ? '编辑用户' : '新建用户'}
+        title={editingRecord ? '编辑部门' : '新建部门'}
         width={560}
       >
         <TenantSelect disabled={!!editingRecord} />
         <ProFormText
           disabled={!!editingRecord}
-          label="用户名"
-          name="username"
-          rules={[{ required: true, message: '请输入用户名' }]}
+          fieldProps={{
+            addonAfter: editingRecord ? undefined : (
+              <Button loading={codeLoading} onClick={handleGenerateCode}>
+                生成
+              </Button>
+            ),
+          }}
+          label="部门编码"
+          name="code"
+          rules={[{ required: true, message: '请输入部门编码' }]}
         />
-        {!editingRecord && (
-          <ProFormText.Password
-            label="密码"
-            name="password"
-            rules={[{ required: true, message: '请输入密码' }]}
-          />
-        )}
+        <ProFormText
+          label="部门名称"
+          name="name"
+          rules={[{ required: true, message: '请输入部门名称' }]}
+        />
         <ProFormTreeSelect
-          label="所属部门"
-          name="deptId"
+          label="上级部门"
+          name="parentId"
           request={async ({ tenantId }) => {
             const currentTenantId =
               tenantId || editingRecord?.tenantId || DEFAULT_TENANT_ID;
@@ -188,7 +211,13 @@ export default function UserPage() {
               tenantId: currentTenantId,
               assignment: true,
             });
-            return toDeptSelectTree(depts);
+            const disabledIds = collectDeptDescendantIds(
+              depts,
+              editingRecord?.id,
+            );
+            return toDeptSelectTree(
+              depts.filter((dept) => !disabledIds.has(dept.id)),
+            );
           }}
           fieldProps={{
             allowClear: true,
@@ -198,56 +227,11 @@ export default function UserPage() {
           }}
           width="md"
         />
-        <ProFormText label="昵称" name="nickname" />
+        <ProFormDigit label="排序" min={0} name="sorting" width="md" />
         <ProFormSelect
           label="状态"
           name="state"
           valueEnum={STATE_VALUE_ENUM}
-          width="md"
-        />
-      </ModalForm>
-      <ModalForm<API.AuthUserRoleBO>
-        key={grantRecord?.id || 'grant'}
-        initialValues={{
-          tenantId: grantRecord?.tenantId,
-          tenantName: getTenantName(grantRecord?.tenantId),
-          userId: grantRecord?.id,
-        }}
-        modalProps={{
-          destroyOnHidden: true,
-          onCancel: () => setGrantOpen(false),
-        }}
-        onFinish={async (values) => {
-          await bindUserRole(values);
-          message.success('绑定成功');
-          setGrantOpen(false);
-          return true;
-        }}
-        open={grantOpen}
-        title="绑定用户角色"
-        width={520}
-      >
-        <ProFormText disabled label="用户 ID" name="userId" />
-        <ProFormText hidden name="tenantId" />
-        <ProFormText disabled label="租户" name="tenantName" />
-        <ProFormSelect
-          label="角色"
-          name="roleId"
-          request={async () => {
-            if (!grantRecord?.tenantId) {
-              return [];
-            }
-            const roles = await listRoles({
-              tenantId: grantRecord.tenantId,
-              assignment: true,
-            });
-            return roles.map((role) => ({
-              label: `${role.name || role.id}（${role.code || role.id}）`,
-              value: role.id,
-            }));
-          }}
-          rules={[{ required: true, message: '请选择角色' }]}
-          showSearch
           width="md"
         />
       </ModalForm>

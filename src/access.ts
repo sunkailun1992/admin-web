@@ -6,6 +6,7 @@ export default (initialState: { currentUser?: API.CurrentUser }) => {
 
   return {
     canSeeTenant: canManage && resourceCodes.has('menu:tenant'),
+    canSeeDept: canManage && resourceCodes.has('menu:dept'),
     canSeeUser: canManage && resourceCodes.has('menu:user'),
     canSeeRole: canManage && resourceCodes.has('menu:role'),
     canSeeResource: canManage && resourceCodes.has('menu:resource'),

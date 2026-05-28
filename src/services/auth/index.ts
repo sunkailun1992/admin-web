@@ -124,6 +124,49 @@ export async function removeUser(data: Pick<API.AuthUserBO, 'id' | 'tenantId'>) 
   });
 }
 
+export async function queryDepts(data: API.AuthDeptQuery) {
+  return unwrapPage<API.AuthDeptVO>(
+    await request<API.ApiResponse<API.Page<API.AuthDeptVO>>>(
+      '/auth/manage/depts/page',
+      {
+        method: 'POST',
+        data,
+      },
+    ),
+  );
+}
+
+export async function listDepts(params: API.AuthDeptQuery) {
+  const response = await request<API.ApiResponse<API.AuthDeptVO[]>>(
+    '/auth/manage/depts',
+    {
+      params,
+    },
+  );
+  return response.data || [];
+}
+
+export async function createDept(data: API.AuthDeptBO) {
+  return request<API.ApiResponse<string>>('/auth/manage/depts', {
+    method: 'POST',
+    data,
+  });
+}
+
+export async function updateDept(data: API.AuthDeptBO) {
+  return request<API.ApiResponse<boolean>>('/auth/manage/depts', {
+    method: 'PUT',
+    data,
+  });
+}
+
+export async function removeDept(data: Pick<API.AuthDeptBO, 'id' | 'tenantId'>) {
+  return request<API.ApiResponse<boolean>>('/auth/manage/depts/remove', {
+    method: 'POST',
+    data,
+  });
+}
+
 export async function queryRoles(data: API.AuthRoleQuery) {
   return unwrapPage<API.AuthRoleVO>(
     await request<API.ApiResponse<API.Page<API.AuthRoleVO>>>(
@@ -240,6 +283,25 @@ export async function listRoleResourceIds(
 
 export async function syncRoleResources(data: API.AuthRoleResourceSyncBO) {
   return request<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
+    method: 'PUT',
+    data,
+  });
+}
+
+export async function listRoleDataScopeDeptIds(
+  params: Pick<API.AuthRoleDataScopeSyncBO, 'tenantId' | 'roleId'>,
+) {
+  const response = await request<API.ApiResponse<string[]>>(
+    '/auth/manage/role-data-scopes',
+    {
+      params,
+    },
+  );
+  return response.data || [];
+}
+
+export async function syncRoleDataScopes(data: API.AuthRoleDataScopeSyncBO) {
+  return request<API.ApiResponse<boolean>>('/auth/manage/role-data-scopes', {
     method: 'PUT',
     data,
   });
