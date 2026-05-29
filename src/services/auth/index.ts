@@ -20,6 +20,13 @@ export async function currentResources() {
   return request<API.ApiResponse<API.AuthCurrentResourceVO>>('/auth/resources');
 }
 
+export async function currentTenants() {
+  const response = await request<API.ApiResponse<API.AuthTenantVO[]>>(
+    '/auth/current/tenants',
+  );
+  return response.data || [];
+}
+
 export async function queryTenants(data: API.AuthTenantQuery) {
   return unwrapPage<API.AuthTenantVO>(
     await request<API.ApiResponse<API.Page<API.AuthTenantVO>>>(

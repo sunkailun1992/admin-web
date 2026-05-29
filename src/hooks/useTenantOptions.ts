@@ -1,15 +1,14 @@
 import { DEFAULT_TENANT_ID } from '@/constants/auth';
-import { listTenants } from '@/services/auth';
-import { useEffect, useMemo, useState } from 'react';
+import { useModel } from '@umijs/max';
+import { useMemo } from 'react';
 
 export function useTenantOptions() {
-  const [tenants, setTenants] = useState<API.AuthTenantVO[]>([]);
-
-  useEffect(() => {
-    listTenants({ assignment: true }).then(setTenants).catch(() => {
-      setTenants([]);
-    });
-  }, []);
+  const { initialState } = useModel('@@initialState');
+  const tenants = initialState?.availableTenants || [];
+  const currentTenantId =
+    initialState?.currentTenantId ||
+    initialState?.currentUser?.tenantId ||
+    DEFAULT_TENANT_ID;
 
   const tenantValueEnum = useMemo(() => {
     return tenants.reduce<Record<string, { text: string }>>((memo, tenant) => {
@@ -30,6 +29,7 @@ export function useTenantOptions() {
   };
 
   return {
+    currentTenantId,
     getTenantName,
     tenantValueEnum,
     tenants,

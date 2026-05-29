@@ -1,4 +1,4 @@
-import { listTenants } from '@/services/auth';
+import { useTenantOptions } from '@/hooks/useTenantOptions';
 import { ProFormSelect } from '@ant-design/pro-components';
 
 interface TenantSelectProps {
@@ -12,18 +12,17 @@ export default function TenantSelect({
   name = 'tenantId',
   required = true,
 }: TenantSelectProps) {
+  const { tenants } = useTenantOptions();
+
   return (
     <ProFormSelect
       disabled={disabled}
       label="租户"
       name={name}
-      request={async () => {
-        const tenants = await listTenants({ assignment: true });
-        return tenants.map((tenant) => ({
-          label: tenant.name || tenant.code || tenant.id,
-          value: tenant.id,
-        }));
-      }}
+      options={tenants.map((tenant) => ({
+        label: tenant.name || tenant.code || tenant.id,
+        value: tenant.id,
+      }))}
       rules={
         required ? [{ required: true, message: '请选择租户' }] : undefined
       }

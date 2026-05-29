@@ -1,9 +1,12 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
+import TenantSwitcher from '@/components/TenantSwitcher';
 import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
   getAccessToken,
+  getSelectedTenantId,
   getStoredLoginInfo,
+  setSelectedTenantId,
   setStoredLoginInfo,
 } from '@/utils/auth';
 import type {
@@ -14,6 +17,7 @@ import type {
 } from '@umijs/max';
 import { history } from '@umijs/max';
 import { message } from 'antd';
+import { createElement } from 'react';
 
 const loginPath = '/login';
 
@@ -45,6 +49,8 @@ const authRequestInterceptor = (config: AxiosRequestConfig) => {
 
 export async function getInitialState(): Promise<{
   currentUser?: API.CurrentUser;
+  currentTenantId?: string;
+  availableTenants?: API.AuthTenantVO[];
   name?: string;
 }> {
   const token = getAccessToken();
@@ -56,6 +62,19 @@ export async function getInitialState(): Promise<{
   try {
     const resourceResponse = await currentResources();
     const resources = resourceResponse.data;
+    const availableTenants =
+      resources.availableTenants?.length
+        ? resources.availableTenants
+        : storedLoginInfo?.availableTenants?.length
+          ? storedLoginInfo.availableTenants
+          : [{ id: resources.tenantId, name: resources.tenantId }];
+    const storedTenantId = getSelectedTenantId();
+    const currentTenantId = availableTenants.some(
+      (tenant) => tenant.id === storedTenantId,
+    )
+      ? storedTenantId!
+      : resources.tenantId;
+    setSelectedTenantId(currentTenantId);
     const currentUser: API.CurrentUser = {
       ...(storedLoginInfo || {}),
       userId: resources.userId,
@@ -63,6 +82,7 @@ export async function getInitialState(): Promise<{
       nickname: storedLoginInfo?.nickname,
       tenantId: resources.tenantId,
       permissions: resources.permissions,
+      availableTenants,
       frontendResources: resources.frontendResources,
       backendResources: resources.backendResources,
       token,
@@ -71,6 +91,8 @@ export async function getInitialState(): Promise<{
     setStoredLoginInfo(currentUser);
     return {
       currentUser,
+      currentTenantId,
+      availableTenants,
       name: currentUser.name,
     };
   } catch {
@@ -100,6 +122,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
       clearAccessToken();
       history.push(loginPath);
     },
+    actionsRender: () => [createElement(TenantSwitcher, { key: 'tenant-switcher' })],
   };
 };
 

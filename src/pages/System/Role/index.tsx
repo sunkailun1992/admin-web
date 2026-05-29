@@ -1,7 +1,6 @@
 import TenantSelect from '@/components/TenantSelect';
 import {
   DATA_SCOPE_VALUE_ENUM,
-  DEFAULT_TENANT_ID,
   STATE_VALUE_ENUM,
 } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
@@ -61,7 +60,7 @@ export default function RolePage() {
   const [codeLoading, setCodeLoading] = useState(false);
   const [grantResourceLoading, setGrantResourceLoading] = useState(false);
   const [dataScopeLoading, setDataScopeLoading] = useState(false);
-  const { getTenantName, tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
 
   useEffect(() => {
     if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {
@@ -127,7 +126,7 @@ export default function RolePage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      initialValue: DEFAULT_TENANT_ID,
+      hideInSearch: true,
       valueEnum: tenantValueEnum,
     },
     {
@@ -208,10 +207,11 @@ export default function RolePage() {
       <ProTable<API.AuthRoleVO>
         actionRef={actionRef}
         columns={columns}
+        key={currentTenantId}
         request={(params) =>
           queryRoles(
             toPageQuery({
-              tenantId: DEFAULT_TENANT_ID,
+              tenantId: currentTenantId,
               ...params,
             } as API.AuthRoleQuery & { pageSize?: number }),
           )
@@ -237,7 +237,7 @@ export default function RolePage() {
         key={editingRecord?.id || 'new'}
         initialValues={
           editingRecord || {
-            tenantId: DEFAULT_TENANT_ID,
+            tenantId: currentTenantId,
             dataScope: 'SELF',
             state: '启用',
           }

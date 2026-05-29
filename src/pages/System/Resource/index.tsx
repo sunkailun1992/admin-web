@@ -1,6 +1,5 @@
 import TenantSelect from '@/components/TenantSelect';
 import {
-  DEFAULT_TENANT_ID,
   HTTP_METHOD_VALUE_ENUM,
   RESOURCE_CATEGORY_VALUE_ENUM,
   STATE_VALUE_ENUM,
@@ -40,7 +39,7 @@ export default function ResourcePage() {
   const [editingRecord, setEditingRecord] = useState<API.AuthResourceVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
-  const { tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, tenantValueEnum } = useTenantOptions();
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -61,7 +60,7 @@ export default function ResourcePage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      initialValue: DEFAULT_TENANT_ID,
+      hideInSearch: true,
       valueEnum: tenantValueEnum,
     },
     {
@@ -138,11 +137,12 @@ export default function ResourcePage() {
         actionRef={actionRef}
         columns={columns}
         expandable={{ defaultExpandAllRows: true }}
+        key={currentTenantId}
         pagination={false}
         request={async (params) => {
           const resources = await listResources(
             toPageQuery({
-              tenantId: DEFAULT_TENANT_ID,
+              tenantId: currentTenantId,
               ...params,
             } as API.AuthResourceQuery & { pageSize?: number }) as API.AuthResourceQuery,
           );
@@ -178,7 +178,7 @@ export default function ResourcePage() {
                 resourceCategory: editingRecord.category,
               }
             : {
-                tenantId: DEFAULT_TENANT_ID,
+                tenantId: currentTenantId,
                 resourceCategory: 'FRONTEND',
                 state: '启用',
                 sorting: 0,
@@ -248,10 +248,10 @@ export default function ResourcePage() {
           label="父级资源"
           name="parentId"
           request={async ({ tenantId }) => {
-            const currentTenantId =
-              tenantId || editingRecord?.tenantId || DEFAULT_TENANT_ID;
+            const selectedTenantId =
+              tenantId || editingRecord?.tenantId || currentTenantId;
             const resources = await listResources({
-              tenantId: currentTenantId,
+              tenantId: selectedTenantId,
               assignment: true,
             });
             const disabledIds = collectResourceDescendantIds(

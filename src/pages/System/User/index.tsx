@@ -1,5 +1,5 @@
 import TenantSelect from '@/components/TenantSelect';
-import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
+import { STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   bindUserRole,
@@ -31,13 +31,13 @@ export default function UserPage() {
   const [grantRecord, setGrantRecord] = useState<API.AuthUserVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
-  const { getTenantName, tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
 
   const columns: ProColumns<API.AuthUserVO>[] = [
     {
       title: '租户',
       dataIndex: 'tenantId',
-      initialValue: DEFAULT_TENANT_ID,
+      hideInSearch: true,
       valueEnum: tenantValueEnum,
     },
     {
@@ -110,10 +110,11 @@ export default function UserPage() {
       <ProTable<API.AuthUserVO>
         actionRef={actionRef}
         columns={columns}
+        key={currentTenantId}
         request={(params) =>
           queryUsers(
             toPageQuery({
-              tenantId: DEFAULT_TENANT_ID,
+              tenantId: currentTenantId,
               ...params,
             } as API.AuthUserQuery & { pageSize?: number }),
           )
@@ -136,7 +137,7 @@ export default function UserPage() {
       />
       <ModalForm<API.AuthUserBO>
         key={editingRecord?.id || 'new'}
-        initialValues={editingRecord || { tenantId: DEFAULT_TENANT_ID, state: '启用' }}
+        initialValues={editingRecord || { tenantId: currentTenantId, state: '启用' }}
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
@@ -182,10 +183,10 @@ export default function UserPage() {
           label="所属部门"
           name="deptId"
           request={async ({ tenantId }) => {
-            const currentTenantId =
-              tenantId || editingRecord?.tenantId || DEFAULT_TENANT_ID;
+            const selectedTenantId =
+              tenantId || editingRecord?.tenantId || currentTenantId;
             const depts = await listDepts({
-              tenantId: currentTenantId,
+              tenantId: selectedTenantId,
               assignment: true,
             });
             return toDeptSelectTree(depts);

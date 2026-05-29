@@ -1,5 +1,9 @@
 import { listPublicTenants, login } from '@/services/auth';
-import { setAccessToken, setStoredLoginInfo } from '@/utils/auth';
+import {
+  setAccessToken,
+  setSelectedTenantId,
+  setStoredLoginInfo,
+} from '@/utils/auth';
 import {
   LockOutlined,
   SafetyCertificateOutlined,
@@ -39,11 +43,21 @@ export default function LoginPage() {
               onFinish={async (values) => {
                 const response = await login(values);
                 const loginInfo = response.data;
+                const availableTenants = loginInfo.availableTenants?.length
+                  ? loginInfo.availableTenants
+                  : [{ id: loginInfo.tenantId, name: loginInfo.tenantId }];
                 setAccessToken(loginInfo.token);
-                setStoredLoginInfo(loginInfo);
+                setSelectedTenantId(loginInfo.tenantId);
+                setStoredLoginInfo({
+                  ...loginInfo,
+                  availableTenants,
+                });
                 await setInitialState({
+                  availableTenants,
+                  currentTenantId: loginInfo.tenantId,
                   currentUser: {
                     ...loginInfo,
+                    availableTenants,
                     name: loginInfo.nickname || loginInfo.username,
                   },
                   name: loginInfo.nickname || loginInfo.username,

@@ -1,5 +1,5 @@
 import TenantSelect from '@/components/TenantSelect';
-import { DEFAULT_TENANT_ID, STATE_VALUE_ENUM } from '@/constants/auth';
+import { STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createDept,
@@ -35,7 +35,7 @@ export default function DeptPage() {
   const [editingRecord, setEditingRecord] = useState<API.AuthDeptVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
-  const { tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, tenantValueEnum } = useTenantOptions();
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -55,7 +55,7 @@ export default function DeptPage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      initialValue: DEFAULT_TENANT_ID,
+      hideInSearch: true,
       valueEnum: tenantValueEnum,
     },
     {
@@ -115,11 +115,12 @@ export default function DeptPage() {
         actionRef={actionRef}
         columns={columns}
         expandable={{ defaultExpandAllRows: true }}
+        key={currentTenantId}
         pagination={false}
         request={async (params) => {
           const depts = await listDepts(
             toPageQuery({
-              tenantId: DEFAULT_TENANT_ID,
+              tenantId: currentTenantId,
               ...params,
             } as API.AuthDeptQuery & { pageSize?: number }) as API.AuthDeptQuery,
           );
@@ -150,7 +151,7 @@ export default function DeptPage() {
         key={editingRecord?.id || 'new'}
         initialValues={
           editingRecord || {
-            tenantId: DEFAULT_TENANT_ID,
+            tenantId: currentTenantId,
             state: '启用',
             sorting: 0,
           }
@@ -205,10 +206,10 @@ export default function DeptPage() {
           label="上级部门"
           name="parentId"
           request={async ({ tenantId }) => {
-            const currentTenantId =
-              tenantId || editingRecord?.tenantId || DEFAULT_TENANT_ID;
+            const selectedTenantId =
+              tenantId || editingRecord?.tenantId || currentTenantId;
             const depts = await listDepts({
-              tenantId: currentTenantId,
+              tenantId: selectedTenantId,
               assignment: true,
             });
             const disabledIds = collectDeptDescendantIds(

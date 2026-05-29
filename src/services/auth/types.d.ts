@@ -41,6 +41,7 @@ declare namespace API {
     deptId?: string;
     dataScope?: DataScope;
     dataScopeDeptIds?: string[];
+    availableTenants?: AuthTenantVO[];
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
@@ -57,6 +58,7 @@ declare namespace API {
     deptId?: string;
     dataScope?: DataScope;
     dataScopeDeptIds?: string[];
+    availableTenants?: AuthTenantVO[];
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
