@@ -116,10 +116,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    logout: () => {
-      clearAccessToken();
-      history.push(loginPath);
-    },
   };
 };
 
