@@ -1,4 +1,5 @@
-import { PageContainer, ProCard, StatisticCard } from '@ant-design/pro-components';
+import PageContainer from '@/components/AppPageContainer';
+import { ProCard, StatisticCard } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
 import { List, Tag } from 'antd';
 
