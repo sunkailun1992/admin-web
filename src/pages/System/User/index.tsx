@@ -1,5 +1,5 @@
 import TenantSelect from '@/components/TenantSelect';
-import { STATE_VALUE_ENUM } from '@/constants/auth';
+import { ADMIN_TYPE_VALUE_ENUM, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   bindUserRole,
@@ -54,6 +54,23 @@ export default function UserPage() {
       dataIndex: 'deptId',
       hideInSearch: true,
       ellipsis: true,
+    },
+    {
+      title: '管理员分类',
+      dataIndex: 'adminType',
+      valueEnum: ADMIN_TYPE_VALUE_ENUM,
+      width: 160,
+    },
+    {
+      title: '关联租户',
+      dataIndex: 'tenantIds',
+      hideInSearch: true,
+      ellipsis: true,
+      renderText: (_, record) =>
+        (record.tenantIds || [record.tenantId])
+          .filter(Boolean)
+          .map((tenantId) => getTenantName(tenantId))
+          .join('、'),
     },
     {
       title: '状态',
@@ -137,7 +154,21 @@ export default function UserPage() {
       />
       <ModalForm<API.AuthUserBO>
         key={editingRecord?.id || 'new'}
-        initialValues={editingRecord || { tenantId: currentTenantId, state: '启用' }}
+        initialValues={
+          editingRecord
+            ? {
+                ...editingRecord,
+                tenantIds: editingRecord.tenantIds?.length
+                  ? editingRecord.tenantIds
+                  : [editingRecord.tenantId],
+              }
+            : {
+                adminType: 'TENANT_ADMIN',
+                tenantId: currentTenantId,
+                tenantIds: currentTenantId ? [currentTenantId] : [],
+                state: '启用',
+              }
+        }
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setFormOpen(false),
@@ -166,6 +197,21 @@ export default function UserPage() {
         width={560}
       >
         <TenantSelect disabled={!!editingRecord} />
+        <ProFormSelect
+          label="管理员分类"
+          name="adminType"
+          rules={[{ required: true, message: '请选择管理员分类' }]}
+          valueEnum={ADMIN_TYPE_VALUE_ENUM}
+          width="md"
+        />
+        <ProFormSelect
+          label="关联租户"
+          name="tenantIds"
+          mode="multiple"
+          rules={[{ required: true, message: '请选择关联租户' }]}
+          valueEnum={tenantValueEnum}
+          width="md"
+        />
         <ProFormText
           disabled={!!editingRecord}
           label="用户名"

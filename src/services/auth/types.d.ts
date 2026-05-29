@@ -5,6 +5,8 @@ declare namespace API {
 
   type DataScope = 'ALL' | 'SELF' | 'DEPT' | 'DEPT_TREE' | 'CUSTOM';
 
+  type AdminType = 'PLATFORM_SUPER_ADMIN' | 'TENANT_ADMIN';
+
   type CodeGenerateTarget = 'TENANT' | 'DEPT' | 'ROLE' | 'RESOURCE';
 
   interface ApiResponse<T> {
@@ -39,6 +41,7 @@ declare namespace API {
     nickname?: string;
     tenantId: string;
     deptId?: string;
+    adminType?: AdminType;
     dataScope?: DataScope;
     dataScopeDeptIds?: string[];
     availableTenants?: AuthTenantVO[];
@@ -56,6 +59,7 @@ declare namespace API {
     userId: string;
     tenantId: string;
     deptId?: string;
+    adminType?: AdminType;
     dataScope?: DataScope;
     dataScopeDeptIds?: string[];
     availableTenants?: AuthTenantVO[];
@@ -105,6 +109,9 @@ declare namespace API {
     username?: string;
     nickname?: string;
     deptId?: string;
+    adminType?: AdminType;
+    adminTypeDesc?: string;
+    tenantIds?: string[];
     state?: AuthState;
     stateDesc?: string;
     version?: number;
@@ -116,6 +123,7 @@ declare namespace API {
     username?: string;
     nickname?: string;
     deptId?: string;
+    adminType?: AdminType;
     state?: AuthState;
   }
 
@@ -127,6 +135,8 @@ declare namespace API {
     password?: string;
     nickname?: string;
     deptId?: string;
+    adminType?: AdminType;
+    tenantIds?: string[];
     state?: AuthState;
   }
 

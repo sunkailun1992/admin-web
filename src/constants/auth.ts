@@ -10,6 +10,11 @@ export const STATE_VALUE_ENUM = {
   禁用: { text: '禁用', status: 'Default' },
 } as const;
 
+export const ADMIN_TYPE_VALUE_ENUM = {
+  PLATFORM_SUPER_ADMIN: { text: '平台超级管理员', status: 'Success' },
+  TENANT_ADMIN: { text: '租户管理员', status: 'Processing' },
+} as const;
+
 export const RESOURCE_CATEGORY_VALUE_ENUM = {
   FRONTEND: { text: '前端资源', status: 'Processing' },
   BACKEND: { text: '后端接口', status: 'Warning' },
