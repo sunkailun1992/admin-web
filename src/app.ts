@@ -1,5 +1,4 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
-import LayoutAccount from '@/components/LayoutAccount';
 import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
@@ -15,7 +14,6 @@ import type {
 } from '@umijs/max';
 import { history } from '@umijs/max';
 import { message } from 'antd';
-import { createElement } from 'react';
 
 const loginPath = '/login';
 
@@ -110,11 +108,10 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    avatarProps: false,
-    menuFooterRender: (props) =>
-      initialState?.currentUser
-        ? createElement(LayoutAccount, { collapsed: props?.collapsed })
-        : null,
+    logout: () => {
+      clearAccessToken();
+      history.push(loginPath);
+    },
   };
 };
 
