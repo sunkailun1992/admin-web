@@ -1,17 +1,18 @@
 import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
 import { clearAccessToken } from '@/utils/auth';
-import {
-  LogoutOutlined,
-  SettingOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
-import { Avatar, Descriptions, Dropdown, Modal, Space, Typography } from 'antd';
+import { Descriptions, Dropdown, Modal } from 'antd';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 const loginPath = '/login';
 
-export default function HeaderAccount() {
+interface LayoutAccountProps {
+  defaultDom: ReactNode;
+}
+
+export default function LayoutAccount({ defaultDom }: LayoutAccountProps) {
   const { initialState, setInitialState } = useModel('@@initialState');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const currentUser = initialState?.currentUser;
@@ -21,19 +22,14 @@ export default function HeaderAccount() {
   const adminTypeText = currentUser?.adminType
     ? ADMIN_TYPE_VALUE_ENUM[currentUser.adminType]?.text
     : '-';
-
-  if (!currentUser) {
-    return null;
-  }
+  const displayName =
+    currentUser?.nickname || currentUser?.username || currentUser?.name || '管理员';
 
   const logout = () => {
     clearAccessToken();
     setInitialState({});
     history.push(loginPath);
   };
-
-  const displayName =
-    currentUser.nickname || currentUser.username || currentUser.name || '管理员';
 
   return (
     <>
@@ -67,18 +63,7 @@ export default function HeaderAccount() {
         placement="bottomRight"
         trigger={['click']}
       >
-        <Space
-          style={{
-            cursor: 'pointer',
-            height: 48,
-            paddingInline: 8,
-          }}
-        >
-          <Avatar icon={<UserOutlined />} size="small" />
-          <Typography.Text style={{ maxWidth: 96 }} ellipsis>
-            {displayName}
-          </Typography.Text>
-        </Space>
+        <span>{defaultDom}</span>
       </Dropdown>
       <Modal
         destroyOnHidden
@@ -90,7 +75,7 @@ export default function HeaderAccount() {
       >
         <Descriptions column={1} size="small">
           <Descriptions.Item label="用户名">
-            {currentUser.username || '-'}
+            {currentUser?.username || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="昵称">{displayName}</Descriptions.Item>
           <Descriptions.Item label="管理员分类">

@@ -1,4 +1,3 @@
-import PageContainer from '@/components/AppPageContainer';
 import TenantSelect from '@/components/TenantSelect';
 import {
   DATA_SCOPE_VALUE_ENUM,
@@ -24,6 +23,7 @@ import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
   ModalForm,
+  PageContainer,
   ProColumns,
   ProFormInstance,
   ProFormSelect,

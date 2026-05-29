@@ -1,4 +1,3 @@
-import PageContainer from '@/components/AppPageContainer';
 import { STATE_VALUE_ENUM } from '@/constants/auth';
 import {
   createTenant,
@@ -11,6 +10,7 @@ import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
   ModalForm,
+  PageContainer,
   ProColumns,
   ProFormInstance,
   ProFormSelect,

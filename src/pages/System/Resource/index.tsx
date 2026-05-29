@@ -1,4 +1,3 @@
-import PageContainer from '@/components/AppPageContainer';
 import TenantSelect from '@/components/TenantSelect';
 import {
   HTTP_METHOD_VALUE_ENUM,
@@ -22,6 +21,7 @@ import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
   ModalForm,
+  PageContainer,
   ProColumns,
   ProFormDigit,
   ProFormInstance,
