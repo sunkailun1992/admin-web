@@ -18,8 +18,11 @@ import {
   syncRoleResources,
   updateRole,
 } from '@/services/auth';
-import { toDeptSelectTree } from '@/utils/deptTree';
-import { toResourceSelectTree } from '@/utils/resourceTree';
+import { DeptSelectTreeNode, toDeptSelectTree } from '@/utils/deptTree';
+import {
+  ResourceSelectTreeNode,
+  toResourceSelectTree,
+} from '@/utils/resourceTree';
 import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
@@ -60,6 +63,12 @@ export default function RolePage() {
   const [codeLoading, setCodeLoading] = useState(false);
   const [grantResourceLoading, setGrantResourceLoading] = useState(false);
   const [dataScopeLoading, setDataScopeLoading] = useState(false);
+  const [grantResourceTree, setGrantResourceTree] = useState<
+    ResourceSelectTreeNode[]
+  >([]);
+  const [dataScopeDeptTree, setDataScopeDeptTree] = useState<
+    DeptSelectTreeNode[]
+  >([]);
   const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
 
   useEffect(() => {
@@ -67,11 +76,18 @@ export default function RolePage() {
       return;
     }
     setGrantResourceLoading(true);
-    listRoleResourceIds({
-      tenantId: grantRecord.tenantId,
-      roleId: grantRecord.id,
-    })
-      .then((resourceIds) => {
+    Promise.all([
+      listRoleResourceIds({
+        tenantId: grantRecord.tenantId,
+        roleId: grantRecord.id,
+      }),
+      listResources({
+        tenantId: grantRecord.tenantId,
+        assignment: true,
+      }),
+    ])
+      .then(([resourceIds, resources]) => {
+        setGrantResourceTree(toResourceSelectTree(resources));
         grantFormRef.current?.setFieldsValue({
           tenantId: grantRecord.tenantId,
           tenantName: getTenantName(grantRecord.tenantId),
@@ -83,18 +99,25 @@ export default function RolePage() {
       .finally(() => {
         setGrantResourceLoading(false);
       });
-  }, [getTenantName, grantOpen, grantRecord]);
+  }, [grantOpen, grantRecord?.id, grantRecord?.tenantId]);
 
   useEffect(() => {
     if (!dataScopeOpen || !dataScopeRecord?.id || !dataScopeRecord.tenantId) {
       return;
     }
     setDataScopeLoading(true);
-    listRoleDataScopeDeptIds({
-      tenantId: dataScopeRecord.tenantId,
-      roleId: dataScopeRecord.id,
-    })
-      .then((deptIds) => {
+    Promise.all([
+      listRoleDataScopeDeptIds({
+        tenantId: dataScopeRecord.tenantId,
+        roleId: dataScopeRecord.id,
+      }),
+      listDepts({
+        tenantId: dataScopeRecord.tenantId,
+        assignment: true,
+      }),
+    ])
+      .then(([deptIds, depts]) => {
+        setDataScopeDeptTree(toDeptSelectTree(depts));
         dataScopeFormRef.current?.setFieldsValue({
           tenantId: dataScopeRecord.tenantId,
           tenantName: getTenantName(dataScopeRecord.tenantId),
@@ -106,7 +129,7 @@ export default function RolePage() {
       .finally(() => {
         setDataScopeLoading(false);
       });
-  }, [dataScopeOpen, dataScopeRecord, getTenantName]);
+  }, [dataScopeOpen, dataScopeRecord?.id, dataScopeRecord?.tenantId]);
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -338,21 +361,13 @@ export default function RolePage() {
         <ProFormTreeSelect
           label="可见部门"
           name="deptIds"
-          request={async () => {
-            if (!dataScopeRecord?.tenantId) {
-              return [];
-            }
-            const depts = await listDepts({
-              tenantId: dataScopeRecord.tenantId,
-              assignment: true,
-            });
-            return toDeptSelectTree(depts);
-          }}
           fieldProps={{
+            allowClear: true,
             loading: dataScopeLoading,
             multiple: true,
             showSearch: true,
             treeCheckable: true,
+            treeData: dataScopeDeptTree,
             showCheckedStrategy: 'SHOW_ALL',
             treeDefaultExpandAll: true,
             treeNodeFilterProp: 'title',
@@ -397,21 +412,13 @@ export default function RolePage() {
         <ProFormTreeSelect
           label="资源"
           name="resourceIds"
-          request={async () => {
-            if (!grantRecord?.tenantId) {
-              return [];
-            }
-            const resources = await listResources({
-              tenantId: grantRecord.tenantId,
-              assignment: true,
-            });
-            return toResourceSelectTree(resources);
-          }}
           fieldProps={{
+            allowClear: true,
             loading: grantResourceLoading,
             multiple: true,
             showSearch: true,
             treeCheckable: true,
+            treeData: grantResourceTree,
             showCheckedStrategy: 'SHOW_ALL',
             treeDefaultExpandAll: true,
             treeNodeFilterProp: 'title',

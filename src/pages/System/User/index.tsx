@@ -40,6 +40,9 @@ export default function UserPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantLoading, setGrantLoading] = useState(false);
+  const [grantRoleOptions, setGrantRoleOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
   const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
 
   useEffect(() => {
@@ -47,11 +50,23 @@ export default function UserPage() {
       return;
     }
     setGrantLoading(true);
-    listUserRoleIds({
-      tenantId: grantRecord.tenantId,
-      userId: grantRecord.id,
-    })
-      .then((roleIds) => {
+    Promise.all([
+      listUserRoleIds({
+        tenantId: grantRecord.tenantId,
+        userId: grantRecord.id,
+      }),
+      listRoles({
+        tenantId: grantRecord.tenantId,
+        assignment: true,
+      }),
+    ])
+      .then(([roleIds, roles]) => {
+        setGrantRoleOptions(
+          roles.map((role) => ({
+            label: `${role.name || role.id}（${role.code || role.id}）`,
+            value: role.id,
+          })),
+        );
         grantFormRef.current?.setFieldsValue({
           tenantId: grantRecord.tenantId,
           tenantName: getTenantName(grantRecord.tenantId),
@@ -62,7 +77,7 @@ export default function UserPage() {
       .finally(() => {
         setGrantLoading(false);
       });
-  }, [getTenantName, grantOpen, grantRecord]);
+  }, [grantOpen, grantRecord?.id, grantRecord?.tenantId]);
 
   const columns: ProColumns<API.AuthUserVO>[] = [
     {
@@ -319,20 +334,8 @@ export default function UserPage() {
           label="角色"
           name="roleIds"
           mode="multiple"
+          options={grantRoleOptions}
           placeholder="请选择角色，可清空全部角色"
-          request={async () => {
-            if (!grantRecord?.tenantId) {
-              return [];
-            }
-            const roles = await listRoles({
-              tenantId: grantRecord.tenantId,
-              assignment: true,
-            });
-            return roles.map((role) => ({
-              label: `${role.name || role.id}（${role.code || role.id}）`,
-              value: role.id,
-            }));
-          }}
           fieldProps={{
             allowClear: true,
             loading: grantLoading,
