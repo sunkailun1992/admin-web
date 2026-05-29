@@ -305,6 +305,7 @@ export default function UserPage() {
           });
           message.success('保存成功');
           setGrantOpen(false);
+          actionRef.current?.reload();
           return true;
         }}
         open={grantOpen}
@@ -318,6 +319,7 @@ export default function UserPage() {
           label="角色"
           name="roleIds"
           mode="multiple"
+          placeholder="请选择角色，可清空全部角色"
           request={async () => {
             if (!grantRecord?.tenantId) {
               return [];
@@ -332,9 +334,9 @@ export default function UserPage() {
             }));
           }}
           fieldProps={{
+            allowClear: true,
             loading: grantLoading,
           }}
-          rules={[{ required: true, message: '请选择角色' }]}
           showSearch
           width="md"
         />
