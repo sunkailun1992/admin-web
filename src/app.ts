@@ -4,7 +4,9 @@ import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
   getAccessToken,
+  getSelectedTenantId,
   getStoredLoginInfo,
+  setSelectedTenantId,
   setStoredLoginInfo,
 } from '@/utils/auth';
 import type {
@@ -66,7 +68,13 @@ export async function getInitialState(): Promise<{
         : storedLoginInfo?.availableTenants?.length
           ? storedLoginInfo.availableTenants
           : [{ id: resources.tenantId, name: resources.tenantId }];
-    const currentTenantId = resources.tenantId;
+    const storedTenantId = getSelectedTenantId();
+    const currentTenantId = availableTenants.some(
+      (tenant) => tenant.id === storedTenantId,
+    )
+      ? storedTenantId!
+      : resources.tenantId;
+    setSelectedTenantId(currentTenantId);
     const currentUser: API.CurrentUser = {
       ...(storedLoginInfo || {}),
       userId: resources.userId,

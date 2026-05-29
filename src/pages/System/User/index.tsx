@@ -1,3 +1,4 @@
+import PageContainer from '@/components/AppPageContainer';
 import TenantSelect from '@/components/TenantSelect';
 import { ADMIN_TYPE_VALUE_ENUM, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
@@ -15,7 +16,6 @@ import { cleanPayload, toPageQuery } from '@/utils/table';
 import {
   ActionType,
   ModalForm,
-  PageContainer,
   ProColumns,
   ProFormSelect,
   ProFormText,
