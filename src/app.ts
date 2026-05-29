@@ -1,4 +1,5 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
+import HeaderAccount from '@/components/HeaderAccount';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import { currentResources } from '@/services/auth';
 import {
@@ -122,7 +123,10 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
       clearAccessToken();
       history.push(loginPath);
     },
-    actionsRender: () => [createElement(TenantSwitcher, { key: 'tenant-switcher' })],
+    actionsRender: () => [
+      createElement(TenantSwitcher, { key: 'tenant-switcher' }),
+      createElement(HeaderAccount, { key: 'header-account' }),
+    ],
   };
 };
 
