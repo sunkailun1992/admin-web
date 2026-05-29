@@ -1,13 +1,9 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
-import LayoutAccount from '@/components/LayoutAccount';
-import TenantSwitcher from '@/components/TenantSwitcher';
 import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
   getAccessToken,
-  getSelectedTenantId,
   getStoredLoginInfo,
-  setSelectedTenantId,
   setStoredLoginInfo,
 } from '@/utils/auth';
 import type {
@@ -18,7 +14,6 @@ import type {
 } from '@umijs/max';
 import { history } from '@umijs/max';
 import { message } from 'antd';
-import { createElement } from 'react';
 
 const loginPath = '/login';
 
@@ -69,13 +64,7 @@ export async function getInitialState(): Promise<{
         : storedLoginInfo?.availableTenants?.length
           ? storedLoginInfo.availableTenants
           : [{ id: resources.tenantId, name: resources.tenantId }];
-    const storedTenantId = getSelectedTenantId();
-    const currentTenantId = availableTenants.some(
-      (tenant) => tenant.id === storedTenantId,
-    )
-      ? storedTenantId!
-      : resources.tenantId;
-    setSelectedTenantId(currentTenantId);
+    const currentTenantId = resources.tenantId;
     const currentUser: API.CurrentUser = {
       ...(storedLoginInfo || {}),
       userId: resources.userId,
@@ -119,11 +108,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    actionsRender: () => [createElement(TenantSwitcher, { key: 'tenant-switcher' })],
-    avatarProps: {
-      title: initialState?.currentUser?.name || '管理员',
-      render: (_, defaultDom) =>
-        createElement(LayoutAccount, { defaultDom }),
+    logout: () => {
+      clearAccessToken();
+      history.push(loginPath);
     },
   };
 };
