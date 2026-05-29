@@ -1,5 +1,5 @@
 import { setSelectedTenantId } from '@/utils/auth';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Select } from 'antd';
 
 export default function TenantSwitcher() {
@@ -23,6 +23,9 @@ export default function TenantSwitcher() {
           ...initialState,
           currentTenantId: tenantId,
         });
+        if (history.location.pathname !== '/system/tenant') {
+          history.push('/system/tenant');
+        }
       }}
       popupMatchSelectWidth={220}
       showSearch
