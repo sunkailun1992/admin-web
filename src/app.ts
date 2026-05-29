@@ -1,5 +1,6 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
 import LayoutRightContent from '@/components/LayoutRightContent';
+import TenantSwitcher from '@/components/TenantSwitcher';
 import { currentResources } from '@/services/auth';
 import {
   clearAccessToken,
@@ -127,6 +128,26 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         initialState: state,
         setInitialState,
       }),
+    childrenRender: (dom) =>
+      createElement(
+        'div',
+        { style: { position: 'relative', minHeight: '100%' } },
+        dom,
+        initialState?.currentUser
+          ? createElement(
+              'div',
+              {
+                style: {
+                  position: 'absolute',
+                  right: 32,
+                  top: 24,
+                  zIndex: 10,
+                },
+              },
+              createElement(TenantSwitcher),
+            )
+          : null,
+      ),
   };
 };
 
