@@ -254,6 +254,12 @@ declare namespace API {
     roleId: string;
   }
 
+  interface AuthUserRoleSyncBO {
+    tenantId: string;
+    userId: string;
+    roleIds: string[];
+  }
+
   interface AuthRoleResourceBO {
     tenantId: string;
     roleId: string;

@@ -3,12 +3,13 @@ import TenantSelect from '@/components/TenantSelect';
 import { ADMIN_TYPE_VALUE_ENUM, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
-  bindUserRole,
   createUser,
   listDepts,
+  listUserRoleIds,
   listRoles,
   queryUsers,
   removeUser,
+  syncUserRoles,
   updateUser,
 } from '@/services/auth';
 import { toDeptSelectTree } from '@/utils/deptTree';
@@ -17,21 +18,51 @@ import {
   ActionType,
   ModalForm,
   ProColumns,
+  ProFormInstance,
   ProFormSelect,
   ProFormText,
   ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+type UserRoleForm = API.AuthUserRoleSyncBO & {
+  tenantName?: string;
+  roleIds: string[];
+};
 
 export default function UserPage() {
   const actionRef = useRef<ActionType>();
+  const grantFormRef = useRef<ProFormInstance<UserRoleForm>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthUserVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthUserVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
+  const [grantLoading, setGrantLoading] = useState(false);
   const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
+
+  useEffect(() => {
+    if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {
+      return;
+    }
+    setGrantLoading(true);
+    listUserRoleIds({
+      tenantId: grantRecord.tenantId,
+      userId: grantRecord.id,
+    })
+      .then((roleIds) => {
+        grantFormRef.current?.setFieldsValue({
+          tenantId: grantRecord.tenantId,
+          tenantName: getTenantName(grantRecord.tenantId),
+          userId: grantRecord.id,
+          roleIds,
+        });
+      })
+      .finally(() => {
+        setGrantLoading(false);
+      });
+  }, [getTenantName, grantOpen, grantRecord]);
 
   const columns: ProColumns<API.AuthUserVO>[] = [
     {
@@ -253,20 +284,26 @@ export default function UserPage() {
           width="md"
         />
       </ModalForm>
-      <ModalForm<API.AuthUserRoleBO>
+      <ModalForm<UserRoleForm>
+        formRef={grantFormRef}
         key={grantRecord?.id || 'grant'}
         initialValues={{
           tenantId: grantRecord?.tenantId,
           tenantName: getTenantName(grantRecord?.tenantId),
           userId: grantRecord?.id,
+          roleIds: [],
         }}
         modalProps={{
           destroyOnHidden: true,
           onCancel: () => setGrantOpen(false),
         }}
         onFinish={async (values) => {
-          await bindUserRole(values);
-          message.success('绑定成功');
+          await syncUserRoles({
+            tenantId: values.tenantId,
+            userId: values.userId,
+            roleIds: values.roleIds || [],
+          });
+          message.success('保存成功');
           setGrantOpen(false);
           return true;
         }}
@@ -279,7 +316,8 @@ export default function UserPage() {
         <ProFormText disabled label="租户" name="tenantName" />
         <ProFormSelect
           label="角色"
-          name="roleId"
+          name="roleIds"
+          mode="multiple"
           request={async () => {
             if (!grantRecord?.tenantId) {
               return [];
@@ -292,6 +330,9 @@ export default function UserPage() {
               label: `${role.name || role.id}（${role.code || role.id}）`,
               value: role.id,
             }));
+          }}
+          fieldProps={{
+            loading: grantLoading,
           }}
           rules={[{ required: true, message: '请选择角色' }]}
           showSearch
