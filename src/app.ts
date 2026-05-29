@@ -1,5 +1,4 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
-import adminAvatar from '@/assets/admin-avatar.svg';
 import LayoutAccount from '@/components/LayoutAccount';
 import { currentResources } from '@/services/auth';
 import {
@@ -111,12 +110,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    avatarProps: {
-      src: adminAvatar,
-      title: initialState?.currentUser?.name || '管理员',
-      render: (_, defaultDom) =>
-        createElement(LayoutAccount, { defaultDom }),
-    },
+    avatarProps: false,
+    menuFooterRender: (props) =>
+      initialState?.currentUser
+        ? createElement(LayoutAccount, { collapsed: props?.collapsed })
+        : null,
   };
 };
 

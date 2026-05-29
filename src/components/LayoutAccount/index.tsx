@@ -1,18 +1,18 @@
 import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
+import adminAvatar from '@/assets/admin-avatar.svg';
 import { clearAccessToken } from '@/utils/auth';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
-import { Descriptions, Dropdown, Modal } from 'antd';
-import type { ReactNode } from 'react';
+import { Avatar, Descriptions, Dropdown, Modal, Space, Typography } from 'antd';
 import { useState } from 'react';
 
 const loginPath = '/login';
 
 interface LayoutAccountProps {
-  defaultDom: ReactNode;
+  collapsed?: boolean;
 }
 
-export default function LayoutAccount({ defaultDom }: LayoutAccountProps) {
+export default function LayoutAccount({ collapsed }: LayoutAccountProps) {
   const { initialState, setInitialState } = useModel('@@initialState');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const currentUser = initialState?.currentUser;
@@ -63,7 +63,21 @@ export default function LayoutAccount({ defaultDom }: LayoutAccountProps) {
         placement="bottomRight"
         trigger={['click']}
       >
-        <span>{defaultDom}</span>
+        <Space
+          style={{
+            cursor: 'pointer',
+            padding: collapsed ? '8px 0' : '8px 16px',
+            width: '100%',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+          }}
+        >
+          <Avatar src={adminAvatar} size={32} />
+          {!collapsed && (
+            <Typography.Text style={{ maxWidth: 112 }} ellipsis>
+              {displayName}
+            </Typography.Text>
+          )}
+        </Space>
       </Dropdown>
       <Modal
         destroyOnHidden
