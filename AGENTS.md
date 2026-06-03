@@ -68,7 +68,7 @@ src/main/resources/db/auth-schema.sql
 - Bind role resource: `POST /auth/manage/role-resources`
 - Generate code: `GET /auth/manage/codes/generate`
 
-The frontend uses Umi request `baseURL = http://localhost:8080`; API service paths stay relative to the gateway origin, such as `/auth/login`. The gateway routes `/auth/**` to the `user` service.
+The frontend uses Umi request `baseURL = http://localhost:8080`; user-center API calls are prefixed inside `src/services/auth/index.ts`, so `/auth/login` produces gateway requests like `/user/auth/login`. The gateway rewrites `/user/**` to the `user` service.
 
 All authenticated requests use:
 

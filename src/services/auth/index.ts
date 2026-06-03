@@ -1,4 +1,9 @@
+import { USER_SERVICE_PREFIX } from '@/constants/auth';
 import { request } from '@umijs/max';
+
+function authRequest<T>(url: string, options?: any) {
+  return request<T>(`${USER_SERVICE_PREFIX}${url}`, options);
+}
 
 function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
   const page = response.data || {};
@@ -10,18 +15,18 @@ function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
 }
 
 export async function login(data: API.LoginRequest) {
-  return request<API.ApiResponse<API.AuthLoginVO>>('/auth/login', {
+  return authRequest<API.ApiResponse<API.AuthLoginVO>>('/auth/login', {
     method: 'POST',
     data,
   });
 }
 
 export async function currentResources() {
-  return request<API.ApiResponse<API.AuthCurrentResourceVO>>('/auth/resources');
+  return authRequest<API.ApiResponse<API.AuthCurrentResourceVO>>('/auth/resources');
 }
 
 export async function currentTenants() {
-  const response = await request<API.ApiResponse<API.AuthTenantVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthTenantVO[]>>(
     '/auth/current/tenants',
   );
   return response.data || [];
@@ -29,7 +34,7 @@ export async function currentTenants() {
 
 export async function queryTenants(data: API.AuthTenantQuery) {
   return unwrapPage<API.AuthTenantVO>(
-    await request<API.ApiResponse<API.Page<API.AuthTenantVO>>>(
+    await authRequest<API.ApiResponse<API.Page<API.AuthTenantVO>>>(
       '/auth/manage/tenants/page',
       {
         method: 'POST',
@@ -43,7 +48,7 @@ export async function listPublicTenants(
   params: API.AuthTenantQuery = {},
   options?: { [key: string]: any },
 ) {
-  const response = await request<API.ApiResponse<API.AuthTenantVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthTenantVO[]>>(
     '/auth/tenants',
     {
       params,
@@ -57,7 +62,7 @@ export async function listTenants(
   params: API.AuthTenantQuery = {},
   options?: { [key: string]: any },
 ) {
-  const response = await request<API.ApiResponse<API.AuthTenantVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthTenantVO[]>>(
     '/auth/manage/tenants',
     {
       params,
@@ -68,21 +73,21 @@ export async function listTenants(
 }
 
 export async function createTenant(data: API.AuthTenantBO) {
-  return request<API.ApiResponse<string>>('/auth/manage/tenants', {
+  return authRequest<API.ApiResponse<string>>('/auth/manage/tenants', {
     method: 'POST',
     data,
   });
 }
 
 export async function updateTenant(data: API.AuthTenantBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/tenants', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/tenants', {
     method: 'PUT',
     data,
   });
 }
 
 export async function removeTenant(data: Pick<API.AuthTenantBO, 'id'>) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/tenants/remove', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/tenants/remove', {
     method: 'POST',
     data,
   });
@@ -90,7 +95,7 @@ export async function removeTenant(data: Pick<API.AuthTenantBO, 'id'>) {
 
 export async function queryUsers(data: API.AuthUserQuery) {
   return unwrapPage<API.AuthUserVO>(
-    await request<API.ApiResponse<API.Page<API.AuthUserVO>>>(
+    await authRequest<API.ApiResponse<API.Page<API.AuthUserVO>>>(
       '/auth/manage/users/page',
       {
         method: 'POST',
@@ -101,7 +106,7 @@ export async function queryUsers(data: API.AuthUserQuery) {
 }
 
 export async function listUsers(params: API.AuthUserQuery) {
-  const response = await request<API.ApiResponse<API.AuthUserVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthUserVO[]>>(
     '/auth/manage/users',
     {
       params,
@@ -111,21 +116,21 @@ export async function listUsers(params: API.AuthUserQuery) {
 }
 
 export async function createUser(data: API.AuthUserBO) {
-  return request<API.ApiResponse<string>>('/auth/manage/users', {
+  return authRequest<API.ApiResponse<string>>('/auth/manage/users', {
     method: 'POST',
     data,
   });
 }
 
 export async function updateUser(data: API.AuthUserBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/users', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/users', {
     method: 'PUT',
     data,
   });
 }
 
 export async function removeUser(data: Pick<API.AuthUserBO, 'id' | 'tenantId'>) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/users/remove', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/users/remove', {
     method: 'POST',
     data,
   });
@@ -133,7 +138,7 @@ export async function removeUser(data: Pick<API.AuthUserBO, 'id' | 'tenantId'>) 
 
 export async function queryDepts(data: API.AuthDeptQuery) {
   return unwrapPage<API.AuthDeptVO>(
-    await request<API.ApiResponse<API.Page<API.AuthDeptVO>>>(
+    await authRequest<API.ApiResponse<API.Page<API.AuthDeptVO>>>(
       '/auth/manage/depts/page',
       {
         method: 'POST',
@@ -144,7 +149,7 @@ export async function queryDepts(data: API.AuthDeptQuery) {
 }
 
 export async function listDepts(params: API.AuthDeptQuery) {
-  const response = await request<API.ApiResponse<API.AuthDeptVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthDeptVO[]>>(
     '/auth/manage/depts',
     {
       params,
@@ -154,21 +159,21 @@ export async function listDepts(params: API.AuthDeptQuery) {
 }
 
 export async function createDept(data: API.AuthDeptBO) {
-  return request<API.ApiResponse<string>>('/auth/manage/depts', {
+  return authRequest<API.ApiResponse<string>>('/auth/manage/depts', {
     method: 'POST',
     data,
   });
 }
 
 export async function updateDept(data: API.AuthDeptBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/depts', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/depts', {
     method: 'PUT',
     data,
   });
 }
 
 export async function removeDept(data: Pick<API.AuthDeptBO, 'id' | 'tenantId'>) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/depts/remove', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/depts/remove', {
     method: 'POST',
     data,
   });
@@ -176,7 +181,7 @@ export async function removeDept(data: Pick<API.AuthDeptBO, 'id' | 'tenantId'>) 
 
 export async function queryRoles(data: API.AuthRoleQuery) {
   return unwrapPage<API.AuthRoleVO>(
-    await request<API.ApiResponse<API.Page<API.AuthRoleVO>>>(
+    await authRequest<API.ApiResponse<API.Page<API.AuthRoleVO>>>(
       '/auth/manage/roles/page',
       {
         method: 'POST',
@@ -187,7 +192,7 @@ export async function queryRoles(data: API.AuthRoleQuery) {
 }
 
 export async function listRoles(params: API.AuthRoleQuery) {
-  const response = await request<API.ApiResponse<API.AuthRoleVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthRoleVO[]>>(
     '/auth/manage/roles',
     {
       params,
@@ -197,21 +202,21 @@ export async function listRoles(params: API.AuthRoleQuery) {
 }
 
 export async function createRole(data: API.AuthRoleBO) {
-  return request<API.ApiResponse<string>>('/auth/manage/roles', {
+  return authRequest<API.ApiResponse<string>>('/auth/manage/roles', {
     method: 'POST',
     data,
   });
 }
 
 export async function updateRole(data: API.AuthRoleBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/roles', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/roles', {
     method: 'PUT',
     data,
   });
 }
 
 export async function removeRole(data: Pick<API.AuthRoleBO, 'id' | 'tenantId'>) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/roles/remove', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/roles/remove', {
     method: 'POST',
     data,
   });
@@ -219,7 +224,7 @@ export async function removeRole(data: Pick<API.AuthRoleBO, 'id' | 'tenantId'>) 
 
 export async function queryResources(data: API.AuthResourceQuery) {
   return unwrapPage<API.AuthResourceVO>(
-    await request<API.ApiResponse<API.Page<API.AuthResourceVO>>>(
+    await authRequest<API.ApiResponse<API.Page<API.AuthResourceVO>>>(
       '/auth/manage/resources/page',
       {
         method: 'POST',
@@ -230,7 +235,7 @@ export async function queryResources(data: API.AuthResourceQuery) {
 }
 
 export async function listResources(params: API.AuthResourceQuery) {
-  const response = await request<API.ApiResponse<API.AuthResourceVO[]>>(
+  const response = await authRequest<API.ApiResponse<API.AuthResourceVO[]>>(
     '/auth/manage/resources',
     {
       params,
@@ -240,14 +245,14 @@ export async function listResources(params: API.AuthResourceQuery) {
 }
 
 export async function createResource(data: API.AuthResourceBO) {
-  return request<API.ApiResponse<string>>('/auth/manage/resources', {
+  return authRequest<API.ApiResponse<string>>('/auth/manage/resources', {
     method: 'POST',
     data,
   });
 }
 
 export async function updateResource(data: API.AuthResourceBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/resources', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/resources', {
     method: 'PUT',
     data,
   });
@@ -256,14 +261,14 @@ export async function updateResource(data: API.AuthResourceBO) {
 export async function removeResource(
   data: Pick<API.AuthResourceBO, 'id' | 'tenantId'>,
 ) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/resources/remove', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/resources/remove', {
     method: 'POST',
     data,
   });
 }
 
 export async function bindUserRole(data: API.AuthUserRoleBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
     method: 'POST',
     data,
   });
@@ -272,7 +277,7 @@ export async function bindUserRole(data: API.AuthUserRoleBO) {
 export async function listUserRoleIds(
   params: Pick<API.AuthUserRoleSyncBO, 'tenantId' | 'userId'>,
 ) {
-  const response = await request<API.ApiResponse<string[]>>(
+  const response = await authRequest<API.ApiResponse<string[]>>(
     '/auth/manage/user-roles',
     {
       params,
@@ -282,14 +287,14 @@ export async function listUserRoleIds(
 }
 
 export async function syncUserRoles(data: API.AuthUserRoleSyncBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
     method: 'PUT',
     data,
   });
 }
 
 export async function bindRoleResource(data: API.AuthRoleResourceBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
     method: 'POST',
     data,
   });
@@ -298,7 +303,7 @@ export async function bindRoleResource(data: API.AuthRoleResourceBO) {
 export async function listRoleResourceIds(
   params: Pick<API.AuthRoleResourceSyncBO, 'tenantId' | 'roleId'>,
 ) {
-  const response = await request<API.ApiResponse<string[]>>(
+  const response = await authRequest<API.ApiResponse<string[]>>(
     '/auth/manage/role-resources',
     {
       params,
@@ -308,7 +313,7 @@ export async function listRoleResourceIds(
 }
 
 export async function syncRoleResources(data: API.AuthRoleResourceSyncBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
     method: 'PUT',
     data,
   });
@@ -317,7 +322,7 @@ export async function syncRoleResources(data: API.AuthRoleResourceSyncBO) {
 export async function listRoleDataScopeDeptIds(
   params: Pick<API.AuthRoleDataScopeSyncBO, 'tenantId' | 'roleId'>,
 ) {
-  const response = await request<API.ApiResponse<string[]>>(
+  const response = await authRequest<API.ApiResponse<string[]>>(
     '/auth/manage/role-data-scopes',
     {
       params,
@@ -327,14 +332,14 @@ export async function listRoleDataScopeDeptIds(
 }
 
 export async function syncRoleDataScopes(data: API.AuthRoleDataScopeSyncBO) {
-  return request<API.ApiResponse<boolean>>('/auth/manage/role-data-scopes', {
+  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-data-scopes', {
     method: 'PUT',
     data,
   });
 }
 
 export async function generateCode(params: API.AuthCodeGenerateQuery) {
-  const response = await request<API.ApiResponse<string>>(
+  const response = await authRequest<API.ApiResponse<string>>(
     '/auth/manage/codes/generate',
     {
       params,

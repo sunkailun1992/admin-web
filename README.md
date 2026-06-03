@@ -197,7 +197,7 @@ http://localhost:8000
 http://localhost:8080
 ```
 
-前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求网关 `http://localhost:8080`，再由网关路由到 `user` 服务。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `8080`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
+前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求网关 `http://localhost:8080`。user-center 模块前缀在 `src/services/auth/index.ts` 统一拼接，现有接口路径仍保持 `/auth/**`，最终请求会成为 `/user/auth/**`，再由网关转发到 `user` 服务。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `8080`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
 
 ## 常用命令
 

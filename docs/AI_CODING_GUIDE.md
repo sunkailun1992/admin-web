@@ -72,7 +72,7 @@ Authorization: Bearer <token>
 
 - 后端统一响应 `success=false` 时必须抛错并展示 `errorMessage` 或 `msg`。
 - 401、403 必须清理本地登录态并跳转 `/login`。
-- 前端通过 Umi request `baseURL` 直接请求网关 `http://localhost:8080`，由网关转发到 `user` 服务；不要直接请求 `user` 的 `http://localhost:7500`，也不要再为 `/auth` 单独配置 dev proxy。
+- 前端通过 Umi request `baseURL` 直接请求网关 `http://localhost:8080`，user-center 模块前缀在 `src/services/auth/index.ts` 统一拼接，现有 service path 仍写 `/auth/**`，最终请求为 `/user/auth/**` 并由网关转发到 `user` 服务；不要直接请求 `user` 的 `http://localhost:7500`，也不要再为 `/auth` 单独配置 dev proxy。
 
 ## 权限规范
 
