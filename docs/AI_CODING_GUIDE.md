@@ -56,14 +56,17 @@ src/pages/System/Resource
 
 ## 请求规范
 
-- 登录接口：`POST /auth/login`。
+- 登录接口：`POST /auth/sessions`。
 - 登录前租户下拉接口：`GET /auth/tenants`。
-- 当前用户资源接口：`GET /auth/resources`。
+- 当前用户资源接口：`GET /auth/current/resources`。
 - 管理接口统一位于 `/auth/manage/**`。
+- 分页查询使用 `GET /auth/manage/{resources}` 并传 `current`、`size` 查询参数；下拉、树形、授权回显等轻量选项查询使用 `GET /auth/manage/{resources}/options`。
+- 更新使用 `PUT /auth/manage/{resources}/{id}`，删除使用 `DELETE /auth/manage/{resources}/{id}`；需要租户上下文的删除把 `tenantId` 放查询参数，不放请求体。
 - 部门管理接口：`/auth/manage/depts`。
-- 角色资源编辑必须先用 `GET /auth/manage/role-resources` 回显历史资源，再用 `PUT /auth/manage/role-resources` 按完整勾选结果同步。
-- 角色自定义数据范围编辑必须先用 `GET /auth/manage/role-data-scopes` 回显历史部门，再用 `PUT /auth/manage/role-data-scopes` 按完整勾选结果同步。
-- 编码生成接口：`GET /auth/manage/codes/generate`。
+- 用户角色编辑必须先用 `GET /auth/manage/users/{userId}/roles` 回显历史角色，再用 `PUT /auth/manage/users/{userId}/roles` 按完整勾选结果同步。
+- 角色资源编辑必须先用 `GET /auth/manage/roles/{roleId}/resources` 回显历史资源，再用 `PUT /auth/manage/roles/{roleId}/resources` 按完整勾选结果同步。
+- 角色自定义数据范围编辑必须先用 `GET /auth/manage/roles/{roleId}/data-scope-depts` 回显历史部门，再用 `PUT /auth/manage/roles/{roleId}/data-scope-depts` 按完整勾选结果同步。
+- 编码生成接口：`POST /auth/manage/codes`。
 - 请求头统一追加：
 
 ```text
@@ -95,7 +98,7 @@ menu:resource
 
 - Token 存储 key：`admin_web_access_token`。
 - 登录用户信息存储 key：`admin_web_login_info`。
-- `getInitialState` 在存在 Token 时调用 `/auth/resources` 刷新权限资源。
+- `getInitialState` 在存在 Token 时调用 `/auth/current/resources` 刷新权限资源。
 - 页面跳转由 `layout.onPageChange` 统一兜底，未登录用户进入业务页必须跳转 `/login`。
 
 ## 表单规范
@@ -105,7 +108,7 @@ menu:resource
 - 租户内资源必须提交 `tenantId`。
 - 用户编辑不展示密码字段，新增用户必须填写密码。
 - 编码字段创建后默认不可编辑，避免破坏唯一约束和授权关系。
-- 所有需要输入业务编码的表单必须提供“生成”按钮，按钮只能调用后端 `GET /auth/manage/codes/generate`，禁止前端自行拼接或随机生成编码。
+- 所有需要输入业务编码的表单必须提供“生成”按钮，按钮只能调用后端 `POST /auth/manage/codes`，禁止前端自行拼接或随机生成编码。
 - 编码生成请求必须传 `target`，租户用 `TENANT`，部门用 `DEPT`，角色用 `ROLE`，权限资源用 `RESOURCE`；资源编码还要传 `resourceCategory`，便于后端生成 `menu:` 或 `api:` 命名空间。
 
 ## 资源树规范

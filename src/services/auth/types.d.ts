@@ -7,7 +7,7 @@ declare namespace API {
 
   type AdminType = 'PLATFORM_SUPER_ADMIN' | 'TENANT_ADMIN';
 
-  type CodeGenerateTarget = 'TENANT' | 'DEPT' | 'ROLE' | 'RESOURCE';
+  type CodeGenerateTarget = 'TENANT' | 'USER' | 'DEPT' | 'ROLE' | 'RESOURCE';
 
   interface ApiResponse<T> {
     success: boolean;
@@ -145,6 +145,8 @@ declare namespace API {
     tenantId: string;
     code?: string;
     name?: string;
+    ownerUserId?: string;
+    deptId?: string;
     dataScope?: DataScope;
     dataScopeDesc?: string;
     state?: AuthState;
@@ -158,6 +160,8 @@ declare namespace API {
     id?: string;
     code?: string;
     name?: string;
+    ownerUserId?: string;
+    deptId?: string;
     dataScope?: DataScope;
     state?: AuthState;
   }
@@ -168,6 +172,8 @@ declare namespace API {
     tenantId: string;
     code?: string;
     name?: string;
+    ownerUserId?: string;
+    deptId?: string;
     dataScope?: DataScope;
     state?: AuthState;
   }
@@ -178,6 +184,7 @@ declare namespace API {
     code?: string;
     name?: string;
     parentId?: string;
+    ownerUserId?: string;
     state?: AuthState;
     stateDesc?: string;
     sorting?: number;
@@ -191,6 +198,8 @@ declare namespace API {
     code?: string;
     name?: string;
     parentId?: string;
+    ownerUserId?: string;
+    sorting?: number;
     state?: AuthState;
   }
 
@@ -201,6 +210,7 @@ declare namespace API {
     code?: string;
     name?: string;
     parentId?: string;
+    ownerUserId?: string;
     sorting?: number;
     state?: AuthState;
   }

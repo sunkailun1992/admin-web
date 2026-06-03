@@ -24,9 +24,9 @@ backend:
   requestMode: direct-baseURL
 auth:
   tenants: GET /auth/tenants
-  login: POST /auth/login
-  currentResources: GET /auth/resources
-  tokenHeader: "Authorization: Bearer <token>"
+  login: POST /auth/sessions
+  currentResources: GET /auth/current/resources
+  tokenHeader: 'Authorization: Bearer <token>'
   tokenStorageKey: admin_web_access_token
 permissions:
   backendManage: user:auth:manage
@@ -69,18 +69,18 @@ AI 处理本项目任务时，优先读取：
 | 功能 | 前端页面 | 后端接口 |
 | --- | --- | --- |
 | 登录租户下拉 | `/login` | `GET /auth/tenants` |
-| 登录 | `/login` | `POST /auth/login` |
-| 当前资源 | 运行时初始化 | `GET /auth/resources` |
+| 登录 | `/login` | `POST /auth/sessions` |
+| 当前资源 | 运行时初始化 | `GET /auth/current/resources` |
 | 工作台 | `/dashboard` | 登录态与资源数据 |
-| 租户管理 | `/system/tenant` | `/auth/manage/tenants` |
-| 部门管理 | `/system/dept` | `/auth/manage/depts` |
-| 用户管理 | `/system/user` | `/auth/manage/users` |
-| 角色管理 | `/system/role` | `/auth/manage/roles` |
-| 权限资源 | `/system/resource` | `/auth/manage/resources` |
-| 用户绑定角色 | 用户管理弹窗 | `POST /auth/manage/user-roles` |
-| 角色绑定资源 | 角色管理弹窗 | `GET /auth/manage/role-resources`、`PUT /auth/manage/role-resources` |
-| 角色数据范围 | 角色管理弹窗 | `GET /auth/manage/role-data-scopes`、`PUT /auth/manage/role-data-scopes` |
-| 编码生成 | 租户/部门/角色/资源表单 | `GET /auth/manage/codes/generate` |
+| 租户管理 | `/system/tenant` | `GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT/DELETE /auth/manage/tenants/{id}` |
+| 部门管理 | `/system/dept` | `GET /auth/manage/depts`、`GET /auth/manage/depts/options`、`POST /auth/manage/depts`、`PUT/DELETE /auth/manage/depts/{id}` |
+| 用户管理 | `/system/user` | `GET /auth/manage/users`、`GET /auth/manage/users/options`、`POST /auth/manage/users`、`PUT/DELETE /auth/manage/users/{id}` |
+| 角色管理 | `/system/role` | `GET /auth/manage/roles`、`GET /auth/manage/roles/options`、`POST /auth/manage/roles`、`PUT/DELETE /auth/manage/roles/{id}` |
+| 权限资源 | `/system/resource` | `GET /auth/manage/resources`、`GET /auth/manage/resources/options`、`POST /auth/manage/resources`、`PUT/DELETE /auth/manage/resources/{id}` |
+| 用户绑定角色 | 用户管理弹窗 | `GET/PUT /auth/manage/users/{userId}/roles` |
+| 角色绑定资源 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/resources` |
+| 角色数据范围 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/data-scope-depts` |
+| 编码生成 | 租户/部门/角色/资源表单 | `POST /auth/manage/codes` |
 
 ## 后端约定
 
@@ -121,7 +121,7 @@ password: 123456
 
 部门使用 `parentId` 组装树形结构。部门列表是树形表格，用户所属部门和角色自定义数据范围都使用部门树。
 
-所有业务编码都由后端生成。前端表单只提供“生成”按钮调用 `/auth/manage/codes/generate`，不在浏览器内拼接随机编码。
+所有业务编码都由后端生成。前端表单只提供“生成”按钮调用 `POST /auth/manage/codes`，不在浏览器内拼接随机编码。
 
 ## 权限模型
 

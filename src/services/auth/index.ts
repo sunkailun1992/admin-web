@@ -15,14 +15,16 @@ function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
 }
 
 export async function login(data: API.LoginRequest) {
-  return authRequest<API.ApiResponse<API.AuthLoginVO>>('/auth/login', {
+  return authRequest<API.ApiResponse<API.AuthLoginVO>>('/auth/sessions', {
     method: 'POST',
     data,
   });
 }
 
 export async function currentResources() {
-  return authRequest<API.ApiResponse<API.AuthCurrentResourceVO>>('/auth/resources');
+  return authRequest<API.ApiResponse<API.AuthCurrentResourceVO>>(
+    '/auth/current/resources',
+  );
 }
 
 export async function currentTenants() {
@@ -35,10 +37,9 @@ export async function currentTenants() {
 export async function queryTenants(data: API.AuthTenantQuery) {
   return unwrapPage<API.AuthTenantVO>(
     await authRequest<API.ApiResponse<API.Page<API.AuthTenantVO>>>(
-      '/auth/manage/tenants/page',
+      '/auth/manage/tenants',
       {
-        method: 'POST',
-        data,
+        params: data,
       },
     ),
   );
@@ -63,7 +64,7 @@ export async function listTenants(
   options?: { [key: string]: any },
 ) {
   const response = await authRequest<API.ApiResponse<API.AuthTenantVO[]>>(
-    '/auth/manage/tenants',
+    '/auth/manage/tenants/options',
     {
       params,
       ...(options || {}),
@@ -80,26 +81,30 @@ export async function createTenant(data: API.AuthTenantBO) {
 }
 
 export async function updateTenant(data: API.AuthTenantBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/tenants', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/tenants/${data.id}`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
 export async function removeTenant(data: Pick<API.AuthTenantBO, 'id'>) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/tenants/remove', {
-    method: 'POST',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/tenants/${data.id}`,
+    {
+      method: 'DELETE',
+    },
+  );
 }
 
 export async function queryUsers(data: API.AuthUserQuery) {
   return unwrapPage<API.AuthUserVO>(
     await authRequest<API.ApiResponse<API.Page<API.AuthUserVO>>>(
-      '/auth/manage/users/page',
+      '/auth/manage/users',
       {
-        method: 'POST',
-        data,
+        params: data,
       },
     ),
   );
@@ -107,7 +112,7 @@ export async function queryUsers(data: API.AuthUserQuery) {
 
 export async function listUsers(params: API.AuthUserQuery) {
   const response = await authRequest<API.ApiResponse<API.AuthUserVO[]>>(
-    '/auth/manage/users',
+    '/auth/manage/users/options',
     {
       params,
     },
@@ -123,26 +128,35 @@ export async function createUser(data: API.AuthUserBO) {
 }
 
 export async function updateUser(data: API.AuthUserBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/users', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/users/${data.id}`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
-export async function removeUser(data: Pick<API.AuthUserBO, 'id' | 'tenantId'>) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/users/remove', {
-    method: 'POST',
-    data,
-  });
+export async function removeUser(
+  data: Pick<API.AuthUserBO, 'id' | 'tenantId'>,
+) {
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/users/${data.id}`,
+    {
+      method: 'DELETE',
+      params: {
+        tenantId: data.tenantId,
+      },
+    },
+  );
 }
 
 export async function queryDepts(data: API.AuthDeptQuery) {
   return unwrapPage<API.AuthDeptVO>(
     await authRequest<API.ApiResponse<API.Page<API.AuthDeptVO>>>(
-      '/auth/manage/depts/page',
+      '/auth/manage/depts',
       {
-        method: 'POST',
-        data,
+        params: data,
       },
     ),
   );
@@ -150,7 +164,7 @@ export async function queryDepts(data: API.AuthDeptQuery) {
 
 export async function listDepts(params: API.AuthDeptQuery) {
   const response = await authRequest<API.ApiResponse<API.AuthDeptVO[]>>(
-    '/auth/manage/depts',
+    '/auth/manage/depts/options',
     {
       params,
     },
@@ -166,26 +180,35 @@ export async function createDept(data: API.AuthDeptBO) {
 }
 
 export async function updateDept(data: API.AuthDeptBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/depts', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/depts/${data.id}`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
-export async function removeDept(data: Pick<API.AuthDeptBO, 'id' | 'tenantId'>) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/depts/remove', {
-    method: 'POST',
-    data,
-  });
+export async function removeDept(
+  data: Pick<API.AuthDeptBO, 'id' | 'tenantId'>,
+) {
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/depts/${data.id}`,
+    {
+      method: 'DELETE',
+      params: {
+        tenantId: data.tenantId,
+      },
+    },
+  );
 }
 
 export async function queryRoles(data: API.AuthRoleQuery) {
   return unwrapPage<API.AuthRoleVO>(
     await authRequest<API.ApiResponse<API.Page<API.AuthRoleVO>>>(
-      '/auth/manage/roles/page',
+      '/auth/manage/roles',
       {
-        method: 'POST',
-        data,
+        params: data,
       },
     ),
   );
@@ -193,7 +216,7 @@ export async function queryRoles(data: API.AuthRoleQuery) {
 
 export async function listRoles(params: API.AuthRoleQuery) {
   const response = await authRequest<API.ApiResponse<API.AuthRoleVO[]>>(
-    '/auth/manage/roles',
+    '/auth/manage/roles/options',
     {
       params,
     },
@@ -209,26 +232,35 @@ export async function createRole(data: API.AuthRoleBO) {
 }
 
 export async function updateRole(data: API.AuthRoleBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/roles', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/roles/${data.id}`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
-export async function removeRole(data: Pick<API.AuthRoleBO, 'id' | 'tenantId'>) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/roles/remove', {
-    method: 'POST',
-    data,
-  });
+export async function removeRole(
+  data: Pick<API.AuthRoleBO, 'id' | 'tenantId'>,
+) {
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/roles/${data.id}`,
+    {
+      method: 'DELETE',
+      params: {
+        tenantId: data.tenantId,
+      },
+    },
+  );
 }
 
 export async function queryResources(data: API.AuthResourceQuery) {
   return unwrapPage<API.AuthResourceVO>(
     await authRequest<API.ApiResponse<API.Page<API.AuthResourceVO>>>(
-      '/auth/manage/resources/page',
+      '/auth/manage/resources',
       {
-        method: 'POST',
-        data,
+        params: data,
       },
     ),
   );
@@ -236,7 +268,7 @@ export async function queryResources(data: API.AuthResourceQuery) {
 
 export async function listResources(params: API.AuthResourceQuery) {
   const response = await authRequest<API.ApiResponse<API.AuthResourceVO[]>>(
-    '/auth/manage/resources',
+    '/auth/manage/resources/options',
     {
       params,
     },
@@ -252,97 +284,127 @@ export async function createResource(data: API.AuthResourceBO) {
 }
 
 export async function updateResource(data: API.AuthResourceBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/resources', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/resources/${data.id}`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
 export async function removeResource(
   data: Pick<API.AuthResourceBO, 'id' | 'tenantId'>,
 ) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/resources/remove', {
-    method: 'POST',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/resources/${data.id}`,
+    {
+      method: 'DELETE',
+      params: {
+        tenantId: data.tenantId,
+      },
+    },
+  );
 }
 
 export async function bindUserRole(data: API.AuthUserRoleBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
-    method: 'POST',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/users/${data.userId}/roles`,
+    {
+      method: 'POST',
+      data,
+    },
+  );
 }
 
 export async function listUserRoleIds(
   params: Pick<API.AuthUserRoleSyncBO, 'tenantId' | 'userId'>,
 ) {
   const response = await authRequest<API.ApiResponse<string[]>>(
-    '/auth/manage/user-roles',
+    `/auth/manage/users/${params.userId}/roles`,
     {
-      params,
+      params: {
+        tenantId: params.tenantId,
+      },
     },
   );
   return response.data || [];
 }
 
 export async function syncUserRoles(data: API.AuthUserRoleSyncBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/user-roles', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/users/${data.userId}/roles`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
 export async function bindRoleResource(data: API.AuthRoleResourceBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
-    method: 'POST',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/roles/${data.roleId}/resources`,
+    {
+      method: 'POST',
+      data,
+    },
+  );
 }
 
 export async function listRoleResourceIds(
   params: Pick<API.AuthRoleResourceSyncBO, 'tenantId' | 'roleId'>,
 ) {
   const response = await authRequest<API.ApiResponse<string[]>>(
-    '/auth/manage/role-resources',
+    `/auth/manage/roles/${params.roleId}/resources`,
     {
-      params,
+      params: {
+        tenantId: params.tenantId,
+      },
     },
   );
   return response.data || [];
 }
 
 export async function syncRoleResources(data: API.AuthRoleResourceSyncBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-resources', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/roles/${data.roleId}/resources`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
 export async function listRoleDataScopeDeptIds(
   params: Pick<API.AuthRoleDataScopeSyncBO, 'tenantId' | 'roleId'>,
 ) {
   const response = await authRequest<API.ApiResponse<string[]>>(
-    '/auth/manage/role-data-scopes',
+    `/auth/manage/roles/${params.roleId}/data-scope-depts`,
     {
-      params,
+      params: {
+        tenantId: params.tenantId,
+      },
     },
   );
   return response.data || [];
 }
 
 export async function syncRoleDataScopes(data: API.AuthRoleDataScopeSyncBO) {
-  return authRequest<API.ApiResponse<boolean>>('/auth/manage/role-data-scopes', {
-    method: 'PUT',
-    data,
-  });
+  return authRequest<API.ApiResponse<boolean>>(
+    `/auth/manage/roles/${data.roleId}/data-scope-depts`,
+    {
+      method: 'PUT',
+      data,
+    },
+  );
 }
 
 export async function generateCode(params: API.AuthCodeGenerateQuery) {
   const response = await authRequest<API.ApiResponse<string>>(
-    '/auth/manage/codes/generate',
+    '/auth/manage/codes',
     {
-      params,
+      method: 'POST',
+      data: params,
     },
   );
   return response.data;

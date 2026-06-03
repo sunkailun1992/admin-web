@@ -57,18 +57,21 @@ src/main/resources/db/auth-schema.sql
 
 ## API Contract
 
-- Login: `POST /auth/login`
+- Login: `POST /auth/sessions`
 - Public tenant list: `GET /auth/tenants`
-- Current resources: `GET /auth/resources`
-- Tenants: `/auth/manage/tenants`
-- Users: `/auth/manage/users`
-- Roles: `/auth/manage/roles`
-- Resources: `/auth/manage/resources`
-- Bind user role: `POST /auth/manage/user-roles`
-- Bind role resource: `POST /auth/manage/role-resources`
-- Generate code: `GET /auth/manage/codes/generate`
+- Current resources: `GET /auth/current/resources`
+- Current tenants: `GET /auth/current/tenants`
+- Tenants: `GET /auth/manage/tenants`, `GET /auth/manage/tenants/options`, `POST /auth/manage/tenants`, `PUT|DELETE /auth/manage/tenants/{id}`
+- Users: `GET /auth/manage/users`, `GET /auth/manage/users/options`, `POST /auth/manage/users`, `PUT|DELETE /auth/manage/users/{id}`
+- Depts: `GET /auth/manage/depts`, `GET /auth/manage/depts/options`, `POST /auth/manage/depts`, `PUT|DELETE /auth/manage/depts/{id}`
+- Roles: `GET /auth/manage/roles`, `GET /auth/manage/roles/options`, `POST /auth/manage/roles`, `PUT|DELETE /auth/manage/roles/{id}`
+- Resources: `GET /auth/manage/resources`, `GET /auth/manage/resources/options`, `POST /auth/manage/resources`, `PUT|DELETE /auth/manage/resources/{id}`
+- User roles: `GET|POST|PUT /auth/manage/users/{userId}/roles`
+- Role resources: `GET|POST|PUT /auth/manage/roles/{roleId}/resources`
+- Role data scope depts: `GET|PUT /auth/manage/roles/{roleId}/data-scope-depts`
+- Generate code: `POST /auth/manage/codes`
 
-The frontend uses Umi request `baseURL = http://localhost:8080`; user-center API calls are prefixed inside `src/services/auth/index.ts`, so `/auth/login` produces gateway requests like `/user/auth/login`. The gateway rewrites `/user/**` to the `user` service.
+The frontend uses Umi request `baseURL = http://localhost:8080`; user-center API calls are prefixed inside `src/services/auth/index.ts`, so `/auth/sessions` produces gateway requests like `/user/auth/sessions`. The gateway rewrites `/user/**` to the `user` service.
 
 All authenticated requests use:
 
