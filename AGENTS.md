@@ -8,8 +8,10 @@ This file is the AI entrypoint for `admin-web`.
 - Kind: user-center admin frontend
 - Stack: Ant Design Pro, Umi Max, React, TypeScript, Ant Design 5, ProComponents
 - Package manager: `pnpm`
+- Gateway repo: `/Users/sunkailun/Desktop/个人/GitHub/gateway`
 - Backend repo: `/Users/sunkailun/Desktop/个人/GitHub/user`
-- Backend dev URL: `http://localhost:7500`
+- Gateway dev URL: `http://localhost:8080`
+- User service direct URL: `http://localhost:7500`
 - Request mode: direct `request.baseURL`, not Umi dev proxy
 
 ## What This App Does
@@ -66,7 +68,7 @@ src/main/resources/db/auth-schema.sql
 - Bind role resource: `POST /auth/manage/role-resources`
 - Generate code: `GET /auth/manage/codes/generate`
 
-The frontend uses Umi request `baseURL = http://localhost:7500`; API service paths stay relative to that origin, such as `/auth/login`.
+The frontend uses Umi request `baseURL = http://localhost:8080`; API service paths stay relative to the gateway origin, such as `/auth/login`. The gateway routes `/auth/**` to the `user` service.
 
 All authenticated requests use:
 

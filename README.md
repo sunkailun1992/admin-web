@@ -15,9 +15,12 @@ project:
   ui: Ant Design 5 + ProComponents
   packageManager: pnpm
 backend:
+  gatewayPath: /Users/sunkailun/Desktop/个人/GitHub/gateway
+  gatewayBaseUrl: http://localhost:8080
   localPath: /Users/sunkailun/Desktop/个人/GitHub/user
   serviceName: user
-  devBaseUrl: http://localhost:7500
+  devBaseUrl: http://localhost:8080
+  userDirectUrl: http://localhost:7500
   requestMode: direct-baseURL
 auth:
   tenants: GET /auth/tenants
@@ -191,10 +194,10 @@ http://localhost:8000
 后端接口地址：
 
 ```text
-http://localhost:7500
+http://localhost:8080
 ```
 
-前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求该地址，因此需要先启动后端 `user` 服务，并确保后端监听 `7500`。如果浏览器出现 CORS 错误，需要在后端允许来自 `http://localhost:8000` 的跨域请求。
+前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求网关 `http://localhost:8080`，再由网关路由到 `user` 服务。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `8080`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
 
 ## 常用命令
 
