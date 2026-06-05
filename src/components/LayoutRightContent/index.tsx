@@ -1,4 +1,5 @@
 import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
+import MessageCenter from '@/components/MessageCenter';
 import { clearAccessToken } from '@/utils/auth';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
@@ -71,6 +72,10 @@ export default function LayoutRightContent({
   return (
     <>
       <div className="umi-plugin-layout-right anticon">
+        <MessageCenter
+          currentTenantId={initialState?.currentTenantId}
+          currentUser={currentUser}
+        />
         <Dropdown
           menu={{
             className: 'umi-plugin-layout-menu',

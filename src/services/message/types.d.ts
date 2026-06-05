@@ -13,6 +13,8 @@ declare namespace MessageAPI {
     senderUserId?: string;
     senderName?: string;
     receiverUserId?: string;
+    ownerUserId?: string;
+    deptId?: string;
     title?: string;
     content?: string;
     sendState?: MessageSendState;
@@ -30,6 +32,8 @@ declare namespace MessageAPI {
     messageType?: MessageType;
     senderUserId?: string;
     receiverUserId?: string;
+    ownerUserId?: string;
+    deptId?: string;
     sendState?: MessageSendState;
     readState?: MessageReadState;
   }
@@ -40,5 +44,10 @@ declare namespace MessageAPI {
     messageType: MessageType;
     title: string;
     content: string;
+  }
+
+  interface CurrentUnreadCountQuery {
+    tenantId: string;
+    messageType?: MessageType;
   }
 }

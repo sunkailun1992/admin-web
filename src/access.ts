@@ -12,6 +12,7 @@ export default (initialState: { currentUser?: API.CurrentUser }) => {
     canSeeUser: canManage && resourceCodes.has('menu:user'),
     canSeeRole: canManage && resourceCodes.has('menu:role'),
     canSeeResource: canManage && resourceCodes.has('menu:resource'),
-    canSeeMessageSend: canSendMessage,
+    canSeeMessageSend:
+      canSendMessage && resourceCodes.has('menu:message:send'),
   };
 };
