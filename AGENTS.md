@@ -55,6 +55,16 @@ src/main/java/com/kellen/auth/entity/vo
 src/main/resources/db/auth-schema.sql
 ```
 
+## Multi-Agent Rules
+
+- Multiple sub-agents may be used, but by default they only perform requirement analysis and project learning; they must not edit code directly.
+- For project learning, split explorers by frontend pages, backend APIs, permission resources, gateway/Nacos config, and build scripts.
+- For issue triage, split explorers by frontend requests, backend controllers, config/permissions, database/logs, and recent changes; the main agent must decide the root cause.
+- For code review, split reviewers by security risk, logic bugs, missing tests, performance, and maintainability; the main agent owns the final review summary.
+- For test regression, one agent may run tests, one may inspect logs, and one may inspect recent diffs; the main agent or one explicit worker owns the fix.
+- Parallel implementation is allowed only when write boundaries are clear, such as one worker only changing frontend pages, one only changing backend APIs, and one only adding tests.
+- If multiple workers need to edit the same core page, service file, route file, permission logic, SQL script, or shared config, do not parallelize writes; the main agent must serialize the work.
+
 ## API Contract
 
 - Login: `POST /auth/sessions`

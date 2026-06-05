@@ -64,6 +64,22 @@ export default defineConfig({
         },
       ],
     },
+    {
+      name: '消息管理',
+      path: '/message',
+      routes: [
+        {
+          path: '/message',
+          redirect: '/message/send',
+        },
+        {
+          name: '消息发送',
+          path: '/message/send',
+          component: './Message/Send',
+          access: 'canSeeMessageSend',
+        },
+      ],
+    },
   ],
   npmClient: 'pnpm',
   utoopack: {},
