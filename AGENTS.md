@@ -32,11 +32,12 @@ Read these before changing behavior:
 
 1. `README.md`
 2. `docs/AI_CODING_GUIDE.md`
-3. `.umirc.ts`
-4. `src/app.ts`
-5. `src/access.ts`
-6. `src/services/auth/index.ts`
-7. `src/services/auth/types.d.ts`
+3. `docs/SECURITY_CODING_SPEC.md`
+4. `.umirc.ts`
+5. `src/app.ts`
+6. `src/access.ts`
+7. `src/services/auth/index.ts`
+8. `src/services/auth/types.d.ts`
 
 When API behavior is unclear, read the backend repo:
 
@@ -64,6 +65,10 @@ src/main/resources/db/auth-schema.sql
 - For test regression, one agent may run tests, one may inspect logs, and one may inspect recent diffs; the main agent or one explicit worker owns the fix.
 - Parallel implementation is allowed only when write boundaries are clear, such as one worker only changing frontend pages, one only changing backend APIs, and one only adding tests.
 - If multiple workers need to edit the same core page, service file, route file, permission logic, SQL script, or shared config, do not parallelize writes; the main agent must serialize the work.
+
+## Security Rules
+
+Security details are maintained in `docs/SECURITY_CODING_SPEC.md`. Read it before changing pages, actions, request services, login state, upload/download flows, rich text, masking, or batch operations.
 
 ## API Contract
 
