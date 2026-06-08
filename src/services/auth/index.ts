@@ -1,8 +1,13 @@
 import { USER_SERVICE_PREFIX } from '@/constants/auth';
+import type { AxiosRequestConfig } from '@umijs/max';
 import { request } from '@umijs/max';
 
-function authRequest<T>(url: string, options?: any) {
-  return request<T>(`${USER_SERVICE_PREFIX}${url}`, options);
+function authRequest<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
+  // 统一声明 user 模块请求返回业务响应体，避免页面误拿 AxiosResponse 类型。
+  const requestUrl = `${USER_SERVICE_PREFIX}${url}`; // 在 service 边界集中追加 user 网关模块前缀，页面保持后端业务路径写法。
+  return options // 根据是否传入请求配置选择 Umi request 重载，避免 undefined 触发 TypeScript 重载错误。
+    ? (request<T>(requestUrl, options) as unknown as Promise<T>) // 带配置请求用于提交、分页和查询参数场景，类型收敛为业务响应体。
+    : (request<T>(requestUrl) as unknown as Promise<T>); // 无配置请求用于当前资源等简单 GET 场景，类型收敛为业务响应体。
 }
 
 function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
