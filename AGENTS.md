@@ -8,8 +8,8 @@
 - 项目类型：用户中心后台管理前端
 - 技术栈：Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5、ProComponents
 - 包管理器：`pnpm`
-- 网关项目：`/Users/sunkailun/Desktop/个人/GitHub/gateway`
-- 用户服务项目：`/Users/sunkailun/Desktop/个人/GitHub/user`
+- 网关项目：同级仓库 `../gateway`
+- 用户服务项目：同级仓库 `../user`
 - 网关本地地址：`http://localhost:8080`
 - 用户服务直连地址：`http://localhost:7500`
 - 请求方式：使用 Umi request 的 `baseURL` 直连网关，不使用 Umi dev proxy
@@ -39,10 +39,10 @@
 7. `src/services/auth/index.ts`
 8. `src/services/auth/types.d.ts`
 
-接口行为不明确时，必须阅读后端项目：
+接口行为不明确时，必须阅读同级后端项目：
 
 ```text
-/Users/sunkailun/Desktop/个人/GitHub/user
+../user
 ```
 
 重点阅读后端文件：
@@ -76,6 +76,14 @@ src/main/resources/db/auth-schema.sql
 - 注释必须说明该行用途、功能、业务含义、交互目的或框架衔接原因。
 - 不允许写只重复语法的无效注释，例如“设置变量”“返回结果”。
 - 局部修改历史代码时，只要求本次改动行和直接相关逻辑补齐注释，不借机大面积重写无关代码。
+
+## 路径与本机环境规则
+
+- AI 新增或修改 README、AGENTS、配置、脚本、测试、示例和前端代码时，禁止写入个人电脑绝对路径、本机下载目录、本机 Node/JDK 路径或本机仓库完整路径。
+- 需要描述同级仓库时，使用 `../user`、`../gateway`、`../message`、`../utils` 这类相对路径，不使用开发者机器上的完整目录。
+- 需要描述可变安装目录、缓存目录、上传目录、导出目录或临时目录时，使用环境变量、前端配置、`~` 用户目录或 `<PLACEHOLDER>` 占位符。
+- 本地私有路径只能放到未提交的本机配置、IDE 运行配置或用户级工具配置中，不得进入 Git 仓库。
+- 提交前必须使用 `rg` 搜索本机用户名、用户目录、仓库根目录和系统盘路径关键字，检查是否残留本机路径。
 
 ## 接口契约
 

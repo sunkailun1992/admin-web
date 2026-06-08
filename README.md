@@ -1,6 +1,6 @@
 # Admin Web
 
-`admin-web` 是用户中心后台管理前端，基于 Ant Design Pro / Umi Max 构建，对接本地后端项目 `/Users/sunkailun/Desktop/个人/GitHub/user`。
+`admin-web` 是用户中心后台管理前端，基于 Ant Design Pro / Umi Max 构建，对接同级 `user` 后端项目。
 
 本项目负责登录认证、租户管理、部门管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源、角色数据范围授权操作。
 
@@ -15,9 +15,9 @@ project:
   ui: Ant Design 5 + ProComponents
   packageManager: pnpm
 backend:
-  gatewayPath: /Users/sunkailun/Desktop/个人/GitHub/gateway
+  gatewayPath: ../gateway
   gatewayBaseUrl: http://localhost:8080
-  localPath: /Users/sunkailun/Desktop/个人/GitHub/user
+  localPath: ../user
   serviceName: user
   devBaseUrl: http://localhost:8080
   userDirectUrl: http://localhost:7500
@@ -53,7 +53,7 @@ AI 处理本项目任务时，优先读取：
 4. `.umirc.ts`
 5. `src/app.ts`
 6. `src/services/auth/index.ts`
-7. 后端 `/Users/sunkailun/Desktop/个人/GitHub/user/README.md`
+7. 后端 `../user/README.md`
 
 ## 技术栈
 
