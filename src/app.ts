@@ -168,10 +168,14 @@ export const request: RequestConfig = {
       const response = 'response' in error ? error.response : undefined;
       const status = response?.status;
       const responseData = response?.data;
-      if (status === 401 || status === 403) {
+      if (status === 401) {
         clearAccessToken();
         history.push(loginPath);
         message.error('登录已失效，请重新登录');
+        return;
+      }
+      if (status === 403) {
+        message.error(responseData?.errorMessage || responseData?.msg || '无权限访问');
         return;
       }
       message.error(
