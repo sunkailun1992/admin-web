@@ -70,6 +70,12 @@ src/main/resources/db/auth-schema.sql
 
 Security details are maintained in `docs/SECURITY_CODING_SPEC.md`. Read it before changing pages, actions, request services, login state, upload/download flows, rich text, masking, or batch operations.
 
+## Comment Rules
+
+- AI-generated or AI-modified TypeScript, TSX, JavaScript, CSS, config, scripts, tests, and examples must include a comment for every added or changed programming-content line except imports, blank lines, standalone braces, and normal Markdown prose.
+- Comments must explain the line's purpose, function, business meaning, interaction purpose, or framework integration reason.
+- Do not use comments that only repeat syntax, such as "set variable" or "return result".
+
 ## API Contract
 
 - Login: `POST /auth/sessions`
