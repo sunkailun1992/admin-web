@@ -32,12 +32,14 @@
 
 1. `README.md`
 2. `docs/AI_CODING_GUIDE.md`
-3. `docs/SECURITY_CODING_SPEC.md`
-4. `.umirc.ts`
-5. `src/app.ts`
-6. `src/access.ts`
-7. `src/services/auth/index.ts`
-8. `src/services/auth/types.d.ts`
+3. `docs/AI_AUTOMATION_WORKFLOW.md`
+4. `docs/AI_ENGINEERING_GUARDRAILS.md`
+5. `docs/SECURITY_CODING_SPEC.md`
+6. `.umirc.ts`
+7. `src/app.ts`
+8. `src/access.ts`
+9. `src/services/auth/index.ts`
+10. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -59,6 +61,8 @@ src/main/resources/db/auth-schema.sql
 ## 多智能体协作规则
 
 - 可以使用多个子智能体，但默认只能用于需求分析和项目学习，不允许直接修改代码。
+- AI 开始功能开发前必须按 `docs/AI_AUTOMATION_WORKFLOW.md` 先整理需求说明、验收标准和开发手册；小改动可以简化输出，但检查项不能跳过。
+- AI 完成功能后必须按 `docs/AI_ENGINEERING_GUARDRAILS.md` 做风险分级、Definition of Done、测试证据、安全检查、风险和回滚说明。
 - 项目学习可以按前端页面、后端接口、权限资源、Gateway/Nacos 配置和构建脚本拆分 explorer。
 - 问题排查可以按前端请求、后端 Controller、配置权限、数据库日志和最近改动拆分 explorer，最终根因必须由主智能体判断。
 - 代码 Review 可以按安全风险、逻辑缺陷、测试缺口、性能问题和可维护性拆分 reviewer，最终结论必须由主智能体汇总。
