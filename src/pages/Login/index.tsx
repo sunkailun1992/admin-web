@@ -15,11 +15,12 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { history, useModel } from '@umijs/max';
-import { message } from 'antd';
+import { App } from 'antd';
 import styles from './index.less';
 
 export default function LoginPage() {
   const { setInitialState } = useModel('@@initialState');
+  const { message } = App.useApp(); // 通过 Ant Design App 上下文获取消息 API，避免静态 message 丢失主题上下文。
 
   return (
     <div className={styles.page}>

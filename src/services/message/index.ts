@@ -2,9 +2,11 @@ import { MESSAGE_SERVICE_PREFIX } from '@/constants/auth';
 import type { AxiosRequestConfig } from '@umijs/max';
 import { request } from '@umijs/max';
 
+type MessageRequestOptions = AxiosRequestConfig & { skipErrorHandler?: boolean }; // 扩展 Umi request 的错误处理开关，供消息轮询静默处理后台失败。
+
 function messageRequest<T>(
   url: string,
-  options?: AxiosRequestConfig,
+  options?: MessageRequestOptions,
 ): Promise<T> {
   // 统一声明 message 模块请求返回业务响应体，避免消息页面误拿 AxiosResponse 类型。
   const requestUrl = `${MESSAGE_SERVICE_PREFIX}${url}`; // 在 service 边界集中追加 message 网关模块前缀，页面保持消息业务路径写法。
@@ -42,12 +44,14 @@ export async function sendUserMessage(data: MessageAPI.UserMessageBO) {
 
 export async function queryCurrentUserMessages(
   data: MessageAPI.UserMessageQuery,
+  options?: MessageRequestOptions,
 ) {
   return unwrapPage<MessageAPI.UserMessageVO>(
     await messageRequest<API.ApiResponse<API.Page<MessageAPI.UserMessageVO>>>(
       '/messages/user-messages/current',
       {
         params: data,
+        ...(options || {}),
       },
     ),
   );
@@ -55,11 +59,13 @@ export async function queryCurrentUserMessages(
 
 export async function countCurrentUnreadMessages(
   params: MessageAPI.CurrentUnreadCountQuery,
+  options?: MessageRequestOptions,
 ) {
   const response = await messageRequest<API.ApiResponse<number>>(
     '/messages/user-messages/current/unread-count',
     {
       params,
+      ...(options || {}),
     },
   );
   return response.data || 0;

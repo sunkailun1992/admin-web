@@ -1,7 +1,7 @@
 import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
-  antd: {},
+  antd: { appConfig: {} }, // 启用 Ant Design App 上下文，让 message 等反馈组件可以消费动态主题。
   access: {},
   model: {},
   initialState: {},
