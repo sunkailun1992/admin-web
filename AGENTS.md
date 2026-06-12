@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本文件是 `admin-web` 项目的 AI 编码入口。AI 修改本项目代码前，必须先阅读本文件，再按需阅读 `README.md`、`docs/AI_CODING_GUIDE.md` 和 `docs/SECURITY_CODING_SPEC.md`。
+本文件是 `admin-web` 项目的 AI 编码入口。AI 修改本项目代码前，必须先阅读本文件，再按修改前阅读顺序读取项目 README、AI 编程规范、工程门禁和安全规范。
 
 ## 项目定位
 
