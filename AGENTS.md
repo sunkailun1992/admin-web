@@ -32,14 +32,15 @@
 
 1. `README.md`
 2. `docs/AI_CODING_GUIDE.md`
-3. `docs/AI_AUTOMATION_WORKFLOW.md`
-4. `docs/AI_ENGINEERING_GUARDRAILS.md`
-5. `docs/SECURITY_CODING_SPEC.md`
-6. `.umirc.ts`
-7. `src/app.ts`
-8. `src/access.ts`
-9. `src/services/auth/index.ts`
-10. `src/services/auth/types.d.ts`
+3. `docs/AI_COMMENT_STYLE_GUIDE.md`
+4. `docs/AI_AUTOMATION_WORKFLOW.md`
+5. `docs/AI_ENGINEERING_GUARDRAILS.md`
+6. `docs/SECURITY_CODING_SPEC.md`
+7. `.umirc.ts`
+8. `src/app.ts`
+9. `src/access.ts`
+10. `src/services/auth/index.ts`
+11. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -76,10 +77,11 @@ src/main/resources/db/auth-schema.sql
 
 ## 注释规则
 
-- AI 新增或修改 TypeScript、TSX、JavaScript、CSS、配置、脚本、测试和示例等编程内容时，必须补充能解释交互目的、权限边界、接口契约和状态流转的有效注释。
-- 优先使用组件/函数前置说明、复杂逻辑块前置说明和测试用例说明，不采用机械逐行或行尾堆叠注释。
-- 不允许写只重复语法、过时、凑数或误导权限边界的注释，例如“设置变量”“返回结果”。
-- 局部修改历史代码时，只补本次改动和直接相关逻辑的说明，不借机大面积重写无关代码。
+- 注释细则以 `docs/AI_COMMENT_STYLE_GUIDE.md` 为准。
+- AI 新增或修改 TypeScript、TSX、配置、脚本、测试和示例前，必须先判断文件类型和上下文。
+- 优先让代码自解释，能用组件名、函数名、类型、常量和拆分后的状态表达的意图，不用注释补救。
+- 禁止逐行翻译式注释，禁止用注释长期保留废弃组件、旧 JSX、临时调试代码或整块旧实现。
+- 注释必须保持缩进、对齐、换行和段落美观一致，不得把页面、配置或样式文件弄得杂乱。
 
 ## 路径与本机环境规则
 
