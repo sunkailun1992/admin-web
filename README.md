@@ -205,6 +205,7 @@ http://localhost:8080
 pnpm dev      # 启动开发服务
 pnpm build    # 构建验证
 pnpm format   # 格式化
+bash scripts/check-secrets.sh
 ```
 
 如果开发服务异常退出后端口未释放：
