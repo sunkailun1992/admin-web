@@ -42,14 +42,14 @@ mainFiles:
   api: src/services/auth/index.ts
   types: src/services/auth/types.d.ts
   routes: .umirc.ts
-  aiGuide: docs/AI_CODING_GUIDE.md
+  aiGuide: docs/ai-coding/AI_CODING_GUIDE.md
 ```
 
 AI 处理本项目任务时，优先读取：
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/AI_CODING_GUIDE.md`
+3. `docs/ai-coding/AI_CODING_GUIDE.md`
 4. `.umirc.ts`
 5. `src/app.ts`
 6. `src/services/auth/index.ts`
@@ -168,7 +168,14 @@ src/
   utils/auth.ts             # Token 和登录信息存储
   utils/table.ts            # ProTable 查询参数、payload 清理
 docs/
-  AI_CODING_GUIDE.md        # AI 编码规则
+  ai-coding/
+    README.md                       # AI 编码规范入口
+    AI_CODING_GUIDE.md              # AI 编码规则
+    AI_DIRECTORY_STRUCTURE_GUIDE.md # 目录管理规范
+    AI_COMMENT_STYLE_GUIDE.md       # 注释规范
+    AI_DESIGN_PATTERN_GUIDE.md      # 设计模式规范
+    AI_ENGINEERING_GUARDRAILS.md    # 工程门禁规范
+    SECURITY_CODING_SPEC.md         # 安全编码规范
 ```
 
 ## 本地启动
@@ -227,4 +234,4 @@ kill -9 <PID>
 - 编码字段使用后端生成接口，禁止前端自行生成。
 - 不提交 `node_modules/`、`dist/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
 
-更完整的 AI 编码规范见 [docs/AI_CODING_GUIDE.md](docs/AI_CODING_GUIDE.md)。
+更完整的 AI 编码规范见 [docs/ai-coding/AI_CODING_GUIDE.md](docs/ai-coding/AI_CODING_GUIDE.md)。

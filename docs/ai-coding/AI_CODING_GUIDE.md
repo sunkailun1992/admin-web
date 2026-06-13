@@ -7,6 +7,7 @@
 - 先读后端接口、DTO、VO、权限码和现有前端结构，再写代码。
 - 先读 `AI_AUTOMATION_WORKFLOW.md`，按需求说明、验收标准、开发手册、测试说明和交付说明组织自动化开发。
 - 先读 `AI_ENGINEERING_GUARDRAILS.md`，按风险分级、Definition of Done、测试门禁、安全门禁和交付说明约束 AI 生成代码。
+- 先读 `AI_DIRECTORY_STRUCTURE_GUIDE.md`，按 Umi Max、React、TypeScript 和 Ant Design Pro 项目结构管理目录。
 - 先读 `AI_DESIGN_PATTERN_GUIDE.md`，按 React、TypeScript、Umi 和 Ant Design Pro 项目结构选择设计模式。
 - 不凭空新增接口字段、路由、权限码或状态值；字段必须来自后端代码、接口文档或明确需求。
 - 优先使用 Ant Design Pro 官方范式：`PageContainer`、`ProTable`、`ModalForm`、`ProForm*`、`StatisticCard`。
@@ -63,10 +64,13 @@ src/
   services/                  # API 请求与接口类型
   utils/                     # 纯工具函数
 docs/
-  AI_CODING_GUIDE.md         # AI 编码规范
-  AI_DESIGN_PATTERN_GUIDE.md # AI 设计模式规范
-  AI_ENGINEERING_GUARDRAILS.md # AI 工程门禁规范
-  SECURITY_CODING_SPEC.md    # 前端安全编码规范
+  ai-coding/
+    README.md                       # AI 编码规范入口
+    AI_CODING_GUIDE.md              # AI 编码规范
+    AI_DIRECTORY_STRUCTURE_GUIDE.md # 目录管理规范
+    AI_DESIGN_PATTERN_GUIDE.md      # AI 设计模式规范
+    AI_ENGINEERING_GUARDRAILS.md    # AI 工程门禁规范
+    SECURITY_CODING_SPEC.md         # 前端安全编码规范
 ```
 
 页面目录按业务域组织：

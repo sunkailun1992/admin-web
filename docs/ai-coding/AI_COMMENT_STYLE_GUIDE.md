@@ -5,7 +5,7 @@
 ## 0. AI 执行流程
 
 - 修改注释前先识别文件类型和上下文，例如 TS、TSX、React 组件、Umi 配置、Less、JSON、YAML、Shell 或 Markdown。
-- 优先阅读 `AGENTS.md`、`docs/AI_CODING_GUIDE.md`、`docs/AI_ENGINEERING_GUARDRAILS.md`、`docs/SECURITY_CODING_SPEC.md`。
+- 优先阅读 `AGENTS.md`、`docs/ai-coding/AI_CODING_GUIDE.md`、`docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md`、`docs/ai-coding/SECURITY_CODING_SPEC.md`。
 - 本规范未覆盖的文件类型，先查官方或主流规范，补充规范来源和本项目落地规则后再改代码。
 - 不为了统一注释风格批量重排页面、路由、配置或生产地址。
 

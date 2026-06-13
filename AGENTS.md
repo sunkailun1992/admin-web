@@ -31,17 +31,19 @@
 修改行为前必须先阅读：
 
 1. `README.md`
-2. `docs/AI_CODING_GUIDE.md`
-3. `docs/AI_COMMENT_STYLE_GUIDE.md`
-4. `docs/AI_DESIGN_PATTERN_GUIDE.md`
-5. `docs/AI_AUTOMATION_WORKFLOW.md`
-6. `docs/AI_ENGINEERING_GUARDRAILS.md`
-7. `docs/SECURITY_CODING_SPEC.md`
-8. `.umirc.ts`
-9. `src/app.ts`
-10. `src/access.ts`
-11. `src/services/auth/index.ts`
-12. `src/services/auth/types.d.ts`
+2. `docs/ai-coding/README.md`
+3. `docs/ai-coding/AI_CODING_GUIDE.md`
+4. `docs/ai-coding/AI_DIRECTORY_STRUCTURE_GUIDE.md`
+5. `docs/ai-coding/AI_COMMENT_STYLE_GUIDE.md`
+6. `docs/ai-coding/AI_DESIGN_PATTERN_GUIDE.md`
+7. `docs/ai-coding/AI_AUTOMATION_WORKFLOW.md`
+8. `docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md`
+9. `docs/ai-coding/SECURITY_CODING_SPEC.md`
+10. `.umirc.ts`
+11. `src/app.ts`
+12. `src/access.ts`
+13. `src/services/auth/index.ts`
+14. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -63,8 +65,9 @@ src/main/resources/db/auth-schema.sql
 ## 多智能体协作规则
 
 - 可以使用多个子智能体，但默认只能用于需求分析和项目学习，不允许直接修改代码。
-- AI 开始功能开发前必须按 `docs/AI_AUTOMATION_WORKFLOW.md` 先整理需求说明、验收标准和开发手册；小改动可以简化输出，但检查项不能跳过。
-- AI 完成功能后必须按 `docs/AI_ENGINEERING_GUARDRAILS.md` 做风险分级、Definition of Done、测试证据、安全检查、风险和回滚说明。
+- AI 开始功能开发前必须按 `docs/ai-coding/AI_AUTOMATION_WORKFLOW.md` 先整理需求说明、验收标准和开发手册；小改动可以简化输出，但检查项不能跳过。
+- AI 完成功能后必须按 `docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md` 做风险分级、Definition of Done、测试证据、安全检查、风险和回滚说明。
+- AI 新增、移动或删除目录前必须按 `docs/ai-coding/AI_DIRECTORY_STRUCTURE_GUIDE.md` 判断 Umi、React、TypeScript 和 Ant Design Pro 目录边界。
 - 项目学习可以按前端页面、后端接口、权限资源、Gateway/Nacos 配置和构建脚本拆分 explorer。
 - 问题排查可以按前端请求、后端 Controller、配置权限、数据库日志和最近改动拆分 explorer，最终根因必须由主智能体判断。
 - 代码 Review 可以按安全风险、逻辑缺陷、测试缺口、性能问题和可维护性拆分 reviewer，最终结论必须由主智能体汇总。
@@ -74,11 +77,11 @@ src/main/resources/db/auth-schema.sql
 
 ## 安全规则
 
-安全细则维护在 `docs/SECURITY_CODING_SPEC.md`。修改页面、按钮、请求服务、登录态、上传下载、富文本、脱敏和批量操作前，必须先阅读安全规范。
+安全细则维护在 `docs/ai-coding/SECURITY_CODING_SPEC.md`。修改页面、按钮、请求服务、登录态、上传下载、富文本、脱敏和批量操作前，必须先阅读安全规范。
 
 ## 注释规则
 
-- 注释细则以 `docs/AI_COMMENT_STYLE_GUIDE.md` 为准。
+- 注释细则以 `docs/ai-coding/AI_COMMENT_STYLE_GUIDE.md` 为准。
 - AI 新增或修改 TypeScript、TSX、配置、脚本、测试和示例前，必须先判断文件类型和上下文。
 - 优先让代码自解释，能用组件名、函数名、类型、常量和拆分后的状态表达的意图，不用注释补救。
 - 禁止逐行翻译式注释，禁止用注释长期保留废弃组件、旧 JSX、临时调试代码或整块旧实现。
@@ -86,7 +89,7 @@ src/main/resources/db/auth-schema.sql
 
 ## 设计模式规则
 
-- 设计模式细则以 `docs/AI_DESIGN_PATTERN_GUIDE.md` 为准。
+- 设计模式细则以 `docs/ai-coding/AI_DESIGN_PATTERN_GUIDE.md` 为准。
 - React/TypeScript 代码优先使用组件组合、Custom Hook、service adapter、Context 和状态映射，不照搬 Java 后端继承结构。
 - 新增页面前先判断是否能复用 ProComponents、现有 service 和常量映射；不要为了模式新增复杂状态库或全局事件。
 - 前端模式不能替代后端鉴权、租户隔离、字段级授权或数据权限。
