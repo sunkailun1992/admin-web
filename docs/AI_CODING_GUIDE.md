@@ -7,6 +7,7 @@
 - 先读后端接口、DTO、VO、权限码和现有前端结构，再写代码。
 - 先读 `AI_AUTOMATION_WORKFLOW.md`，按需求说明、验收标准、开发手册、测试说明和交付说明组织自动化开发。
 - 先读 `AI_ENGINEERING_GUARDRAILS.md`，按风险分级、Definition of Done、测试门禁、安全门禁和交付说明约束 AI 生成代码。
+- 先读 `AI_DESIGN_PATTERN_GUIDE.md`，按 React、TypeScript、Umi 和 Ant Design Pro 项目结构选择设计模式。
 - 不凭空新增接口字段、路由、权限码或状态值；字段必须来自后端代码、接口文档或明确需求。
 - 优先使用 Ant Design Pro 官方范式：`PageContainer`、`ProTable`、`ModalForm`、`ProForm*`、`StatisticCard`。
 - 业务页面保持 CRUD 闭环：查询、新增、编辑、删除、错误提示、刷新表格。
@@ -41,6 +42,15 @@
 - 禁止逐行翻译式注释，禁止用注释保留废弃组件、旧 JSX、临时调试代码或整块旧实现。
 - 注释必须保持缩进、对齐、换行和段落美观一致；不能为了补说明把页面、配置或样式文件弄乱。
 
+## 设计模式要求
+
+- AI 新增或重构 TypeScript、TSX、service、Hook、权限和状态代码前，必须遵守 `AI_DESIGN_PATTERN_GUIDE.md`。
+- 页面复用优先使用组件组合和 ProComponents 官方范式。
+- 远程接口统一通过 `src/services` 做 service adapter，页面不直接拼请求。
+- 跨页面状态优先使用 Umi initialState、access 和 request 运行时能力；简单局部状态不引入全局状态库。
+- 固定状态、分类、权限码和 HTTP 方法优先放入 `src/constants` 映射，不写散落 `if/else`。
+- 禁止照搬 Java 式抽象类、Service Locator 和过深继承。
+
 ## 目录规范
 
 ```text
@@ -54,6 +64,7 @@ src/
   utils/                     # 纯工具函数
 docs/
   AI_CODING_GUIDE.md         # AI 编码规范
+  AI_DESIGN_PATTERN_GUIDE.md # AI 设计模式规范
   AI_ENGINEERING_GUARDRAILS.md # AI 工程门禁规范
   SECURITY_CODING_SPEC.md    # 前端安全编码规范
 ```

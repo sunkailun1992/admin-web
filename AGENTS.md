@@ -33,14 +33,15 @@
 1. `README.md`
 2. `docs/AI_CODING_GUIDE.md`
 3. `docs/AI_COMMENT_STYLE_GUIDE.md`
-4. `docs/AI_AUTOMATION_WORKFLOW.md`
-5. `docs/AI_ENGINEERING_GUARDRAILS.md`
-6. `docs/SECURITY_CODING_SPEC.md`
-7. `.umirc.ts`
-8. `src/app.ts`
-9. `src/access.ts`
-10. `src/services/auth/index.ts`
-11. `src/services/auth/types.d.ts`
+4. `docs/AI_DESIGN_PATTERN_GUIDE.md`
+5. `docs/AI_AUTOMATION_WORKFLOW.md`
+6. `docs/AI_ENGINEERING_GUARDRAILS.md`
+7. `docs/SECURITY_CODING_SPEC.md`
+8. `.umirc.ts`
+9. `src/app.ts`
+10. `src/access.ts`
+11. `src/services/auth/index.ts`
+12. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -82,6 +83,13 @@ src/main/resources/db/auth-schema.sql
 - 优先让代码自解释，能用组件名、函数名、类型、常量和拆分后的状态表达的意图，不用注释补救。
 - 禁止逐行翻译式注释，禁止用注释长期保留废弃组件、旧 JSX、临时调试代码或整块旧实现。
 - 注释必须保持缩进、对齐、换行和段落美观一致，不得把页面、配置或样式文件弄得杂乱。
+
+## 设计模式规则
+
+- 设计模式细则以 `docs/AI_DESIGN_PATTERN_GUIDE.md` 为准。
+- React/TypeScript 代码优先使用组件组合、Custom Hook、service adapter、Context 和状态映射，不照搬 Java 后端继承结构。
+- 新增页面前先判断是否能复用 ProComponents、现有 service 和常量映射；不要为了模式新增复杂状态库或全局事件。
+- 前端模式不能替代后端鉴权、租户隔离、字段级授权或数据权限。
 
 ## 路径与本机环境规则
 
