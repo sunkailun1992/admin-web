@@ -27,7 +27,10 @@ jobs:
           node-version: "20"
 
       - name: Set up pnpm
-        run: corepack prepare pnpm@8.15.9 --activate
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.9
+          run_install: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
