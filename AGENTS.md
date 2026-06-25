@@ -42,11 +42,12 @@
 10. `docs/ai-coding/ENVIRONMENT_CONFIG_SPEC.md`
 11. `docs/ai-coding/VERSIONING_SPEC.md`
 12. `docs/ai-coding/SECURITY_CODING_SPEC.md`
-13. `.umirc.ts`
-14. `src/app.ts`
-15. `src/access.ts`
-16. `src/services/auth/index.ts`
-17. `src/services/auth/types.d.ts`
+13. `docs/ai-coding/TESTING_SPEC.md`
+14. `.umirc.ts`
+15. `src/app.ts`
+16. `src/access.ts`
+17. `src/services/auth/index.ts`
+18. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -157,7 +158,8 @@ menu:resource
 - 展示租户时使用租户名称，`tenantId` 只作为接口内部字段使用。
 - 业务编码必须调用后端编码生成接口，不允许浏览器随机生成业务编码。
 - 更新接口必须携带 `version`，保证后端 MyBatis-Plus 乐观锁生效。
-- 功能变更后必须执行 `pnpm build` 和 `bash scripts/check-secrets.sh`。
+- 测试分层按 `docs/ai-coding/TESTING_SPEC.md` 执行；普通单元、组件和 service 测试默认不访问真实后端，E2E 只允许连接 test 环境。
+- 功能变更后至少执行 `pnpm build` 和 `bash scripts/check-secrets.sh`；引入测试栈后按 `TESTING_SPEC.md` 执行 `pnpm check` 和必要的 E2E。
 
 ## 禁止提交
 

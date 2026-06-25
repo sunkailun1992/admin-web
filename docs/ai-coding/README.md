@@ -16,7 +16,8 @@
 10. `ENVIRONMENT_CONFIG_SPEC.md`
 11. `VERSIONING_SPEC.md`
 12. `SECURITY_CODING_SPEC.md`
-13. `.umirc.ts`、`src/app.ts`、`src/access.ts`、目标 page / service / component
+13. `TESTING_SPEC.md`
+14. `.umirc.ts`、`src/app.ts`、`src/access.ts`、目标 page / service / component
 
 ## 目录结构
 
@@ -33,6 +34,7 @@ docs/ai-coding/
   ENVIRONMENT_CONFIG_SPEC.md
   VERSIONING_SPEC.md
   SECURITY_CODING_SPEC.md
+  TESTING_SPEC.md
 ```
 
 ## 必读结论
@@ -41,6 +43,7 @@ docs/ai-coding/
 - 分支命名、短分支生命周期、release/hotfix、tag 和分支清理按 `BRANCHING_SPEC.md` 处理。
 - 环境、Nacos namespace、Java profile 和前端网关地址边界按 `ENVIRONMENT_CONFIG_SPEC.md` 处理。
 - 项目版本、公共包依赖和后端 Java 新项目基础坐标按 `VERSIONING_SPEC.md` 处理；纯 AI 规范或 README 改动不提升制品版本。
+- 前端测试按 `TESTING_SPEC.md` 分层；普通单元、组件和 service 测试默认隔离真实接口，E2E 只允许连接 test 环境。
 - 页面放 `src/pages`，接口放 `src/services`，可复用组件放 `src/components`，常量放 `src/constants`。
 - 框架生成目录和缓存目录不得提交，例如 `src/.umi`、`src/.umi-production`、`.turbopack/`、`dist/`、`node_modules/`。
 - 前端权限和展示不能替代后端鉴权、租户隔离、字段级授权和数据权限。

@@ -180,6 +180,7 @@ pnpm build
 bash scripts/check-secrets.sh
 ```
 
+- 前端测试分层以 `TESTING_SPEC.md` 为准；普通单元、组件和 service 测试默认不访问真实后端，E2E 只允许连接 test 环境。
 - 修改登录、路由、权限、请求拦截后必须本地打开页面验证。
 - 提交前检查：
 
