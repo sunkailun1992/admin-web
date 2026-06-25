@@ -38,12 +38,13 @@
 6. `docs/ai-coding/AI_DESIGN_PATTERN_GUIDE.md`
 7. `docs/ai-coding/AI_AUTOMATION_WORKFLOW.md`
 8. `docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md`
-9. `docs/ai-coding/SECURITY_CODING_SPEC.md`
-10. `.umirc.ts`
-11. `src/app.ts`
-12. `src/access.ts`
-13. `src/services/auth/index.ts`
-14. `src/services/auth/types.d.ts`
+9. `docs/ai-coding/VERSIONING_SPEC.md`
+10. `docs/ai-coding/SECURITY_CODING_SPEC.md`
+11. `.umirc.ts`
+12. `src/app.ts`
+13. `src/access.ts`
+14. `src/services/auth/index.ts`
+15. `src/services/auth/types.d.ts`
 
 接口行为不明确时，必须阅读同级后端项目：
 
