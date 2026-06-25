@@ -12,9 +12,10 @@
 6. `AI_DESIGN_PATTERN_GUIDE.md`
 7. `AI_AUTOMATION_WORKFLOW.md`
 8. `AI_ENGINEERING_GUARDRAILS.md`
-9. `VERSIONING_SPEC.md`
-10. `SECURITY_CODING_SPEC.md`
-11. `.umirc.ts`、`src/app.ts`、`src/access.ts`、目标 page / service / component
+9. `BRANCHING_SPEC.md`
+10. `VERSIONING_SPEC.md`
+11. `SECURITY_CODING_SPEC.md`
+12. `.umirc.ts`、`src/app.ts`、`src/access.ts`、目标 page / service / component
 
 ## 目录结构
 
@@ -27,6 +28,7 @@ docs/ai-coding/
   AI_DESIGN_PATTERN_GUIDE.md
   AI_AUTOMATION_WORKFLOW.md
   AI_ENGINEERING_GUARDRAILS.md
+  BRANCHING_SPEC.md
   VERSIONING_SPEC.md
   SECURITY_CODING_SPEC.md
 ```
@@ -34,6 +36,7 @@ docs/ai-coding/
 ## 必读结论
 
 - 本项目是 Umi Max / React / TypeScript / Ant Design Pro 前端，不套用 Java 后端目录规则。
+- 分支命名、短分支生命周期、release/hotfix、tag 和分支清理按 `BRANCHING_SPEC.md` 处理。
 - 项目版本、公共包依赖和后端 Java 新项目基础坐标按 `VERSIONING_SPEC.md` 处理；纯 AI 规范或 README 改动不提升制品版本。
 - 页面放 `src/pages`，接口放 `src/services`，可复用组件放 `src/components`，常量放 `src/constants`。
 - 框架生成目录和缓存目录不得提交，例如 `src/.umi`、`src/.umi-production`、`.turbopack/`、`dist/`、`node_modules/`。
