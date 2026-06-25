@@ -10,6 +10,7 @@ import {
   setSelectedTenantId,
   setStoredLoginInfo,
 } from '@/utils/auth';
+import { getTrafficHeaders } from '@/utils/traffic';
 import type {
   AxiosError,
   AxiosRequestConfig,
@@ -39,6 +40,10 @@ const disableMenuTooltip = (
 
 const authRequestInterceptor = (config: AxiosRequestConfig) => {
   const token = getAccessToken();
+  config.headers = {
+    ...getTrafficHeaders(),
+    ...config.headers,
+  };
   if (token) {
     config.headers = {
       ...config.headers,
