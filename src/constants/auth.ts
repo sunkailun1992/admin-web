@@ -2,7 +2,8 @@ export const ACCESS_TOKEN_KEY = 'admin_web_access_token';
 export const LOGIN_INFO_KEY = 'admin_web_login_info';
 export const SELECTED_TENANT_ID_KEY = 'admin_web_selected_tenant_id';
 
-export const BACKEND_BASE_URL = 'http://localhost:8080';
+export const BACKEND_BASE_URL =
+  process.env.UMI_APP_BACKEND_BASE_URL || 'http://localhost:8080';
 export const USER_SERVICE_PREFIX = '/user';
 export const MESSAGE_SERVICE_PREFIX = '/message';
 export const DEFAULT_TENANT_ID = '100';

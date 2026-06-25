@@ -88,6 +88,9 @@ prod:
 
 前端和小程序没有 Spring profile，不直接连接 Nacos。
 
+- `admin-web` 保留 `.env.dev`、`.env.test`、`.env.prod` 三份入口文件，分别声明 `UMI_APP_BACKEND_BASE_URL`、`UMI_APP_RELEASE_VERSION`、`UMI_APP_TRAFFIC_LANE` 等前端可公开运行变量。
+- `pnpm dev` 使用 dev；`pnpm dev:test` 可本地连 test；`pnpm build:test` 构建 test 包；`pnpm build` 默认构建 prod 包。
+- 当前 dev/test/prod 暂时都指向 `http://localhost:8080`，后期网关地址拆开时只改对应 `.env.*` 文件。
 - 前端只配置网关地址、构建模式和请求头默认值。
 - 小程序只配置 API base URL、上传配置和请求头默认值。
 - 前端/小程序不能保存 Nacos 地址、namespace、数据库、Redis、MQ 或生产密钥。

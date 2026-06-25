@@ -10,9 +10,9 @@
 - 包管理器：`pnpm`
 - 网关项目：同级仓库 `../gateway`
 - 用户服务项目：同级仓库 `../user`
-- 网关本地地址：`http://localhost:8080`
+- 网关地址：由 `.env.dev`、`.env.test`、`.env.prod` 中的 `UMI_APP_BACKEND_BASE_URL` 决定；当前三套暂时都是 `http://localhost:8080`
 - 用户服务直连地址：`http://localhost:7500`
-- 请求方式：使用 Umi request 的 `baseURL` 直连网关，不使用 Umi dev proxy
+- 请求方式：使用 Umi request 的 `baseURL` 直连网关，不使用 Umi dev proxy；页面和 service 不直接写环境地址
 
 ## 项目职责
 
@@ -121,7 +121,7 @@ src/main/resources/db/auth-schema.sql
 - 角色数据范围部门：`GET|PUT /auth/manage/roles/{roleId}/data-scope-depts`
 - 编码生成：`POST /auth/manage/codes`
 
-前端使用 Umi request 的 `baseURL = http://localhost:8080`；用户中心接口在 `src/services/auth/index.ts` 内统一追加模块前缀，所以 `/auth/sessions` 最终会请求网关路径 `/user/auth/sessions`。网关负责把 `/user/**` 转发到 `user` 服务。
+前端使用 Umi request 的 `baseURL = process.env.UMI_APP_BACKEND_BASE_URL`；用户中心接口在 `src/services/auth/index.ts` 内统一追加模块前缀，所以 `/auth/sessions` 最终会请求网关路径 `/user/auth/sessions`。网关负责把 `/user/**` 转发到 `user` 服务。
 
 所有需要认证的请求必须携带：
 
