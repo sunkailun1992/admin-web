@@ -2,7 +2,7 @@ export const ACCESS_TOKEN_KEY = 'admin_web_access_token';
 export const LOGIN_INFO_KEY = 'admin_web_login_info';
 export const SELECTED_TENANT_ID_KEY = 'admin_web_selected_tenant_id';
 
-const DEFAULT_BACKEND_BASE_URL = 'http://localhost:8080';
+const DEFAULT_BACKEND_BASE_URL = 'http://localhost:7100';
 
 function normalizeBackendBaseUrl(value?: string) {
   const rawValue = (value ?? '').trim();
@@ -14,7 +14,7 @@ function normalizeBackendBaseUrl(value?: string) {
 export const BACKEND_BASE_URL = normalizeBackendBaseUrl(
   process.env.UMI_APP_BACKEND_BASE_URL,
 );
-export const USER_SERVICE_PREFIX = '/user';
+export const USER_SERVICE_PREFIX = '';
 export const MESSAGE_SERVICE_PREFIX = '/message';
 export const DEFAULT_TENANT_ID = '100';
 
