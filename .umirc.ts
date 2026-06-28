@@ -132,6 +132,22 @@ export default defineConfig({
         },
       ],
     },
+    {
+      name: 'AI管理',
+      path: '/ai',
+      routes: [
+        {
+          path: '/ai',
+          redirect: '/ai/model',
+        },
+        {
+          name: 'AI模型',
+          path: '/ai/model',
+          component: './Ai/Model',
+          access: 'canSeeAiModel',
+        },
+      ],
+    },
   ],
   define: clientEnvDefine,
   npmClient: 'pnpm',

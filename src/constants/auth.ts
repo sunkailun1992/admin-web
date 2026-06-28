@@ -15,6 +15,7 @@ export const BACKEND_BASE_URL = normalizeBackendBaseUrl(
   process.env.UMI_APP_BACKEND_BASE_URL,
 );
 export const USER_SERVICE_PREFIX = '';
+export const AI_SERVICE_PREFIX = '';
 export const MESSAGE_SERVICE_PREFIX = '/message';
 export const DEFAULT_TENANT_ID = '100';
 
