@@ -79,7 +79,7 @@ src/main/resources/db/auth-schema.sql
 - 测试回归可以让一个 agent 跑测试、一个 agent 分析日志、一个 agent 检查最近 diff，但最终修复必须由主智能体或一个明确 worker 收口。
 - 只有写入边界清楚时才允许并行实现，例如一个 worker 只改前端页面、一个 worker 只改后端 API、一个 worker 只补测试。
 - 如果多个 worker 需要修改同一个核心页面、service 文件、路由文件、权限逻辑、SQL 脚本或共享配置，不允许并行写入，必须由主智能体串行处理。
-- 前端仓库不维护业务库 DDL；后端全新或空业务库首次启动前，必须让目标业务库手动执行 `../utils/src/main/resources/db/common-infra-schema.sql`，再执行对应业务 SQL，不能依赖后端应用首次启动自动创建 Seata AT `undo_log`。
+- 前端仓库不设计、不生成、不维护后端业务表、数据库字段或 DDL；涉及新增表结构时必须回到对应 Java 后端项目，按其 AI 表设计规范处理。后端全新或空业务库首次启动前，必须让目标业务库手动执行 `../utils/src/main/resources/db/common-infra-schema.sql`，再执行对应业务 SQL，不能依赖后端应用首次启动自动创建 Seata AT `undo_log`。
 
 ## 安全规则
 

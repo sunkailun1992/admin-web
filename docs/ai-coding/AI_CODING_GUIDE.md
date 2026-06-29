@@ -10,6 +10,7 @@
 - 先读 `AI_DIRECTORY_STRUCTURE_GUIDE.md`，按 Umi Max、React、TypeScript 和 Ant Design Pro 项目结构管理目录。
 - 先读 `AI_DESIGN_PATTERN_GUIDE.md`，按 React、TypeScript、Umi 和 Ant Design Pro 项目结构选择设计模式。
 - 不凭空新增接口字段、路由、权限码或状态值；字段必须来自后端代码、接口文档或明确需求。
+- 前端不生成后端业务表、DDL 或数据库字段；涉及新增表先回到对应 Java 后端项目，按其 AI 表设计规范完成。
 - 优先使用 Ant Design Pro 官方范式：`PageContainer`、`ProTable`、`ModalForm`、`ProForm*`、`StatisticCard`。
 - 业务页面保持 CRUD 闭环：查询、新增、编辑、删除、错误提示、刷新表格。
 - 所有远程请求集中放在 `src/services`，页面不直接拼 axios/fetch。
