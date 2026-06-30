@@ -35,6 +35,9 @@ declare namespace API {
 
   interface AuthLoginVO {
     token: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    refreshExpiresIn?: number;
     tokenType?: string;
     userId: string;
     username: string;
@@ -48,6 +51,10 @@ declare namespace API {
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
+  }
+
+  interface LogoutSessionRequest {
+    refreshToken?: string;
   }
 
   interface CurrentUser extends AuthLoginVO {

@@ -1,7 +1,7 @@
 import { BACKEND_BASE_URL } from '@/constants/auth';
 import LayoutRightContent from '@/components/LayoutRightContent';
 import TenantSwitcher from '@/components/TenantSwitcher';
-import { currentResources } from '@/services/auth';
+import { currentResources, logoutSession } from '@/services/auth';
 import {
   clearAccessToken,
   getAccessToken,
@@ -124,9 +124,16 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         history.push(loginPath);
       }
     },
-    logout: () => {
-      clearAccessToken();
-      history.push(loginPath);
+    logout: async () => {
+      const refreshToken = getStoredLoginInfo()?.refreshToken;
+      try {
+        await logoutSession({ refreshToken });
+      } catch {
+        // 退出时以后端撤销为最佳努力，前端本地登录态仍必须清理。
+      } finally {
+        clearAccessToken();
+        history.push(loginPath);
+      }
     },
     rightRender: (state, setInitialState) =>
       createElement(LayoutRightContent, {

@@ -2,7 +2,9 @@ import { USER_SERVICE_PREFIX } from '@/constants/auth';
 import type { AxiosRequestConfig } from '@umijs/max';
 import { request } from '@umijs/max';
 
-function authRequest<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
+type AuthRequestOptions = AxiosRequestConfig & { skipErrorHandler?: boolean };
+
+function authRequest<T>(url: string, options?: AuthRequestOptions): Promise<T> {
   // 统一声明 user 模块请求返回业务响应体，避免页面误拿 AxiosResponse 类型。
   const requestUrl = `${USER_SERVICE_PREFIX}${url}`; // 在 service 边界集中追加 user 网关模块前缀，页面保持后端业务路径写法。
   return options // 根据是否传入请求配置选择 Umi request 重载，避免 undefined 触发 TypeScript 重载错误。
@@ -23,6 +25,14 @@ export async function login(data: API.LoginRequest) {
   return authRequest<API.ApiResponse<API.AuthLoginVO>>('/auth/sessions', {
     method: 'POST',
     data,
+  });
+}
+
+export async function logoutSession(data: API.LogoutSessionRequest = {}) {
+  return authRequest<API.ApiResponse<void>>('/auth/sessions/logout', {
+    method: 'POST',
+    data,
+    skipErrorHandler: true,
   });
 }
 

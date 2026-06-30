@@ -1,6 +1,7 @@
 import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
 import MessageCenter from '@/components/MessageCenter';
-import { clearAccessToken } from '@/utils/auth';
+import { logoutSession } from '@/services/auth';
+import { clearAccessToken, getStoredLoginInfo } from '@/utils/auth';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import { Avatar, Descriptions, Dropdown, Modal } from 'antd';
@@ -49,10 +50,17 @@ export default function LayoutRightContent({
     return null;
   }
 
-  const logout = () => {
-    clearAccessToken();
-    setInitialState({});
-    history.push(loginPath);
+  const logout = async () => {
+    const refreshToken = getStoredLoginInfo()?.refreshToken;
+    try {
+      await logoutSession({ refreshToken });
+    } catch {
+      // 退出时以后端撤销为最佳努力，前端本地登录态仍必须清理。
+    } finally {
+      clearAccessToken();
+      setInitialState({});
+      history.push(loginPath);
+    }
   };
 
   const avatar = (
