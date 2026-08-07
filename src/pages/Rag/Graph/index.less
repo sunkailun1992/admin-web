@@ -1,0 +1,44 @@
+.knowledgeBaseInput {
+  width: 180px;
+}
+
+.viewSelect,
+.typeSelect {
+  width: 132px;
+}
+
+.graphCanvas,
+.emptyGraph {
+  width: 100%;
+  height: clamp(520px, 68vh, 760px);
+  overflow: hidden;
+  background: radial-gradient(
+      circle at 20% 15%,
+      rgba(22, 119, 255, 0.07),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 80% 85%,
+      rgba(250, 140, 22, 0.08),
+      transparent 36%
+    ),
+    #fafcff;
+}
+
+.emptyGraph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breakText {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 991px) {
+  .graphCanvas,
+  .emptyGraph {
+    height: min(64vh, 620px);
+  }
+}

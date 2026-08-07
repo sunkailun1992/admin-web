@@ -2,7 +2,7 @@
 
 `admin-web` 是用户中心后台管理前端，基于 Ant Design Pro / Umi Max 构建，对接同级 `user` 后端项目。
 
-本项目负责登录认证、租户管理、部门管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源、角色数据范围授权操作。
+本项目负责登录认证、租户管理、部门管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源、角色数据范围授权操作；同时提供受独立权限控制的 RAG 文档向量管理、检索试查和知识图谱页面。
 
 ## AI 快速识别
 
@@ -83,6 +83,8 @@ AI 处理本项目任务时，优先读取：
 | 角色绑定资源 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/resources` |
 | 角色数据范围 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/data-scope-depts` |
 | 编码生成 | 租户/部门/角色/资源表单 | `POST /auth/manage/codes` |
+| RAG 文档管理 | `/rag-knowledge/documents` | `POST/GET /rag/api/rag/documents`、校验、停用与检索接口 |
+| RAG 知识图谱 | `/rag-knowledge/graph` | `GET /rag/api/rag/graphs`、`POST /rag/api/rag/graphs/sync` |
 
 ## 后端约定
 
@@ -151,6 +153,17 @@ menu:resource
 
 权限判断集中在 `src/access.ts`。
 
+RAG 页面采用独立权限，不继承用户中心管理权限：
+
+```text
+menu:rag:document + rag:document:manage
+rag:retrieval:use
+menu:rag:graph + rag:graph:view
+rag:graph:manage
+```
+
+前端只负责隐藏无权页面和动作；RAG 服务的 `@PreAuthorize` 仍是最终授权边界。
+
 ## 目录说明
 
 ```text
@@ -166,7 +179,10 @@ src/
   pages/System/User/        # 用户管理和绑定角色
   pages/System/Role/        # 角色管理和绑定资源
   pages/System/Resource/    # 权限资源管理
+  pages/Rag/Document/       # XLSX 摄取、文档版本、读回校验和检索试查
+  pages/Rag/Graph/          # 图谱查询、同步和节点来源展示
   services/auth/            # 后端接口封装和 API 类型
+  services/rag/             # RAG 服务接口封装和 API 类型
   utils/auth.ts             # Token 和登录信息存储
   utils/table.ts            # ProTable 查询参数、payload 清理
 docs/

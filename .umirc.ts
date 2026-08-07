@@ -148,6 +148,28 @@ export default defineConfig({
         },
       ],
     },
+    {
+      name: 'RAG知识库',
+      path: '/rag-knowledge',
+      routes: [
+        {
+          path: '/rag-knowledge',
+          redirect: '/rag-knowledge/documents',
+        },
+        {
+          name: '文档向量管理',
+          path: '/rag-knowledge/documents',
+          component: './Rag/Document',
+          access: 'canSeeRagDocument',
+        },
+        {
+          name: '知识图谱',
+          path: '/rag-knowledge/graph',
+          component: './Rag/Graph',
+          access: 'canSeeRagGraph',
+        },
+      ],
+    },
   ],
   define: clientEnvDefine,
   npmClient: 'pnpm',
