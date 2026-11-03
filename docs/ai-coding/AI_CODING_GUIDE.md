@@ -4,6 +4,8 @@
 
 ## 基本原则
 
+新任务、完整功能、跨仓配套和分支清理按 AGENTS.md／BRANCHING_SPEC.md；修改版本先读 VERSIONING_SPEC.md，执行 1.2.9→1.3.0、1.9.9→2.0.0 的进位与占用检查。
+
 - 先读后端接口、DTO、VO、权限码和现有前端结构，再写代码。
 - 先读 `AI_AUTOMATION_WORKFLOW.md`，按需求说明、验收标准、开发手册、测试说明和交付说明组织自动化开发。
 - 先读 `AI_ENGINEERING_GUARDRAILS.md`，按风险分级、Definition of Done、测试门禁、安全门禁和交付说明约束 AI 生成代码。
@@ -121,11 +123,12 @@ Authorization: Bearer <token>
 ```
 
 - 后端统一响应 `success=false` 时必须抛错并展示 `errorMessage` 或 `msg`。
-- 401、403 必须清理本地登录态并跳转 `/login`。
-- 前端通过 Umi request `baseURL` 直接请求网关 `http://localhost:8080`，user-center 模块前缀在 `src/services/auth/index.ts` 统一拼接，现有 service path 仍写 `/auth/**`，最终请求为 `/user/auth/**` 并由网关转发到 `user` 服务；不要直接请求 `user` 的 `http://localhost:7500`，也不要再为 `/auth` 单独配置 dev proxy。
+- 普通管理请求 401 清理管理员会话并跳转登录；精确 OAuth token 入口的 401 只提示 Client 认证失败，403 保留登录态并提示权限不足。skipAuth 请求不能携带管理员 Bearer token。
+- 前端通过 Umi request baseURL 请求网关，本地默认 `http://localhost:7100`；当前用户中心 service path 为 `/auth/**`，不额外追加 `/user`，不直连 user 服务或另建 dev proxy。
 
 ## 权限规范
 
+- 新增页面或管理入口时同步核对前端路由/access、后端菜单资源、接口权限与目标角色授权；页面可见不代表服务端已授权。
 - 后端权限码来自 `permissions`，前端菜单资源来自 `frontendResources`。
 - 后端管理权限码为 `user:auth:manage`。
 - 前端菜单资源码：

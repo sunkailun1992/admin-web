@@ -16,12 +16,12 @@ project:
   packageManager: pnpm
 backend:
   gatewayPath: ../gateway
-  gatewayBaseUrl: http://localhost:8080
+  gatewayBaseUrl: http://localhost:7100
   localPath: ../user
   serviceName: user
-  devBaseUrl: http://localhost:8080
-  testBaseUrl: http://localhost:8080
-  prodBaseUrl: http://localhost:8080
+  devBaseUrl: http://localhost:7100
+  testBaseUrl: http://localhost:7100
+  prodBaseUrl: http://localhost:7100
   userDirectUrl: http://localhost:7500
   requestMode: env-baseURL
 auth:
@@ -219,12 +219,12 @@ http://localhost:8000
 后端接口地址：
 
 ```text
-.env.dev  -> UMI_APP_BACKEND_BASE_URL=http://localhost:8080
-.env.test -> UMI_APP_BACKEND_BASE_URL=http://localhost:8080
-.env.prod -> UMI_APP_BACKEND_BASE_URL=http://localhost:8080
+.env.dev  -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
+.env.test -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
+.env.prod -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
 ```
 
-前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求 `UMI_APP_BACKEND_BASE_URL` 指向的网关。user-center 模块前缀在 `src/services/auth/index.ts` 统一拼接，现有接口路径仍保持 `/auth/**`，最终请求会成为 `/user/auth/**`，再由网关转发到 `user` 服务。当前 dev/test/prod 暂时都指向 `http://localhost:8080`；后续环境拆开时，只改对应 `.env.*` 文件。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `8080`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
+前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求 `UMI_APP_BACKEND_BASE_URL` 指向的网关。当前 USER_SERVICE_PREFIX 为空，`src/services/auth/index.ts` 的 `/auth/**` 直接请求同路径网关，再转发到 user 服务；不额外追加 `/user`。当前 dev/test/prod 暂时都指向 `http://localhost:7100`；后续环境拆开时，只改对应 `.env.*` 文件。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `7100`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
 
 ## 常用命令
 

@@ -39,6 +39,7 @@ docs/ai-coding/
 
 ## 必读结论
 
+- 长期保留 main/test/preprod；完整交付 main 并远端确认后才清理本任务短分支，保护未合入、dirty 与其他 worktree。详见分支规范。
 - 本项目是 Umi Max / React / TypeScript / Ant Design Pro 前端，不套用 Java 后端目录规则。
 - 分支命名、短分支生命周期、release/hotfix、tag 和分支清理按 `BRANCHING_SPEC.md` 处理。
 - 环境、Nacos namespace、Java profile 和前端网关地址边界按 `ENVIRONMENT_CONFIG_SPEC.md` 处理。

@@ -70,7 +70,7 @@ bash scripts/check-secrets.sh
 - 认证请求必须验证 `Authorization`、`X-Release-Version`、`X-Traffic-Lane` 等 header 的传递规则。
 - 列表查询必须验证分页、搜索、排序字段和字段白名单参数。
 - 新增和编辑请求必须验证请求体不携带前端临时字段；编辑请求必须携带后端乐观锁 `version`。
-- Service 测试默认使用 MSW 或等价网络层 mock 拦截请求，不打真实 `localhost:8080`、test 或 prod 网关。
+- Service 测试默认使用 MSW 或等价网络层 mock 拦截请求，不打真实 `localhost:7100`、test 或 prod 网关。
 
 ## E2E 测试规则
 

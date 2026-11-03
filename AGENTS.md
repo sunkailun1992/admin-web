@@ -2,6 +2,14 @@
 
 本文件是 `admin-web` 项目的 AI 编码入口。AI 修改本项目代码前，必须先阅读本文件，再按修改前阅读顺序读取项目 README、AI 编程规范、工程门禁和安全规范。
 
+## GitHub 分支与交付管理
+
+- 长期分支为 `main`、`test`、`preprod`；三者禁止删除或 force push。新任务先核对仓库、HEAD、dirty、worktree 并 fetch，从最新 origin/main 建独立短分支；同一任务可核对后复用。
+- 功能分支承载完整功能及测试、文档、契约、migration 和精确依赖；进入 test/preprod 后保留源分支，正式候选在最新 main 上独立验证完整功能与跨仓配套。
+- 本任务短分支完整合入各仓 main、main 推送并远端读回、完整包含关系确认后才清理；保护三条长期分支、未合入或仍有唯一提交、dirty 及其他 worktree 使用中的分支，不用强删绕过保护。
+- Git、验证、CI、制品、部署和真实验收分别取证；GitHub 不继承公司自动部署 lane。已授权 commit/push/merge 按当前任务完成，tag/发布/部署不从分支名推定授权。
+- 命名、集成、清理、版本与交付按 `docs/ai-coding/BRANCHING_SPEC.md` 和 `VERSIONING_SPEC.md`，不使用旧 main-only 或 personal/dev 流程。
+
 ## 项目定位
 
 - 项目名称：`admin-web`
@@ -10,7 +18,7 @@
 - 包管理器：`pnpm`
 - 网关项目：同级仓库 `../gateway`
 - 用户服务项目：同级仓库 `../user`
-- 网关地址：由 `.env.dev`、`.env.test`、`.env.prod` 中的 `UMI_APP_BACKEND_BASE_URL` 决定；当前三套暂时都是 `http://localhost:8080`
+- 网关地址：由 `.env.dev`、`.env.test`、`.env.prod` 中的 `UMI_APP_BACKEND_BASE_URL` 决定；本地默认网关为 `http://localhost:7100`，环境实际值以构建入口为准
 - 用户服务直连地址：`http://localhost:7500`
 - 请求方式：使用 Umi request 的 `baseURL` 直连网关，不使用 Umi dev proxy；页面和 service 不直接写环境地址
 
@@ -69,7 +77,7 @@ src/main/resources/db/auth-schema.sql
 
 ## 多智能体协作规则
 
-- 可以使用多个子智能体，但默认只能用于需求分析和项目学习，不允许直接修改代码。
+- 可按独立写入边界分配 worker；未获当前任务授权不修改其他 worker 或用户文件，主智能体统一收口。
 - AI 开始功能开发前必须按 `docs/ai-coding/AI_AUTOMATION_WORKFLOW.md` 先整理需求说明、验收标准和开发手册；小改动可以简化输出，但检查项不能跳过。
 - AI 完成功能后必须按 `docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md` 做风险分级、Definition of Done、测试证据、安全检查、风险和回滚说明。
 - AI 新增、移动或删除目录前必须按 `docs/ai-coding/AI_DIRECTORY_STRUCTURE_GUIDE.md` 判断 Umi、React、TypeScript 和 Ant Design Pro 目录边界。
@@ -124,7 +132,7 @@ src/main/resources/db/auth-schema.sql
 - 角色数据范围部门：`GET|PUT /auth/manage/roles/{roleId}/data-scope-depts`
 - 编码生成：`POST /auth/manage/codes`
 
-前端使用 Umi request 的 `baseURL = process.env.UMI_APP_BACKEND_BASE_URL`；用户中心接口在 `src/services/auth/index.ts` 内统一追加模块前缀，所以 `/auth/sessions` 最终会请求网关路径 `/user/auth/sessions`。网关负责把 `/user/**` 转发到 `user` 服务。
+前端通过 Umi request 的 baseURL 请求公开网关；当前 USER_SERVICE_PREFIX 为空，service 的 `/auth/**` 直接走同路径网关，不追加 `/user`，不直连后端服务。
 
 所有需要认证的请求必须携带：
 
