@@ -11,6 +11,7 @@ import {
   setStoredLoginInfo,
 } from '@/utils/auth';
 import { getTrafficHeaders } from '@/utils/traffic';
+import { applyAccessToken, isOAuthTokenRequest } from '@/utils/requestAuth';
 import type {
   AxiosError,
   AxiosRequestConfig,
@@ -44,13 +45,7 @@ const authRequestInterceptor = (config: AxiosRequestConfig) => {
     ...getTrafficHeaders(),
     ...config.headers,
   };
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-  }
-  return config;
+  return applyAccessToken(config, token);
 };
 
 export async function getInitialState(): Promise<{
@@ -181,6 +176,11 @@ export const request: RequestConfig = {
       const status = response?.status;
       const responseData = response?.data;
       if (status === 401) {
+        const requestUrl = 'config' in error ? error.config?.url : undefined;
+        if (isOAuthTokenRequest(requestUrl)) {
+          message.error('OAuth Client 认证失败');
+          return;
+        }
         clearAccessToken();
         history.push(loginPath);
         message.error('登录已失效，请重新登录');

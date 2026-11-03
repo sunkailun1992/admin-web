@@ -257,3 +257,9 @@ kill -9 <PID>
 - 不提交 `node_modules/`、`dist/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
 
 更完整的 AI 编码规范见 [docs/ai-coding/AI_CODING_GUIDE.md](docs/ai-coding/AI_CODING_GUIDE.md)。
+
+## 通用安全与架构同步
+
+请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
+
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配，`pnpm build` 验证现有页面构建。前端首次声明制品版本 `1.0.0`，未发布制品。
