@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "status": "completed",
+  "startedAt": "2026-01-01T00:00:00+00:00",
+  "finishedAt": "2026-01-01T00:00:01+00:00",
+  "temporaryCollection": "rag_eval_00000000000000000000000000000000",
+  "scope": "synthetic-regression-only",
+  "provenance": {
+    "datasetSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "corpusSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "engineSourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "engineLockSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "gitHead": null
+  },
+  "setup": {
+    "documentCount": 28,
+    "questionCount": 2,
+    "documentEmbeddingBatches": 3,
+    "documentEmbeddingsBuiltOnce": true,
+    "queryEmbeddingRequestLimit": 4,
+    "rerankRequestLimit": 4
+  },
+  "configuration": {
+    "topK": 6,
+    "candidateCount": 30,
+    "similarityThreshold": 0.2,
+    "retrievalTimeoutSeconds": 3.0,
+    "rerankTimeoutSeconds": 0.8,
+    "pairOrder": "alternating-dense-first-hybrid-first",
+    "embeddingModel": "fixture-embedding",
+    "embeddingDimension": 1024,
+    "rerankModel": "fixture-rerank",
+    "rerankScoreThreshold": 0.9,
+    "sparseModel": "lexical-v1"
+  },
+  "limitations": [
+    "Synthetic fixture only; no model or network requests were made."
+  ],
+  "cleanup": {
+    "required": true,
+    "attempted": true,
+    "verifiedAbsent": true,
+    "deleteStatus": 200,
+    "readbackStatus": 404
+  },
+  "predictions": {
+    "dense": [
+      {
+        "id": "q001",
+        "sources": [
+          {
+            "sourceId": "cache-v1",
+            "tenantId": "eval-a",
+            "knowledgeBase": "synthetic-tech",
+            "score": 0.99
+          }
+        ],
+        "mode": "dense",
+        "degraded": false,
+        "latencyMs": 100
+      },
+      {
+        "id": "q053",
+        "sources": [],
+        "mode": "dense",
+        "degraded": false,
+        "latencyMs": 200
+      }
+    ],
+    "hybrid": [
+      {
+        "id": "q001",
+        "sources": [
+          {
+            "sourceId": "cache-v1",
+            "tenantId": "eval-a",
+            "knowledgeBase": "synthetic-tech",
+            "score": 0.99
+          }
+        ],
+        "mode": "hybrid",
+        "degraded": false,
+        "latencyMs": 100
+      },
+      {
+        "id": "q053",
+        "sources": [],
+        "mode": "hybrid",
+        "degraded": false,
+        "latencyMs": 200
+      }
+    ]
+  },
+  "results": {
+    "dense": {
+      "schemaVersion": 1,
+      "k": 6,
+      "questionCount": 2,
+      "positiveCount": 1,
+      "negativeCount": 1,
+      "recallAtK": 1.0,
+      "mrrAtK": 1.0,
+      "ndcgAtK": 1.0,
+      "falseNegativeCount": 0,
+      "falsePositiveCount": 0,
+      "correctEmptyCount": 1,
+      "errorCount": 0,
+      "missingPredictionCount": 0,
+      "scopeLeakCount": 0,
+      "unknownSourceCount": 0,
+      "latencySampleCount": 2,
+      "latencyP50Ms": 150.0,
+      "latencyP95Ms": 195.0,
+      "details": [
+        {
+          "id": "q001",
+          "failed": false,
+          "scopeLeak": false,
+          "retrievedSourceIds": [
+            "cache-v1"
+          ],
+          "latencyMs": 100,
+          "recall": 1.0,
+          "reciprocalRank": 1.0,
+          "ndcg": 1.0
+        },
+        {
+          "id": "q053",
+          "failed": false,
+          "scopeLeak": false,
+          "retrievedSourceIds": [],
+          "latencyMs": 200,
+          "correctEmpty": true
+        }
+      ],
+      "degradedCount": 0,
+      "timeoutCount": 0,
+      "blockedScopeViolationCount": 0,
+      "errorCodes": {},
+      "modeMismatchCount": 0,
+      "topScoreDistribution": {
+        "definition": "Score of the first returned hit, after engine filtering; not the pre-filter candidate maximum.",
+        "limitations": "Empty/error/missing-score responses have no numeric score; degraded scores are separate and may use a different ranking scale.",
+        "groups": {
+          "positive": {
+            "questionCount": 1,
+            "emptyResponseCount": 0,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 1,
+              "min": 0.99,
+              "p05": 0.99,
+              "p25": 0.99,
+              "p50": 0.99,
+              "p75": 0.99,
+              "p95": 0.99,
+              "max": 0.99,
+              "mean": 0.99
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "negative": {
+            "questionCount": 1,
+            "emptyResponseCount": 1,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "no-answer": {
+            "questionCount": 1,
+            "emptyResponseCount": 1,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "tenant-isolation": {
+            "questionCount": 0,
+            "emptyResponseCount": 0,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          }
+        }
+      }
+    },
+    "hybrid": {
+      "schemaVersion": 1,
+      "k": 6,
+      "questionCount": 2,
+      "positiveCount": 1,
+      "negativeCount": 1,
+      "recallAtK": 1.0,
+      "mrrAtK": 1.0,
+      "ndcgAtK": 1.0,
+      "falseNegativeCount": 0,
+      "falsePositiveCount": 0,
+      "correctEmptyCount": 1,
+      "errorCount": 0,
+      "missingPredictionCount": 0,
+      "scopeLeakCount": 0,
+      "unknownSourceCount": 0,
+      "latencySampleCount": 2,
+      "latencyP50Ms": 150.0,
+      "latencyP95Ms": 195.0,
+      "details": [
+        {
+          "id": "q001",
+          "failed": false,
+          "scopeLeak": false,
+          "retrievedSourceIds": [
+            "cache-v1"
+          ],
+          "latencyMs": 100,
+          "recall": 1.0,
+          "reciprocalRank": 1.0,
+          "ndcg": 1.0
+        },
+        {
+          "id": "q053",
+          "failed": false,
+          "scopeLeak": false,
+          "retrievedSourceIds": [],
+          "latencyMs": 200,
+          "correctEmpty": true
+        }
+      ],
+      "degradedCount": 0,
+      "timeoutCount": 0,
+      "blockedScopeViolationCount": 0,
+      "errorCodes": {},
+      "modeMismatchCount": 0,
+      "topScoreDistribution": {
+        "definition": "Score of the first returned hit, after engine filtering; not the pre-filter candidate maximum.",
+        "limitations": "Empty/error/missing-score responses have no numeric score; degraded scores are separate and may use a different ranking scale.",
+        "groups": {
+          "positive": {
+            "questionCount": 1,
+            "emptyResponseCount": 0,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 1,
+              "min": 0.99,
+              "p05": 0.99,
+              "p25": 0.99,
+              "p50": 0.99,
+              "p75": 0.99,
+              "p95": 0.99,
+              "max": 0.99,
+              "mean": 0.99
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "negative": {
+            "questionCount": 1,
+            "emptyResponseCount": 1,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "no-answer": {
+            "questionCount": 1,
+            "emptyResponseCount": 1,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          },
+          "tenant-isolation": {
+            "questionCount": 0,
+            "emptyResponseCount": 0,
+            "errorCount": 0,
+            "missingScoreCount": 0,
+            "nonDegraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            },
+            "degraded": {
+              "sampleCount": 0,
+              "min": null,
+              "p05": null,
+              "p25": null,
+              "p50": null,
+              "p75": null,
+              "p95": null,
+              "max": null,
+              "mean": null
+            }
+          }
+        }
+      }
+    }
+  },
+  "hybridMinusDense": {
+    "recallAtK": 0.0,
+    "mrrAtK": 0.0,
+    "ndcgAtK": 0.0,
+    "latencyP50Ms": 0.0,
+    "latencyP95Ms": 0.0
+  },
+  "acceptance": {
+    "checks": {
+      "completeResponses": true,
+      "noScopeLeaks": true,
+      "knownSources": true,
+      "correctEmptyResponses": true,
+      "allReranksCompleted": true,
+      "expectedRetrievalMode": true,
+      "hybridRecallNoRegression": true,
+      "hybridMrrNoRegression": true,
+      "hybridNdcgNoRegression": true,
+      "temporaryCollectionRemoved": true,
+      "runCompleted": true
+    },
+    "passed": true
+  }
+}
