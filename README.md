@@ -210,6 +210,8 @@ pnpm install
 pnpm dev
 ```
 
+IDEA 的 `.run/` 运行配置保留在本机，不纳入 Git。单独打开本项目和通过聚合工作区打开时，IDEA 的项目根目录不同，请在运行配置中选择本项目的 `package.json`，执行 `dev` 脚本。
+
 前端默认地址：
 
 ```text

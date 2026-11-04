@@ -15,6 +15,7 @@
 
 # local IDE files
 .idea/
+.run/
 *.iml
 
 # system and logs
