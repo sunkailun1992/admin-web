@@ -83,8 +83,8 @@ AI 处理本项目任务时，优先读取：
 | 角色绑定资源 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/resources` |
 | 角色数据范围 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/data-scope-depts` |
 | 编码生成 | 租户/部门/角色/资源表单 | `POST /auth/manage/codes` |
-| RAG 文档管理 | `/rag-knowledge/documents` | `POST/GET /rag/api/rag/documents`、校验、停用与检索接口 |
-| RAG 知识图谱 | `/rag-knowledge/graph` | `GET /rag/api/rag/graphs`、`POST /rag/api/rag/graphs/sync` |
+| RAG 文档管理 | `/rag-knowledge/documents` | `POST/GET /api/rag/documents`、校验、停用与检索接口 |
+| RAG 知识图谱 | `/rag-knowledge/graph` | `GET /api/rag/graphs`、`POST /api/rag/graphs/sync` |
 
 ## 后端约定
 
@@ -262,4 +262,4 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配，`pnpm build` 验证现有页面构建。前端首次声明制品版本 `1.0.0`，未发布制品。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 七类请求的最终路径、方法与参数；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.1`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。

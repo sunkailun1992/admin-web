@@ -2,6 +2,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -35,8 +36,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
+      - name: Service and request contract tests
+        run: pnpm test:services
+
+      - name: Build with development configuration
+        run: pnpm build:dev
 
       - name: Secret warning scan
         run: bash scripts/check-secrets.sh

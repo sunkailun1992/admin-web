@@ -7,6 +7,7 @@
 - 测试目标是验证用户可见行为、请求契约、权限展示和安全边界，不测试 React、Umi、Ant Design Pro 或浏览器本身。
 - 普通 CI 默认不访问真实后端接口，不读取 `.env.prod`，不使用生产 token，不改生产数据。
 - `pnpm build` 只能证明项目可构建，不能替代表单、权限、请求 header、异常提示和页面交互测试。
+- 普通 CI 使用 `pnpm build:dev` 选择开发构建配置，生产构建入口仍为 `pnpm build`。
 - 前端权限、按钮隐藏和菜单控制只是体验层保护，不能替代后端鉴权、租户隔离和数据权限。
 - 修改测试时必须说明覆盖的真实业务风险，不能只断言 mock 返回值。
 
@@ -25,7 +26,8 @@
 当前仓库尚未引入 Vitest、Testing Library、MSW、Playwright 等测试依赖。任何功能改动至少执行：
 
 ```bash
-pnpm build
+pnpm test:services
+pnpm build:dev
 bash scripts/check-secrets.sh
 ```
 
@@ -66,7 +68,8 @@ bash scripts/check-secrets.sh
 
 ## Service/API 测试规则
 
-- `src/services/auth/index.ts` 是请求测试重点，必须验证用户中心接口统一追加 `/user` 网关前缀后的最终路径。
+- `src/services/auth/index.ts` 是请求测试重点，用户中心 `/auth/**` 直接请求同路径网关，不额外追加 `/user`。
+- RAG service 的文档、检索和图谱接口使用 `/api/rag/**`，不得重复追加 `/rag`。当前 Node 请求契约测试直接执行真实 service 与常量，只替换网络出口；与认证拦截测试一起通过 `pnpm test:services` 执行。
 - 认证请求必须验证 `Authorization`、`X-Release-Version`、`X-Traffic-Lane` 等 header 的传递规则。
 - 列表查询必须验证分页、搜索、排序字段和字段白名单参数。
 - 新增和编辑请求必须验证请求体不携带前端临时字段；编辑请求必须携带后端乐观锁 `version`。

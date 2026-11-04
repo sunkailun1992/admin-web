@@ -11,6 +11,7 @@
 - `.env.dev`、`.env.test`、`.env.prod` 只保存可公开构建变量，例如 UMI_APP_BACKEND_BASE_URL、UMI_APP_RELEASE_VERSION、UMI_APP_TRAFFIC_LANE；浏览器包内变量不可作为 secret。
 - pnpm dev、pnpm dev:test、pnpm build:test、pnpm build 选择现有构建入口；真实值以仓库脚本及对应文件为准。
 - 本地网关默认 http://localhost:7100；service 使用集中 baseURL，不把本机地址写入页面。当前用户中心 `/auth/**` 不追加 `/user` 前缀。
+- 个人 RAG 网关路径与后端保持 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不追加 `/rag`；message 仍沿用自己的模块前缀，不能批量清空所有 service 前缀。
 - 后端 Nacos SDK/Console/gRPC 端口和私有连接文件属于后端服务，不写入前端环境文件。
 
 ## 验证与发布
