@@ -29,6 +29,24 @@ declare namespace RagAPI {
     validation: DocumentValidationVO;
   };
 
+  type DocumentChunkVO = {
+    chunkId: string;
+    chunkIndex: number;
+    chunkType: string;
+    sectionPath?: string;
+    sourceName?: string;
+    sourceLocator?: string;
+    content: string;
+    sourceMetadata?: { page?: number; block_type?: string; bbox?: number[] };
+    duplicateLocators?: string[];
+  };
+
+  type DocumentChunkPageVO = {
+    documentId: string;
+    items: DocumentChunkVO[];
+    nextCursor?: string | null;
+  };
+
   type RetrievalRequest = {
     query: string;
     collectionName?: string;

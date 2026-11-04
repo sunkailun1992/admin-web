@@ -179,7 +179,7 @@ src/
   pages/System/User/        # 用户管理和绑定角色
   pages/System/Role/        # 角色管理和绑定资源
   pages/System/Resource/    # 权限资源管理
-  pages/Rag/Document/       # XLSX 摄取、文档版本、读回校验和检索试查
+  pages/Rag/Document/       # 文档摄取、上传校验、文档版本、读回校验和检索试查
   pages/Rag/Graph/          # 图谱查询、同步和节点来源展示
   services/auth/            # 后端接口封装和 API 类型
   services/rag/             # RAG 服务接口封装和 API 类型
@@ -264,4 +264,20 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 七类请求的最终路径、方法与参数；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.1`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 请求的最终路径、方法、分页参数、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.2`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+
+## RAG 文档上传
+
+上传入口接受 XLSX、DOCX、PDF、PNG、JPG/JPEG，单文件最多 20 MiB（界面显示 20 MB）。选择文件和提交时均校验扩展名、大小、文件名及浏览器报告的 MIME；没有可靠 MIME 信息时交给后端核对文件头。前置校验不替代后端权限、租户隔离和内容安全检查。
+
+XLSX/DOCX 使用既有 Java 解析；PDF/图片依赖配套 RAG 版本启用文档解析，扫描件还需可用 OCR 服务。前端允许选文件不表示目标环境已启用 OCR，未启用或解析失败沿用统一接口错误提示。上传继续使用原有 `POST /api/rag/documents` multipart 契约，不改变请求身份、租户或字段。
+
+## RAG 切片检视与评估报告
+
+文档列表中的「切片检视」读取 `GET /api/rag/documents/{documentId}/chunks?limit=20&cursor=...`，每次加载 20 条并按后端不透明游标续读。接口必须由配套 Java RAG 版本提供，沿用 `rag:document:manage` 和当前登录租户，不传入可由页面伪造的 `tenantId`。展示真实保存的来源名称、定位、章节、页码、区块类型、坐标、重复来源和切片正文；旧数据缺少元信息时显示「未提供」，不推测页码。关闭窗口会取消未完成的请求，读取失败可重试，不用模拟数据代替。
+
+「查看评估报告」在浏览器内读取 [RAG 评估工具](../rag/evaluation/README.md) 生成的 `schemaVersion=1` JSON，最大 2 MiB。文件不上传、不写入浏览器存储，关闭窗口即清除页面状态。读取器只接受报告定义字段，并核对明细数量、计数和门禁结果；原始预测、查询、正文等额外字段会被拒绝。界面展示 Recall/MRR/nDCG、P50/P95、漏召回、误召回、越界命中、逐题结果和报告来源摘要，明确区分离线预测与真实接口采集。
+
+评估报告是历史记录，字段校验不等于来源真实性认证，门禁通过也不代表线上环境验收。当前指标按来源文档统计；OCR、复杂表格、真实模型及业务文档质量需另配环境和样本验证。没有阈值检查的指标不视为达标。前端测试使用实际 Python 评估器对虚构样本生成的固定报告，不以测试数据声称模型效果。
+
+本批变更不增加菜单、认证方式或权限编码；回滚时恢复前端版本即可，切片与评估读取不修改已入库文档。

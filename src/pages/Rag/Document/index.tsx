@@ -7,6 +7,7 @@ import {
   validateRagDocument,
 } from '@/services/rag';
 import { InboxOutlined } from '@ant-design/icons';
+import { useAccess } from '@umijs/max';
 import type { UploadFile } from 'antd';
 import {
   Alert,
@@ -26,9 +27,11 @@ import {
   Upload,
   message,
 } from 'antd';
-import { useAccess } from '@umijs/max';
 import { useEffect, useState } from 'react';
+import DocumentChunksDrawer from './DocumentChunksDrawer';
+import EvaluationReportModal from './EvaluationReportModal';
 import styles from './index.less';
+import { RAG_UPLOAD_ACCEPT, validateRagUpload } from './uploadValidation';
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
 
@@ -49,6 +52,8 @@ export default function RagDocumentPage() {
   const [validation, setValidation] = useState<RagAPI.DocumentValidationVO>();
   const [retrieval, setRetrieval] = useState<RagAPI.RetrievalVO>();
   const [searching, setSearching] = useState(false);
+  const [chunkDocument, setChunkDocument] = useState<RagAPI.DocumentVO>();
+  const [evaluationOpen, setEvaluationOpen] = useState(false);
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -71,7 +76,7 @@ export default function RagDocumentPage() {
           showIcon
           type="info"
           message="结构化切片与重复处理"
-          description="仅 Excel 作为知识语料，按“工作表 + 完整表头 + 单行记录”入库；Word/TXT 规则不进入向量库。同一文件再次上传直接复用，同一文档编码的新内容生成新版本，重复业务行合并向量但保留全部行位置。"
+          description="Excel 按工作表、表头和记录行切片，Word 按标题段落和表格行切片。PDF 与图片需服务器已开通文档解析，扫描件还需 OCR 服务。同一文件再次上传直接复用，同一文档编码的新内容生成新版本，重复内容合并向量但保留来源位置。"
         />
         <Row gutter={16}>
           <Col lg={12} xs={24}>
@@ -83,6 +88,11 @@ export default function RagDocumentPage() {
                   const selected = fileList[0]?.originFileObj;
                   if (!selected) {
                     message.warning('请选择文档');
+                    return;
+                  }
+                  const validationError = validateRagUpload(selected);
+                  if (validationError) {
+                    message.warning(validationError);
                     return;
                   }
                   const data = new FormData();
@@ -136,8 +146,15 @@ export default function RagDocumentPage() {
                   <Input maxLength={120} placeholder="可留空使用文件名" />
                 </Form.Item>
                 <Upload.Dragger
-                  accept=".xlsx"
-                  beforeUpload={() => false}
+                  accept={RAG_UPLOAD_ACCEPT}
+                  beforeUpload={(file) => {
+                    const validationError = validateRagUpload(file);
+                    if (validationError) {
+                      message.warning(validationError);
+                      return Upload.LIST_IGNORE;
+                    }
+                    return false;
+                  }}
                   fileList={fileList}
                   maxCount={1}
                   onChange={({ fileList: next }) => setFileList(next.slice(-1))}
@@ -145,7 +162,7 @@ export default function RagDocumentPage() {
                   <p className="ant-upload-drag-icon">
                     <InboxOutlined />
                   </p>
-                  <p>选择或拖入 xlsx 表格文档</p>
+                  <p>选择或拖入 XLSX、DOCX、PDF、PNG 或 JPG/JPEG 文件</p>
                   <p>单文件不超过 20 MB；文件内容不会在浏览器本地切片</p>
                 </Upload.Dragger>
                 <Button
@@ -261,9 +278,14 @@ export default function RagDocumentPage() {
         <Card
           title="文档版本与状态"
           extra={
-            <Button loading={loading} onClick={loadDocuments}>
-              刷新
-            </Button>
+            <Space>
+              <Button onClick={() => setEvaluationOpen(true)}>
+                查看评估报告
+              </Button>
+              <Button loading={loading} onClick={loadDocuments}>
+                刷新
+              </Button>
+            </Space>
           }
         >
           <Table<RagAPI.DocumentVO>
@@ -296,6 +318,12 @@ export default function RagDocumentPage() {
                   <Space>
                     <Button
                       size="small"
+                      onClick={() => setChunkDocument(record)}
+                    >
+                      切片检视
+                    </Button>
+                    <Button
+                      size="small"
                       onClick={async () => {
                         const response = await validateRagDocument(
                           record.documentId,
@@ -326,6 +354,16 @@ export default function RagDocumentPage() {
           />
         </Card>
       </Space>
+      {chunkDocument && (
+        <DocumentChunksDrawer
+          key={chunkDocument.documentId}
+          document={chunkDocument}
+          onClose={() => setChunkDocument(undefined)}
+        />
+      )}
+      {evaluationOpen && (
+        <EvaluationReportModal onClose={() => setEvaluationOpen(false)} />
+      )}
       <Modal
         footer={null}
         onCancel={() => setValidation(undefined)}

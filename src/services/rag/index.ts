@@ -36,6 +36,17 @@ export async function validateRagDocument(documentId: string) {
   );
 }
 
+export async function listRagDocumentChunks(
+  documentId: string,
+  params: { limit?: number; cursor?: string } = {},
+  signal?: AbortSignal,
+) {
+  return ragRequest<API.ApiResponse<RagAPI.DocumentChunkPageVO>>(
+    `/api/rag/documents/${encodeURIComponent(documentId)}/chunks`,
+    { params: { limit: params.limit ?? 20, cursor: params.cursor }, signal },
+  );
+}
+
 export async function deactivateRagDocument(documentId: string) {
   return ragRequest<API.ApiResponse<boolean>>(
     `/api/rag/documents/${encodeURIComponent(documentId)}`,

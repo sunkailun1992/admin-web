@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "k": 6,
+  "questionCount": 2,
+  "positiveCount": 1,
+  "negativeCount": 1,
+  "recallAtK": 1.0,
+  "mrrAtK": 1.0,
+  "ndcgAtK": 1.0,
+  "falseNegativeCount": 0,
+  "falsePositiveCount": 0,
+  "correctEmptyCount": 1,
+  "errorCount": 0,
+  "missingPredictionCount": 0,
+  "scopeLeakCount": 0,
+  "unknownSourceCount": 0,
+  "latencySampleCount": 2,
+  "latencyP50Ms": 150.0,
+  "latencyP95Ms": 195.0,
+  "details": [
+    {
+      "id": "q001",
+      "failed": false,
+      "scopeLeak": false,
+      "retrievedSourceIds": ["cache-v1"],
+      "latencyMs": 100,
+      "recall": 1.0,
+      "reciprocalRank": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "id": "q053",
+      "failed": false,
+      "scopeLeak": false,
+      "retrievedSourceIds": [],
+      "latencyMs": 200,
+      "correctEmpty": true
+    }
+  ],
+  "provenance": {
+    "evaluatedAt": "2026-11-04T18:23:24.187148+00:00",
+    "datasetSha256": "0663a1267f9007e946f3944b21c5081cfdec8feedaebf1f576498ca87d1bc5d0",
+    "corpusSha256": "5ac73304c9d1c09e63261194fb76162f696d1da0d1e8580116836f8eb62abf5e",
+    "mode": "offline",
+    "tenantFilter": null
+  },
+  "gate": {
+    "passed": true,
+    "checks": {
+      "completeResponses": true,
+      "noScopeLeaks": true,
+      "knownSources": true,
+      "correctEmptyResponses": true
+    }
+  }
+}

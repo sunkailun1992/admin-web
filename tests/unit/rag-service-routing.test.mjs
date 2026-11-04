@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import test from 'node:test';
 import { createContext, runInContext } from 'node:vm';
 import ts from 'typescript';
 
@@ -10,14 +10,20 @@ function loadModule(relativePath, dependencies = {}) {
     readFileSync(new URL(relativePath, import.meta.url), 'utf8'),
     { compilerOptions: { module: ts.ModuleKind.CommonJS } },
   ).outputText;
-  runInContext(code, createContext({
-    exports: module.exports,
-    process: { env: {} },
-    require: (name) => {
-      assert.ok(Object.hasOwn(dependencies, name), `Unexpected dependency: ${name}`);
-      return dependencies[name];
-    },
-  }));
+  runInContext(
+    code,
+    createContext({
+      exports: module.exports,
+      process: { env: {} },
+      require: (name) => {
+        assert.ok(
+          Object.hasOwn(dependencies, name),
+          `Unexpected dependency: ${name}`,
+        );
+        return dependencies[name];
+      },
+    }),
+  );
   return module.exports;
 }
 
@@ -27,10 +33,12 @@ function runtime() {
   const constants = loadModule('../../src/constants/auth.ts');
   const service = loadModule('../../src/services/rag/index.ts', {
     '@/constants/auth': constants,
-    '@umijs/max': { request: async (url, options = {}) => {
-      calls.push({ url, options });
-      return {};
-    } },
+    '@umijs/max': {
+      request: async (url, options = {}) => {
+        calls.push({ url, options });
+        return {};
+      },
+    },
   });
   return { service, calls };
 }
@@ -62,6 +70,25 @@ test('validation keeps a document identifier in one encoded path segment', async
   assert.equal(calls[0].url, '/api/rag/documents/doc%2Fa%20b%3Fx/validation');
   assert.equal(calls[0].options.method, 'POST');
   assert.equal(calls[0].options.timeout, 120000);
+});
+
+test('chunk inspector preserves the gateway path, opaque cursor and cancellation', async () => {
+  const { service, calls } = runtime();
+  const signal = new AbortController().signal;
+  await service.listRagDocumentChunks(
+    'doc/a b?x',
+    { cursor: 'opaque+/cursor=', limit: 20 },
+    signal,
+  );
+  assert.equal(calls[0].url, '/api/rag/documents/doc%2Fa%20b%3Fx/chunks');
+  assert.equal(calls[0].options.method || 'GET', 'GET');
+  assert.equal(calls[0].options.params.cursor, 'opaque+/cursor=');
+  assert.equal(calls[0].options.params.limit, 20);
+  assert.equal(calls[0].options.signal, signal);
+  assert.equal(Object.hasOwn(calls[0].options.params, 'tenantId'), false);
+  await service.listRagDocumentChunks('doc-default');
+  assert.equal(calls[1].options.params.limit, 20);
+  assert.equal(calls[1].options.params.cursor, undefined);
 });
 
 test('deactivation keeps DELETE and an encoded document identifier', async () => {
