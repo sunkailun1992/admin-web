@@ -83,6 +83,26 @@ test('runtime still expires ordinary unauthorized administrator requests', () =>
   assert.deepEqual(effects.redirects, ['/login']);
 });
 
+test('runtime silently ignores confirmed client cancellation during graph scope changes', () => {
+  const { request, effects } = runtime();
+  request.errorConfig.errorHandler({ code: 'ERR_CANCELED', message: 'canceled' });
+  request.errorConfig.errorHandler({ name: 'AbortError', message: 'aborted' });
+  assert.deepEqual(effects.messages, []);
+  assert.deepEqual(effects.redirects, []);
+  assert.equal(effects.cleared, 0);
+});
+
+test('runtime still reports timeouts, ordinary network errors and HTTP authorization failures', () => {
+  const { request, effects } = runtime();
+  request.errorConfig.errorHandler({ code: 'ECONNABORTED', message: 'timeout' });
+  request.errorConfig.errorHandler({ message: 'canceled by network' });
+  request.errorConfig.errorHandler({ code: 'ERR_CANCELED', response: { status: 403 } });
+  request.errorConfig.errorHandler({ name: 'AbortError', response: { status: 401 } });
+  assert.deepEqual(effects.messages, ['timeout', 'canceled by network', '无权限访问', '登录已失效，请重新登录']);
+  assert.equal(effects.cleared, 1);
+  assert.deepEqual(effects.redirects, ['/login']);
+});
+
 test('runtime interceptor preserves Basic credentials and traffic headers', () => {
   const { request } = runtime();
   const config = request.requestInterceptors[0]({ skipAuth: true, headers: { Authorization: 'Basic fixture' } });

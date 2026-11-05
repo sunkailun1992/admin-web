@@ -50,6 +50,8 @@ declare namespace RagAPI {
     document: DocumentVO;
     idempotent: boolean;
     validation: DocumentValidationVO;
+    graphBuild?: KnowledgeGraphSyncVO;
+    graphStatus?: GraphBuildStatus | string;
   };
 
   type DocumentChunkVO = {
@@ -96,9 +98,13 @@ declare namespace RagAPI {
     chunks: RetrievalChunkVO[];
   };
 
-  type GraphNodeType = 'DOCUMENT' | 'SECTION' | 'RECORD' | 'CONCEPT';
+  type GraphNodeType = 'DOCUMENT' | 'SECTION' | 'RECORD' | 'CONCEPT' | 'ENTITY';
 
-  type GraphRelationType = 'CONTAINS' | 'HAS_ATTRIBUTE' | 'MENTIONS';
+  type GraphRelationType =
+    | 'CONTAINS'
+    | 'HAS_ATTRIBUTE'
+    | 'MENTIONS'
+    | 'RELATED_TO';
 
   type GraphViewMode = 'OVERVIEW' | 'DETAIL';
 
@@ -117,7 +123,29 @@ declare namespace RagAPI {
     chunkId?: string;
     chunkType?: string;
     sectionPath?: string;
+    sources?: KnowledgeGraphSource[];
+    sourceCount?: number;
+    sourceTruncated?: boolean;
     [key: string]: unknown;
+  };
+
+  type KnowledgeGraphSource = {
+    pointId: string;
+    documentId: string;
+    documentCode: string;
+    documentVersion: number;
+    documentRevision: number;
+    chunkId: string;
+    contentSha256: string;
+    sourceName?: string;
+    sourceType?: SourceType;
+    sourceLocator?: string;
+    chunkType?: string;
+    sectionPath?: string;
+    sourceMetadata?: SourceMetadata;
+    evidence?: string;
+    evidenceTruncated?: boolean;
+    evidenceNormalized?: boolean;
   };
 
   type KnowledgeGraphNodeVO = {
@@ -139,7 +167,7 @@ declare namespace RagAPI {
     type: GraphRelationType;
     label?: string;
     sourceLocator?: string;
-    properties?: Record<string, unknown>;
+    properties?: KnowledgeGraphNodeProperties;
   };
 
   type KnowledgeGraphVO = {
@@ -152,6 +180,28 @@ declare namespace RagAPI {
     relationTypeCounts: Record<string, number>;
     nodes: KnowledgeGraphNodeVO[];
     edges: KnowledgeGraphEdgeVO[];
+    backend?: 'neo4j';
+    build?: GraphBuild | null;
+  };
+
+  type GraphBuildStatus =
+    | 'QUEUED'
+    | 'RUNNING'
+    | 'SUCCEEDED'
+    | 'FAILED'
+    | 'CANCELLED';
+
+  type GraphBuild = {
+    buildId: string;
+    knowledgeBase: string;
+    status: GraphBuildStatus;
+    documentCount: number;
+    processedDocumentCount: number;
+    nodeCount: number;
+    edgeCount: number;
+    errorCode?: string;
+    createdAt?: string;
+    updatedAt?: string;
   };
 
   type KnowledgeGraphSyncVO = {
@@ -159,5 +209,7 @@ declare namespace RagAPI {
     documentCount: number;
     nodeCount: number;
     edgeCount: number;
+    buildId?: string;
+    status?: GraphBuildStatus;
   };
 }

@@ -67,20 +67,36 @@ export async function retrieveRagKnowledge(data: RagAPI.RetrievalRequest) {
 
 export async function queryRagKnowledgeGraph(
   params: RagAPI.KnowledgeGraphQuery,
+  signal?: AbortSignal,
 ) {
   return ragRequest<API.ApiResponse<RagAPI.KnowledgeGraphVO>>(
     '/api/rag/graphs',
-    { params },
+    { params, signal },
   );
 }
 
-export async function syncRagKnowledgeGraph(knowledgeBase?: string) {
+export async function syncRagKnowledgeGraph(
+  knowledgeBase?: string,
+  signal?: AbortSignal,
+) {
   return ragRequest<API.ApiResponse<RagAPI.KnowledgeGraphSyncVO>>(
     '/api/rag/graphs/sync',
     {
       method: 'POST',
       params: { knowledgeBase: knowledgeBase || undefined },
       timeout: 5 * 60 * 1000,
+      signal,
     },
+  );
+}
+
+export async function getRagGraphBuild(
+  buildId: string,
+  knowledgeBase: string,
+  signal?: AbortSignal,
+) {
+  return ragRequest<API.ApiResponse<RagAPI.GraphBuild>>(
+    `/api/rag/graphs/builds/${encodeURIComponent(buildId)}`,
+    { params: { knowledgeBase }, signal },
   );
 }

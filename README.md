@@ -288,8 +288,12 @@ XLSX/DOCX 使用既有 Java 解析；PDF/图片依赖配套 RAG 版本启用文�
 
 ## RAG 图谱来源追溯
 
-图谱沿用 `GET /api/rag/graphs` 和 `POST /api/rag/graphs/sync`。`SECTION` 统一显示为「来源区段」，可对应 XLSX 工作表、DOCX 章节及 PDF / 图片页面；具体范围以已保存的章节、定位与元信息为准。图谱展示来源结构和按规则生成的确定性概念关系，不提供语义实体抽取。
+图谱沿用 `GET /api/rag/graphs` 和 `POST /api/rag/graphs/sync`，兼容原来源结构与规则概念图。配套 Java 开启新图后端后，语义图展示 LlamaIndex 抽取、Neo4j 保存的 `ENTITY` 实体及 `RELATED_TO` 关系；关系以 `label` 展示具体语义。读到 `backend=neo4j` 后，页面仅提供实体筛选并隐藏结构视图选项，旧结构筛选会清除并重查；首次未知后端时保留现有筛选。请求仍兼容 `OVERVIEW/DETAIL`，新模式两者返回语义图，不表示另有文档结构。旧后端的总览继续查看文档与概念，结构明细展示区段和记录。未知节点类型使用安全默认样式。`SECTION` 统一显示为「来源区段」，可对应 XLSX 工作表、DOCX 章节及 PDF / 图片页面；具体范围以已保存的章节、定位与元信息为准。
 
-文档、区段、记录节点从配套后端返回的 `properties.sourceName/sourceType/sourceMetadata` 展示来源文件、格式、页码、区块类型、坐标和 OCR 能力，保留已有 `chunkId/chunkType/sectionPath` 的追溯信息。旧图谱缺少字段时显示「未提供」，更新配套后端后可由有图谱管理权限的账号重新同步活动文档。切片坐标属于具体区块，不应当作整页坐标。
+点击节点或关系可查看来源证据。新图谱读取 `properties.sources[]`、`sourceCount`、`sourceTruncated`，每项最多显示 8 条公开来源；跨文档实体和关系不会被伪装为只有一个来源。来源字段及摘录使用白名单并以普通文本展示，摘录显示最多 2000 字符。每条来源的严格布尔 `evidenceTruncated=true` 会提示摘录已截断、需核对原文或完整切片，即使文本未达到前端上限；`evidenceNormalized=true` 显示「格式已归一」，说明定位使用了空白或字形规范化。前端自行裁短也会提示，不把局部摘录当完整证据。旧节点继续从 `properties.sourceName/sourceType/sourceMetadata` 展示来源文件、格式、页码、区块类型、坐标和 OCR 能力，保留已有 `chunkId/chunkType/sectionPath` 的追溯信息。缺少字段时显示「未提供」。切片坐标属于具体区块，不应当作整页坐标。
 
-有 `documentId` 的节点可通过「查看文档切片」打开与文档列表相同的分页检视窗口，入口同时要求 `menu:rag:document + rag:document:manage`；只有图谱查看权限的账号不显示该入口，没有文档标识的共享概念节点也不显示。前端不增加节点详情接口、不伪造文档字段或租户，后端继续执行最终授权。
+证据含 `documentId` 时可通过「查看文档切片」打开与文档列表相同的分页检视窗口，入口同时要求 `menu:rag:document + rag:document:manage`；只有图谱查看权限的账号可读后端公开的图谱证据摘录，不显示完整文档切片入口。分页窗口不会自动定位到某个 `chunkId`。前端不伪造文档字段或租户，后端继续执行最终授权。
+
+「重新构建图谱」沿用 `rag:graph:manage`，二次确认后提交。旧后端返回同步计数时仍按完成处理；新后端返回 `buildId/status` 时仅表示任务已接收，页面调用 `GET /api/rag/graphs/builds/{buildId}?knowledgeBase=...` 读取完整状态，每 2 秒续读排队或运行中的任务，终态停止。图查询返回的可选 `build` 可恢复进行中的任务。构建卡的实体/关系出现次数按来源累计，当前图节点/关系数按查询范围聚合，两者不能直接等同。只有 `SUCCEEDED` 显示完成并刷新图谱，`FAILED/CANCELLED` 保留已显示结果并允许重试，状态读取失败可单独重试。更换知识库、再次查询和离开页面会取消对应旧请求，迟到响应不覆盖当前视图。
+
+上传继续使用原 multipart 契约。配套后端可追加 `graphBuild/graphStatus`，向量成功与图谱排队或失败分别提示，不把图谱失败解释为向量上传失败。前端不连接 Python、Neo4j 或 Qdrant，也不持有模型或数据库凭据。接口、实现与离线验收说明见 [图谱接入说明](docs/ai-coding/RAG_NEO4J_GRAPH.md)；真实模型、网关和浏览器验收需单独执行，前端构建通过不代表环境已启用新后端。

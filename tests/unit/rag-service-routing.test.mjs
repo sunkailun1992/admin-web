@@ -125,3 +125,19 @@ test('graph sync preserves POST, knowledge base and synchronization timeout', as
   assert.equal(calls[0].options.params.knowledgeBase, 'fixture-kb');
   assert.equal(calls[0].options.timeout, 300000);
 });
+
+test('graph requests preserve cancellation and scope build reads to an encoded job and knowledge base', async () => {
+  const { service, calls } = runtime();
+  const signal = new AbortController().signal;
+  await service.queryRagKnowledgeGraph({ knowledgeBase: 'fixture-kb' }, signal);
+  assert.equal(calls[0].options.signal, signal);
+  await service.syncRagKnowledgeGraph('fixture-kb', signal);
+  assert.equal(calls[1].options.signal, signal);
+  assert.equal(typeof service.getRagGraphBuild, 'function');
+  await service.getRagGraphBuild('build/a ?b', 'fixture-kb', signal);
+  assert.equal(calls[2].url, '/api/rag/graphs/builds/build%2Fa%20%3Fb');
+  assert.equal(calls[2].options.method || 'GET', 'GET');
+  assert.equal(calls[2].options.params.knowledgeBase, 'fixture-kb');
+  assert.equal(calls[2].options.signal, signal);
+  assert.equal(Object.hasOwn(calls[2].options.params, 'tenantId'), false);
+});

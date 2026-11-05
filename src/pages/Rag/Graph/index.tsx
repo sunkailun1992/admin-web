@@ -1,8 +1,12 @@
 import PageContainer from '@/components/AppPageContainer';
-import { queryRagKnowledgeGraph, syncRagKnowledgeGraph } from '@/services/rag';
+import {
+  getRagGraphBuild,
+  queryRagKnowledgeGraph,
+  syncRagKnowledgeGraph,
+} from '@/services/rag';
 import { ApartmentOutlined, SyncOutlined } from '@ant-design/icons';
 import type { IElementEvent } from '@antv/g6';
-import { Graph, NodeEvent } from '@antv/g6';
+import { EdgeEvent, Graph, NodeEvent } from '@antv/g6';
 import { useAccess } from '@umijs/max';
 import {
   Alert,
@@ -14,6 +18,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -23,25 +28,31 @@ import {
 } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DocumentChunksDrawer from '../Document/DocumentChunksDrawer';
-import { readSourceDetails } from '../sourceDetails';
+import GraphSources from './GraphSources';
+import {
+  createGraphRequestGate,
+  graphBuildMeta,
+  graphNodeMeta,
+  graphNodeTypes,
+  isBuildPending,
+  nodePresentation,
+  pollGraphBuild,
+  queryForGraphBackend,
+  readGraphBuild,
+  readGraphSync,
+} from './graphModel';
 import styles from './index.less';
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
 
-const nodeMeta: Record<
-  RagAPI.GraphNodeType,
-  { color: string; name: string; size: number }
-> = {
-  DOCUMENT: { color: '#1677ff', name: '文档', size: 44 },
-  SECTION: { color: '#13c2c2', name: '来源区段', size: 34 },
-  RECORD: { color: '#722ed1', name: '知识记录', size: 28 },
-  CONCEPT: { color: '#fa8c16', name: '概念', size: 24 },
-};
+type GraphSelection =
+  | { kind: 'node'; value: RagAPI.KnowledgeGraphNodeVO }
+  | { kind: 'edge'; value: RagAPI.KnowledgeGraphEdgeVO };
 
 type GraphCanvasProps = {
   canSync: boolean;
   graph?: RagAPI.KnowledgeGraphVO;
-  onSelect: (node?: RagAPI.KnowledgeGraphNodeVO) => void;
+  onSelect: (selection?: GraphSelection) => void;
   onSync: () => Promise<void>;
   syncing: boolean;
 };
@@ -58,6 +69,7 @@ function GraphCanvas({
   useEffect(() => {
     if (!containerRef.current || !data?.nodes.length) return undefined;
     const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
+    const edgesById = new Map(data.edges.map((edge) => [edge.id, edge]));
     const instance = new Graph({
       container: containerRef.current,
       autoFit: 'view',
@@ -75,12 +87,8 @@ function GraphCanvas({
       node: {
         type: 'circle',
         style: {
-          size: (datum) =>
-            nodeMeta[(datum.data?.type as RagAPI.GraphNodeType) || 'CONCEPT']
-              .size,
-          fill: (datum) =>
-            nodeMeta[(datum.data?.type as RagAPI.GraphNodeType) || 'CONCEPT']
-              .color,
+          size: (datum) => nodePresentation(datum.data?.type).size,
+          fill: (datum) => nodePresentation(datum.data?.type).color,
           stroke: '#ffffff',
           lineWidth: 2,
           labelText: (datum) => {
@@ -108,7 +116,14 @@ function GraphCanvas({
           lineWidth: 1.2,
           endArrow: true,
           endArrowSize: 5,
+          labelText: (datum) =>
+            String(datum.data?.label || datum.data?.type || ''),
+          labelFontSize: 10,
+          labelMaxWidth: 120,
+          labelBackground: true,
+          labelBackgroundFill: 'rgba(255,255,255,0.9)',
         },
+        state: { selected: { stroke: '#52c41a', lineWidth: 3 } },
       },
       layout: {
         type: 'd3-force',
@@ -127,7 +142,17 @@ function GraphCanvas({
       }
       selectedId = id;
       instance.setElementState(id, ['selected']);
-      onSelect(nodesById.get(id));
+      const node = nodesById.get(id);
+      onSelect(node ? { kind: 'node', value: node } : undefined);
+    });
+    instance.on<IElementEvent>(EdgeEvent.CLICK, (event) => {
+      const id = String(event.target.id);
+      if (selectedId && selectedId !== id)
+        instance.setElementState(selectedId, []);
+      selectedId = id;
+      instance.setElementState(id, ['selected']);
+      const edge = edgesById.get(id);
+      onSelect(edge ? { kind: 'edge', value: edge } : undefined);
     });
     instance.render();
     return () => {
@@ -141,19 +166,20 @@ function GraphCanvas({
         <Empty
           description={
             canSync
-              ? '当前知识库尚未生成图谱；已有向量文档需要先执行一次图谱同步。'
+              ? '当前知识库尚无可显示图谱，可从活动文档构建；已接收任务的进度见构建状态。'
               : '当前知识库尚无图谱数据，请联系有图谱管理权限的管理员执行同步。'
           }
         >
           {canSync && (
-            <Button
-              icon={<SyncOutlined />}
-              loading={syncing}
-              onClick={onSync}
-              type="primary"
+            <Popconfirm
+              title="确认从当前知识库的活动文档重新构建图谱？"
+              onConfirm={onSync}
+              disabled={syncing}
             >
-              从活动向量生成图谱
-            </Button>
+              <Button icon={<SyncOutlined />} loading={syncing} type="primary">
+                构建图谱
+              </Button>
+            </Popconfirm>
           )}
         </Empty>
       </div>
@@ -167,60 +193,186 @@ export default function RagKnowledgeGraphPage() {
   const [form] = Form.useForm<RagAPI.KnowledgeGraphQuery>();
   const currentViewMode = Form.useWatch('viewMode', form);
   const [graph, setGraph] = useState<RagAPI.KnowledgeGraphVO>();
-  const [selectedNode, setSelectedNode] =
-    useState<RagAPI.KnowledgeGraphNodeVO>();
+  const [selection, setSelection] = useState<GraphSelection>();
   const [chunkDocument, setChunkDocument] =
     useState<Pick<RagAPI.DocumentVO, 'documentId' | 'title' | 'sourceName'>>();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const selectedSource = readSourceDetails(selectedNode?.properties);
+  const [watching, setWatching] = useState(false);
+  const [graphError, setGraphError] = useState(false);
+  const [buildError, setBuildError] = useState(false);
+  const [build, setBuild] = useState<RagAPI.GraphBuild>();
+  const [trackedBuild, setTrackedBuild] = useState<{
+    buildId: string;
+    knowledgeBase: string;
+  }>();
+  const graphGate = useRef(createGraphRequestGate());
+  const syncGate = useRef(createGraphRequestGate());
+  const buildGate = useRef(createGraphRequestGate());
+  const scope = useRef(DEFAULT_KNOWLEDGE_BASE);
+  const mounted = useRef(true);
 
-  const loadGraph = async (values?: RagAPI.KnowledgeGraphQuery) => {
-    const params = values || form.getFieldsValue();
+  const cancelRequests = () => {
+    graphGate.current.cancel();
+    syncGate.current.cancel();
+    buildGate.current.cancel();
+  };
+
+  const loadGraph = async (
+    values?: RagAPI.KnowledgeGraphQuery,
+    resume = true,
+  ): Promise<void> => {
+    const params = queryForGraphBackend(
+      values || form.getFieldsValue(),
+      graph?.backend,
+    );
+    const knowledgeBase = params.knowledgeBase || DEFAULT_KNOWLEDGE_BASE;
+    if (!mounted.current || scope.current !== knowledgeBase) return;
+    const request = graphGate.current.begin();
+    if (resume) {
+      buildGate.current.cancel();
+      setWatching(false);
+    }
     setLoading(true);
+    setGraphError(false);
     try {
-      const response = await queryRagKnowledgeGraph(params);
-      setGraph(response.data);
-      setSelectedNode(undefined);
+      const response = await queryRagKnowledgeGraph(
+        { ...params, knowledgeBase },
+        request.signal,
+      );
+      if (!request.isCurrent()) return;
+      const data = response.data;
+      if (
+        !data ||
+        data.knowledgeBase !== knowledgeBase ||
+        !Array.isArray(data.nodes) ||
+        !Array.isArray(data.edges)
+      )
+        throw new Error('Invalid graph response');
+      setGraph(data);
+      const normalized = queryForGraphBackend(params, data.backend);
+      if (normalized.nodeType !== params.nodeType) {
+        form.setFieldValue('nodeType', undefined);
+        await loadGraph(normalized, resume);
+        return;
+      }
+      setSelection(undefined);
       setChunkDocument(undefined);
+      const currentBuild = readGraphBuild(data.build, knowledgeBase);
+      if (resume) {
+        setBuild(currentBuild);
+        setBuildError(Boolean(data.build && !currentBuild));
+        setTrackedBuild(
+          currentBuild
+            ? { buildId: currentBuild.buildId, knowledgeBase }
+            : undefined,
+        );
+        if (currentBuild && isBuildPending(currentBuild.status))
+          void watchBuild(currentBuild.buildId, knowledgeBase);
+      }
+    } catch {
+      if (request.isCurrent()) setGraphError(true);
     } finally {
-      setLoading(false);
+      if (request.isCurrent()) setLoading(false);
+    }
+  };
+
+  const watchBuild = async (
+    buildId: string,
+    knowledgeBase: string,
+  ): Promise<void> => {
+    if (!mounted.current || scope.current !== knowledgeBase) return;
+    const request = buildGate.current.begin();
+    setTrackedBuild({ buildId, knowledgeBase });
+    setWatching(true);
+    setBuildError(false);
+    try {
+      const terminal = await pollGraphBuild({
+        buildId,
+        knowledgeBase,
+        signal: request.signal,
+        read: async (id, kb, signal) =>
+          (
+            await getRagGraphBuild(id, kb, signal)
+          ).data,
+        onUpdate: (value) => {
+          if (request.isCurrent()) setBuild(value);
+        },
+      });
+      if (!request.isCurrent()) return;
+      if (terminal.status === 'SUCCEEDED') {
+        message.success('图谱构建完成');
+        await loadGraph({ ...form.getFieldsValue(), knowledgeBase }, false);
+      }
+    } catch {
+      if (request.isCurrent()) setBuildError(true);
+    } finally {
+      if (request.isCurrent()) setWatching(false);
     }
   };
 
   useEffect(() => {
-    loadGraph({
+    mounted.current = true;
+    void loadGraph({
       knowledgeBase: DEFAULT_KNOWLEDGE_BASE,
       viewMode: 'OVERVIEW',
       limit: 240,
     });
+    return () => {
+      mounted.current = false;
+      cancelRequests();
+    };
   }, []);
 
   const handleSync = async () => {
     const values = await form.validateFields(['knowledgeBase']);
+    const knowledgeBase = values.knowledgeBase || DEFAULT_KNOWLEDGE_BASE;
+    if (!mounted.current || scope.current !== knowledgeBase) return;
+    const request = syncGate.current.begin();
+    graphGate.current.cancel();
+    buildGate.current.cancel();
+    setLoading(false);
+    setWatching(false);
     setSyncing(true);
+    setBuildError(false);
     try {
-      const response = await syncRagKnowledgeGraph(values.knowledgeBase);
-      message.success(
-        `已同步 ${response.data?.documentCount || 0} 份文档、${
-          response.data?.nodeCount || 0
-        } 个节点和 ${response.data?.edgeCount || 0} 条关系`,
+      const response = await syncRagKnowledgeGraph(
+        knowledgeBase,
+        request.signal,
       );
-      await loadGraph();
+      if (!request.isCurrent()) return;
+      const outcome = readGraphSync(response.data, knowledgeBase);
+      if (outcome.kind === 'build') {
+        setBuild(undefined);
+        message.info('图谱任务已接收，正在读取构建状态');
+        void watchBuild(outcome.buildId, knowledgeBase);
+      } else {
+        message.success(
+          `已同步 ${outcome.documentCount} 份文档、${outcome.nodeCount} 个节点和 ${outcome.edgeCount} 条关系`,
+        );
+        await loadGraph();
+      }
+    } catch {
+      if (request.isCurrent()) setBuildError(true);
     } finally {
-      setSyncing(false);
+      if (request.isCurrent()) setSyncing(false);
     }
   };
 
   const legend = useMemo(
     () =>
-      (Object.keys(nodeMeta) as RagAPI.GraphNodeType[]).map((type) => (
-        <Tag color={nodeMeta[type].color} key={type}>
-          {nodeMeta[type].name} {graph?.nodeTypeCounts?.[type] || 0}
+      graphNodeTypes(graph?.backend, 'DETAIL').map((type) => (
+        <Tag color={graphNodeMeta[type].color} key={type}>
+          {graphNodeMeta[type].name} {graph?.nodeTypeCounts?.[type] || 0}
         </Tag>
       )),
     [graph],
   );
+  const buildBusy = syncing || watching || isBuildPending(build?.status);
+  const selectedNode = selection?.kind === 'node' ? selection.value : undefined;
+  const selectedEdge = selection?.kind === 'edge' ? selection.value : undefined;
+  const nodeName = (id: string) =>
+    graph?.nodes.find((node) => node.id === id)?.name || id;
 
   return (
     <PageContainer title="RAG知识图谱">
@@ -228,8 +380,12 @@ export default function RagKnowledgeGraphPage() {
         <Alert
           showIcon
           type="info"
-          message="向量检索与知识关系分层存储"
-          description="图谱展示已激活文档的来源结构和确定性概念关系。总览观察文档与共享概念的网络，结构明细追溯到工作表、章节、页面和切片位置；PDF / 图片的页码、区块及 OCR 能力以已保存元信息为准。概念来自规则生成，图谱不提供语义实体抽取。"
+          message="实体关系与来源证据"
+          description={
+            graph?.backend === 'neo4j'
+              ? '当前为语义图谱，显示活动来源中抽取的实体与关系。模型关系应结合来源证据判断，点击节点或关系可查看摘录；上传向量与图谱构建分别记录状态。'
+              : '图谱按实际后端展示实体关系或来源结构。旧结构图总览查看文档与概念，结构明细追溯区段与切片；语义关系应结合来源证据判断。上传向量与图谱构建分别记录状态。'
+          }
         />
         <Card>
           <Form<RagAPI.KnowledgeGraphQuery>
@@ -241,11 +397,24 @@ export default function RagKnowledgeGraphPage() {
             }}
             layout="inline"
             onValuesChange={(changed) => {
+              if (changed.knowledgeBase !== undefined) {
+                cancelRequests();
+                scope.current = changed.knowledgeBase;
+                setGraph(undefined);
+                setBuild(undefined);
+                setTrackedBuild(undefined);
+                setSelection(undefined);
+                setChunkDocument(undefined);
+                setLoading(false);
+                setSyncing(false);
+                setWatching(false);
+                setGraphError(false);
+                setBuildError(false);
+              }
               if (changed.viewMode === 'OVERVIEW') {
                 const currentType = form.getFieldValue('nodeType');
-                if (currentType === 'SECTION' || currentType === 'RECORD') {
+                if (currentType === 'SECTION' || currentType === 'RECORD')
                   form.setFieldValue('nodeType', undefined);
-                }
               }
             }}
             onFinish={loadGraph}
@@ -267,10 +436,14 @@ export default function RagKnowledgeGraphPage() {
               <Input
                 allowClear
                 maxLength={80}
-                placeholder="概念、文档或来源位置"
+                placeholder="实体、概念、文档或来源位置"
               />
             </Form.Item>
-            <Form.Item label="视图" name="viewMode">
+            <Form.Item
+              label="视图"
+              name="viewMode"
+              hidden={graph?.backend === 'neo4j'}
+            >
               <Select
                 className={styles.viewSelect}
                 options={[
@@ -283,17 +456,12 @@ export default function RagKnowledgeGraphPage() {
               <Select
                 allowClear
                 className={styles.typeSelect}
-                options={(Object.keys(nodeMeta) as RagAPI.GraphNodeType[])
-                  .filter(
-                    (type) =>
-                      currentViewMode === 'DETAIL' ||
-                      type === 'DOCUMENT' ||
-                      type === 'CONCEPT',
-                  )
-                  .map((type) => ({
-                    label: nodeMeta[type].name,
+                options={graphNodeTypes(graph?.backend, currentViewMode).map(
+                  (type) => ({
+                    label: graphNodeMeta[type].name,
                     value: type,
-                  }))}
+                  }),
+                )}
                 placeholder="全部"
               />
             </Form.Item>
@@ -306,23 +474,113 @@ export default function RagKnowledgeGraphPage() {
                   htmlType="submit"
                   icon={<ApartmentOutlined />}
                   loading={loading}
+                  disabled={syncing}
                   type="primary"
                 >
                   查询图谱
                 </Button>
                 {access.canManageRagGraph && (
-                  <Button
-                    icon={<SyncOutlined />}
-                    loading={syncing}
-                    onClick={handleSync}
+                  <Popconfirm
+                    title="确认从当前知识库的活动文档重新构建图谱？"
+                    description="构建完成前继续使用已发布图谱，构建失败不会撤销活动向量。"
+                    onConfirm={handleSync}
+                    disabled={buildBusy}
                   >
-                    从活动向量同步
-                  </Button>
+                    <Button
+                      icon={<SyncOutlined />}
+                      loading={syncing}
+                      disabled={buildBusy}
+                    >
+                      重新构建图谱
+                    </Button>
+                  </Popconfirm>
                 )}
               </Space>
             </Form.Item>
           </Form>
         </Card>
+        {(build || watching || buildError) && (
+          <Card
+            title="构建状态"
+            extra={
+              build && (
+                <Tag color={graphBuildMeta[build.status].color}>
+                  {graphBuildMeta[build.status].name}
+                </Tag>
+              )
+            }
+          >
+            <Space direction="vertical" style={{ width: '100%' }}>
+              {build ? (
+                <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 4 }}>
+                  <Descriptions.Item label="处理文档">
+                    {build.processedDocumentCount} / {build.documentCount}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="实体出现次数">
+                    {build.nodeCount}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="关系出现次数">
+                    {build.edgeCount}
+                  </Descriptions.Item>
+                  {build.updatedAt && (
+                    <Descriptions.Item label="更新时间">
+                      {build.updatedAt}
+                    </Descriptions.Item>
+                  )}
+                  {build.errorCode && (
+                    <Descriptions.Item label="错误代码">
+                      {build.errorCode}
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              ) : (
+                watching && <span>任务已接收，正在读取构建状态。</span>
+              )}
+              {build && (
+                <span>
+                  构建计数按来源累计，当前图按实体与关系聚合，两者数量可能不同。
+                </span>
+              )}
+              {build &&
+                (build.status === 'FAILED' || build.status === 'CANCELLED') && (
+                  <Alert
+                    showIcon
+                    type="warning"
+                    message="本次图谱未构建成功，当前视图保留已发布结果；可重新构建。"
+                  />
+                )}
+              {buildError && (
+                <Alert
+                  showIcon
+                  type="error"
+                  message="图谱任务提交或状态读取失败，已显示的图谱保持不变。"
+                  action={
+                    trackedBuild && (
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          void watchBuild(
+                            trackedBuild.buildId,
+                            trackedBuild.knowledgeBase,
+                          )
+                        }
+                      >
+                        重试读取状态
+                      </Button>
+                    )
+                  }
+                />
+              )}
+            </Space>
+          </Card>
+        )}
+        {graphError && (
+          <Alert
+            showIcon
+            type="error"
+            message="图谱读取失败，已显示的结果保持不变，请重试查询。"
+          />
+        )}
         {graph?.truncated && (
           <Alert
             showIcon
@@ -331,7 +589,7 @@ export default function RagKnowledgeGraphPage() {
           />
         )}
         <Row gutter={16}>
-          <Col lg={18} xs={24}>
+          <Col lg={17} xs={24}>
             <Card
               bodyStyle={{ padding: 0 }}
               loading={loading}
@@ -345,13 +603,13 @@ export default function RagKnowledgeGraphPage() {
               <GraphCanvas
                 canSync={access.canManageRagGraph}
                 graph={graph}
-                onSelect={setSelectedNode}
+                onSelect={setSelection}
                 onSync={handleSync}
-                syncing={syncing}
+                syncing={buildBusy}
               />
             </Card>
           </Col>
-          <Col lg={6} xs={24}>
+          <Col lg={7} xs={24}>
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               <Card title="当前结果">
                 <Row gutter={12}>
@@ -363,116 +621,75 @@ export default function RagKnowledgeGraphPage() {
                   </Col>
                 </Row>
               </Card>
-              <Card title="节点详情">
-                {selectedNode ? (
+              <Card title={selectedEdge ? '关系详情' : '节点详情'}>
+                {selection ? (
                   <Space
                     direction="vertical"
                     size={12}
                     style={{ width: '100%' }}
                   >
                     <Descriptions column={1} size="small">
-                      <Descriptions.Item label="类型">
-                        <Tag color={nodeMeta[selectedNode.type].color}>
-                          {nodeMeta[selectedNode.type].name}
-                        </Tag>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="名称">
-                        <span className={styles.breakText}>
-                          {selectedNode.name}
-                        </span>
-                      </Descriptions.Item>
-                      {selectedNode.label && (
-                        <Descriptions.Item label="字段">
-                          <span className={styles.breakText}>
-                            {selectedNode.label}
-                          </span>
-                        </Descriptions.Item>
-                      )}
-                      {selectedNode.documentCode && (
-                        <Descriptions.Item label="文档编码">
-                          {selectedNode.documentCode}
-                        </Descriptions.Item>
-                      )}
-                      {selectedNode.documentVersion && (
-                        <Descriptions.Item label="版本">
-                          v{selectedNode.documentVersion}
-                        </Descriptions.Item>
-                      )}
-                      {selectedNode.sourceLocator && (
-                        <Descriptions.Item label="来源位置">
-                          <span className={styles.breakText}>
-                            {selectedNode.sourceLocator}
-                          </span>
-                        </Descriptions.Item>
-                      )}
-                      {selectedNode.documentId && (
+                      {selectedNode && (
                         <>
-                          <Descriptions.Item label="来源文件">
+                          <Descriptions.Item label="类型">
+                            <Tag
+                              color={nodePresentation(selectedNode.type).color}
+                            >
+                              {nodePresentation(selectedNode.type).name}
+                            </Tag>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="名称">
                             <span className={styles.breakText}>
-                              {selectedSource.sourceName || '未提供'}
+                              {selectedNode.name}
                             </span>
                           </Descriptions.Item>
-                          <Descriptions.Item label="来源格式">
-                            {selectedSource.sourceType || '未提供'}
+                          {selectedNode.label && (
+                            <Descriptions.Item label="标签">
+                              <span className={styles.breakText}>
+                                {selectedNode.label}
+                              </span>
+                            </Descriptions.Item>
+                          )}
+                        </>
+                      )}
+                      {selectedEdge && (
+                        <>
+                          <Descriptions.Item label="主体">
+                            <span className={styles.breakText}>
+                              {nodeName(selectedEdge.source)}
+                            </span>
                           </Descriptions.Item>
-                          {selectedSource.sectionPath && (
-                            <Descriptions.Item label="来源区段">
-                              <span className={styles.breakText}>
-                                {selectedSource.sectionPath}
-                              </span>
-                            </Descriptions.Item>
-                          )}
-                          {selectedSource.chunkId && (
-                            <Descriptions.Item label="切片编号">
-                              <span className={styles.breakText}>
-                                {selectedSource.chunkId}
-                              </span>
-                            </Descriptions.Item>
-                          )}
-                          {selectedSource.chunkType && (
-                            <Descriptions.Item label="切片类型">
-                              {selectedSource.chunkType}
-                            </Descriptions.Item>
-                          )}
-                          {selectedSource.metadata.length ? (
-                            selectedSource.metadata.map((detail) => (
-                              <Descriptions.Item
-                                key={detail.key}
-                                label={detail.label}
-                              >
-                                <span className={styles.breakText}>
-                                  {detail.value}
-                                </span>
-                              </Descriptions.Item>
-                            ))
-                          ) : (
-                            <Descriptions.Item label="来源元信息">
-                              未提供
+                          <Descriptions.Item label="关系">
+                            <span className={styles.breakText}>
+                              {selectedEdge.label || selectedEdge.type}
+                            </span>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="类型">
+                            {selectedEdge.type}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="客体">
+                            <span className={styles.breakText}>
+                              {nodeName(selectedEdge.target)}
+                            </span>
+                          </Descriptions.Item>
+                          {selectedEdge.sourceLocator && (
+                            <Descriptions.Item label="来源位置">
+                              {selectedEdge.sourceLocator}
                             </Descriptions.Item>
                           )}
                         </>
                       )}
                     </Descriptions>
-                    {access.canSeeRagDocument && selectedNode.documentId && (
-                      <Button
-                        onClick={() =>
-                          setChunkDocument({
-                            documentId: selectedNode.documentId!,
-                            title:
-                              selectedSource.sourceName ||
-                              selectedNode.documentCode ||
-                              selectedNode.name,
-                            sourceName: selectedSource.sourceName || '',
-                          })
-                        }
-                      >
-                        查看文档切片
-                      </Button>
-                    )}
+                    <GraphSources
+                      properties={selection.value.properties}
+                      legacy={selectedNode}
+                      canViewDocument={access.canSeeRagDocument}
+                      onOpenDocument={setChunkDocument}
+                    />
                   </Space>
                 ) : (
                   <Empty
-                    description="点击节点查看来源"
+                    description="点击节点或关系查看来源"
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                   />
                 )}

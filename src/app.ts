@@ -175,6 +175,13 @@ export const request: RequestConfig = {
       const response = 'response' in error ? error.response : undefined;
       const status = response?.status;
       const responseData = response?.data;
+      if (
+        !status &&
+        (('code' in error && error.code === 'ERR_CANCELED') ||
+          error.name === 'AbortError')
+      ) {
+        return;
+      }
       if (status === 401) {
         const requestUrl = 'config' in error ? error.config?.url : undefined;
         if (isOAuthTokenRequest(requestUrl)) {

@@ -28,6 +28,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useState } from 'react';
+import { uploadGraphNotice } from '../Graph/graphModel';
 import DocumentChunksDrawer from './DocumentChunksDrawer';
 import EvaluationReportModal from './EvaluationReportModal';
 import styles from './index.less';
@@ -54,6 +55,8 @@ export default function RagDocumentPage() {
   const [searching, setSearching] = useState(false);
   const [chunkDocument, setChunkDocument] = useState<RagAPI.DocumentVO>();
   const [evaluationOpen, setEvaluationOpen] = useState(false);
+  const [graphNotice, setGraphNotice] =
+    useState<ReturnType<typeof uploadGraphNotice>>();
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -78,6 +81,13 @@ export default function RagDocumentPage() {
           message="结构化切片与重复处理"
           description="Excel 按工作表、表头和记录行切片，Word 按标题段落和表格行切片。PDF 与图片需服务器已开通文档解析，扫描件还需 OCR 服务。同一文件再次上传直接复用，同一文档编码的新内容生成新版本，重复内容合并向量但保留来源位置。"
         />
+        {graphNotice && (
+          <Alert
+            showIcon
+            type={graphNotice.type}
+            message={graphNotice.message}
+          />
+        )}
         <Row gutter={16}>
           <Col lg={12} xs={24}>
             <Card title="上传并转向量">
@@ -102,6 +112,7 @@ export default function RagDocumentPage() {
                     data.append('documentCode', values.documentCode);
                   if (values.title) data.append('title', values.title);
                   setUploading(true);
+                  setGraphNotice(undefined);
                   try {
                     const response = await uploadRagDocument(data);
                     message.success(
@@ -110,6 +121,7 @@ export default function RagDocumentPage() {
                         : '文档向量写入并校验成功',
                     );
                     setFileList([]);
+                    setGraphNotice(uploadGraphNotice(response.data));
                     await loadDocuments();
                   } finally {
                     setUploading(false);
