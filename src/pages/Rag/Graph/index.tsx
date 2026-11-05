@@ -22,6 +22,8 @@ import {
   message,
 } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import DocumentChunksDrawer from '../Document/DocumentChunksDrawer';
+import { readSourceDetails } from '../sourceDetails';
 import styles from './index.less';
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
@@ -31,7 +33,7 @@ const nodeMeta: Record<
   { color: string; name: string; size: number }
 > = {
   DOCUMENT: { color: '#1677ff', name: '文档', size: 44 },
-  SECTION: { color: '#13c2c2', name: '工作表', size: 34 },
+  SECTION: { color: '#13c2c2', name: '来源区段', size: 34 },
   RECORD: { color: '#722ed1', name: '知识记录', size: 28 },
   CONCEPT: { color: '#fa8c16', name: '概念', size: 24 },
 };
@@ -59,6 +61,8 @@ function GraphCanvas({
     const instance = new Graph({
       container: containerRef.current,
       autoFit: 'view',
+      // 少量节点的自动适配也受缩放上限约束，避免单节点和标签被放大到铺满画布。
+      zoomRange: [0.01, 1.5],
       data: {
         nodes: data.nodes.map((node) => ({ id: node.id, data: node })),
         edges: data.edges.map((edge) => ({
@@ -165,8 +169,11 @@ export default function RagKnowledgeGraphPage() {
   const [graph, setGraph] = useState<RagAPI.KnowledgeGraphVO>();
   const [selectedNode, setSelectedNode] =
     useState<RagAPI.KnowledgeGraphNodeVO>();
+  const [chunkDocument, setChunkDocument] =
+    useState<Pick<RagAPI.DocumentVO, 'documentId' | 'title' | 'sourceName'>>();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const selectedSource = readSourceDetails(selectedNode?.properties);
 
   const loadGraph = async (values?: RagAPI.KnowledgeGraphQuery) => {
     const params = values || form.getFieldsValue();
@@ -175,6 +182,7 @@ export default function RagKnowledgeGraphPage() {
       const response = await queryRagKnowledgeGraph(params);
       setGraph(response.data);
       setSelectedNode(undefined);
+      setChunkDocument(undefined);
     } finally {
       setLoading(false);
     }
@@ -221,7 +229,7 @@ export default function RagKnowledgeGraphPage() {
           showIcon
           type="info"
           message="向量检索与知识关系分层存储"
-          description="图谱从已激活的结构化切片确定性生成，不让模型猜测关系。总览用于观察文档与共享概念的网络，结构明细可追溯到工作表和原始行位置；节点与边使用稳定编码，后续可迁移到 Neo4j。"
+          description="图谱展示已激活文档的来源结构和确定性概念关系。总览观察文档与共享概念的网络，结构明细追溯到工作表、章节、页面和切片位置；PDF / 图片的页码、区块及 OCR 能力以已保存元信息为准。概念来自规则生成，图谱不提供语义实体抽取。"
         />
         <Card>
           <Form<RagAPI.KnowledgeGraphQuery>
@@ -357,42 +365,111 @@ export default function RagKnowledgeGraphPage() {
               </Card>
               <Card title="节点详情">
                 {selectedNode ? (
-                  <Descriptions column={1} size="small">
-                    <Descriptions.Item label="类型">
-                      <Tag color={nodeMeta[selectedNode.type].color}>
-                        {nodeMeta[selectedNode.type].name}
-                      </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="名称">
-                      <span className={styles.breakText}>
-                        {selectedNode.name}
-                      </span>
-                    </Descriptions.Item>
-                    {selectedNode.label && (
-                      <Descriptions.Item label="字段">
+                  <Space
+                    direction="vertical"
+                    size={12}
+                    style={{ width: '100%' }}
+                  >
+                    <Descriptions column={1} size="small">
+                      <Descriptions.Item label="类型">
+                        <Tag color={nodeMeta[selectedNode.type].color}>
+                          {nodeMeta[selectedNode.type].name}
+                        </Tag>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="名称">
                         <span className={styles.breakText}>
-                          {selectedNode.label}
+                          {selectedNode.name}
                         </span>
                       </Descriptions.Item>
+                      {selectedNode.label && (
+                        <Descriptions.Item label="字段">
+                          <span className={styles.breakText}>
+                            {selectedNode.label}
+                          </span>
+                        </Descriptions.Item>
+                      )}
+                      {selectedNode.documentCode && (
+                        <Descriptions.Item label="文档编码">
+                          {selectedNode.documentCode}
+                        </Descriptions.Item>
+                      )}
+                      {selectedNode.documentVersion && (
+                        <Descriptions.Item label="版本">
+                          v{selectedNode.documentVersion}
+                        </Descriptions.Item>
+                      )}
+                      {selectedNode.sourceLocator && (
+                        <Descriptions.Item label="来源位置">
+                          <span className={styles.breakText}>
+                            {selectedNode.sourceLocator}
+                          </span>
+                        </Descriptions.Item>
+                      )}
+                      {selectedNode.documentId && (
+                        <>
+                          <Descriptions.Item label="来源文件">
+                            <span className={styles.breakText}>
+                              {selectedSource.sourceName || '未提供'}
+                            </span>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="来源格式">
+                            {selectedSource.sourceType || '未提供'}
+                          </Descriptions.Item>
+                          {selectedSource.sectionPath && (
+                            <Descriptions.Item label="来源区段">
+                              <span className={styles.breakText}>
+                                {selectedSource.sectionPath}
+                              </span>
+                            </Descriptions.Item>
+                          )}
+                          {selectedSource.chunkId && (
+                            <Descriptions.Item label="切片编号">
+                              <span className={styles.breakText}>
+                                {selectedSource.chunkId}
+                              </span>
+                            </Descriptions.Item>
+                          )}
+                          {selectedSource.chunkType && (
+                            <Descriptions.Item label="切片类型">
+                              {selectedSource.chunkType}
+                            </Descriptions.Item>
+                          )}
+                          {selectedSource.metadata.length ? (
+                            selectedSource.metadata.map((detail) => (
+                              <Descriptions.Item
+                                key={detail.key}
+                                label={detail.label}
+                              >
+                                <span className={styles.breakText}>
+                                  {detail.value}
+                                </span>
+                              </Descriptions.Item>
+                            ))
+                          ) : (
+                            <Descriptions.Item label="来源元信息">
+                              未提供
+                            </Descriptions.Item>
+                          )}
+                        </>
+                      )}
+                    </Descriptions>
+                    {access.canSeeRagDocument && selectedNode.documentId && (
+                      <Button
+                        onClick={() =>
+                          setChunkDocument({
+                            documentId: selectedNode.documentId!,
+                            title:
+                              selectedSource.sourceName ||
+                              selectedNode.documentCode ||
+                              selectedNode.name,
+                            sourceName: selectedSource.sourceName || '',
+                          })
+                        }
+                      >
+                        查看文档切片
+                      </Button>
                     )}
-                    {selectedNode.documentCode && (
-                      <Descriptions.Item label="文档编码">
-                        {selectedNode.documentCode}
-                      </Descriptions.Item>
-                    )}
-                    {selectedNode.documentVersion && (
-                      <Descriptions.Item label="版本">
-                        v{selectedNode.documentVersion}
-                      </Descriptions.Item>
-                    )}
-                    {selectedNode.sourceLocator && (
-                      <Descriptions.Item label="来源位置">
-                        <span className={styles.breakText}>
-                          {selectedNode.sourceLocator}
-                        </span>
-                      </Descriptions.Item>
-                    )}
-                  </Descriptions>
+                  </Space>
                 ) : (
                   <Empty
                     description="点击节点查看来源"
@@ -404,6 +481,13 @@ export default function RagKnowledgeGraphPage() {
           </Col>
         </Row>
       </Space>
+      {access.canSeeRagDocument && chunkDocument && (
+        <DocumentChunksDrawer
+          key={chunkDocument.documentId}
+          document={chunkDocument}
+          onClose={() => setChunkDocument(undefined)}
+        />
+      )}
     </PageContainer>
   );
 }

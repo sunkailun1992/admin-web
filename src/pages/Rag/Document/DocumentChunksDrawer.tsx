@@ -11,9 +11,13 @@ import {
   Tag,
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { readSourceDetails } from '../sourceDetails';
 import styles from './index.less';
 
-type Props = { document: RagAPI.DocumentVO; onClose: () => void };
+type Props = {
+  document: Pick<RagAPI.DocumentVO, 'documentId' | 'title' | 'sourceName'>;
+  onClose: () => void;
+};
 
 export default function DocumentChunksDrawer({ document, onClose }: Props) {
   const [items, setItems] = useState<RagAPI.DocumentChunkVO[]>([]);
@@ -86,42 +90,50 @@ export default function DocumentChunksDrawer({ document, onClose }: Props) {
               <Empty description="没有可查看的切片" />
             ),
           }}
-          renderItem={(item) => (
-            <List.Item key={item.chunkId}>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                <Space wrap>
-                  <strong>切片 {item.chunkIndex}</strong>
-                  <Tag>{item.chunkType}</Tag>
+          renderItem={(item) => {
+            const source = readSourceDetails(item);
+            return (
+              <List.Item key={item.chunkId}>
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Space wrap>
+                    <strong>切片 {item.chunkIndex}</strong>
+                    <Tag>{item.chunkType}</Tag>
+                  </Space>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="来源">
+                      {source.sourceName || document.sourceName || '未提供'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="来源位置">
+                      {item.sourceLocator || '未提供'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="章节">
+                      {source.sectionPath || '未提供'}
+                    </Descriptions.Item>
+                    {source.metadata.length ? (
+                      source.metadata.map((detail) => (
+                        <Descriptions.Item
+                          key={detail.key}
+                          label={detail.label}
+                        >
+                          {detail.value}
+                        </Descriptions.Item>
+                      ))
+                    ) : (
+                      <Descriptions.Item label="来源元信息">
+                        未提供
+                      </Descriptions.Item>
+                    )}
+                    {!!item.duplicateLocators?.length && (
+                      <Descriptions.Item label="重复内容来源">
+                        {item.duplicateLocators.join('；')}
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
+                  <div className={styles.chunkContent}>{item.content}</div>
                 </Space>
-                <Descriptions bordered column={1} size="small">
-                  <Descriptions.Item label="来源">
-                    {item.sourceName || document.sourceName || '未提供'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="来源位置">
-                    {item.sourceLocator || '未提供'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="章节">
-                    {item.sectionPath || '未提供'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="页码 / 区块">
-                    {item.sourceMetadata?.page ?? '未提供'} /{' '}
-                    {item.sourceMetadata?.block_type || '未提供'}
-                  </Descriptions.Item>
-                  {item.sourceMetadata?.bbox?.length === 4 && (
-                    <Descriptions.Item label="区块坐标">
-                      {item.sourceMetadata.bbox.join(', ')}
-                    </Descriptions.Item>
-                  )}
-                  {!!item.duplicateLocators?.length && (
-                    <Descriptions.Item label="重复内容来源">
-                      {item.duplicateLocators.join('；')}
-                    </Descriptions.Item>
-                  )}
-                </Descriptions>
-                <div className={styles.chunkContent}>{item.content}</div>
-              </Space>
-            </List.Item>
-          )}
+              </List.Item>
+            );
+          }}
         />
         {error && (
           <Alert

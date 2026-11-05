@@ -1,4 +1,27 @@
 declare namespace RagAPI {
+  type SourceType =
+    | 'xlsx'
+    | 'docx'
+    | 'pdf'
+    | 'png'
+    | 'jpg'
+    | 'jpeg'
+    | 'txt'
+    | (string & {});
+
+  type OcrCapabilities = {
+    textRecognition?: boolean;
+    tableStructure?: boolean;
+    layoutAnalysis?: boolean;
+  };
+
+  type SourceMetadata = {
+    page?: number;
+    block_type?: string;
+    bbox?: [number, number, number, number] | null;
+    ocr_capabilities?: OcrCapabilities;
+  };
+
   type DocumentValidationVO = {
     valid: boolean;
     expectedChunkCount: number;
@@ -14,7 +37,7 @@ declare namespace RagAPI {
     documentCode: string;
     title: string;
     sourceName: string;
-    sourceType: 'xlsx' | 'docx' | 'txt' | string;
+    sourceType: SourceType;
     documentVersion: number;
     status: 'STAGING' | 'ACTIVE' | 'SUPERSEDED' | 'FAILED' | 'DELETED' | string;
     chunkCount: number;
@@ -37,7 +60,7 @@ declare namespace RagAPI {
     sourceName?: string;
     sourceLocator?: string;
     content: string;
-    sourceMetadata?: { page?: number; block_type?: string; bbox?: number[] };
+    sourceMetadata?: SourceMetadata;
     duplicateLocators?: string[];
   };
 
@@ -87,6 +110,16 @@ declare namespace RagAPI {
     limit?: number;
   };
 
+  type KnowledgeGraphNodeProperties = {
+    sourceName?: string;
+    sourceType?: SourceType;
+    sourceMetadata?: SourceMetadata;
+    chunkId?: string;
+    chunkType?: string;
+    sectionPath?: string;
+    [key: string]: unknown;
+  };
+
   type KnowledgeGraphNodeVO = {
     id: string;
     type: GraphNodeType;
@@ -96,7 +129,7 @@ declare namespace RagAPI {
     documentCode?: string;
     documentVersion?: number;
     sourceLocator?: string;
-    properties?: Record<string, unknown>;
+    properties?: KnowledgeGraphNodeProperties;
   };
 
   type KnowledgeGraphEdgeVO = {
