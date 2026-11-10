@@ -40,3 +40,14 @@
 - [ ] fresh fetch 后正常 main/精确 SHA CI；源码 stable 后才通知 dev 重启，避免 checkout 窗口。
 
 依据：[固定版本 alias 复制](https://github.com/BerriAI/litellm/blob/e6f080fb5633aa71ea81b652bd72069aff1f0228/litellm/router.py#L12562)、[固定版本 wildcard 展开](https://github.com/BerriAI/litellm/blob/e6f080fb5633aa71ea81b652bd72069aff1f0228/litellm/proxy/auth/model_checks.py#L381)。fixture 为合成元数据，无代理实例/模型调用；真实部署验收仍由主会话负责。
+
+## 后续修复：1.0.9 存储请求 UUID 合同
+
+后端 `StorageValidation.requestId` 要求 `UUID.fromString(value).toString().equals(value)`，前端原 48 位 hex 生成器与其不兼容。主会话已授权在新版本修复，不能因请求标识“不透明”而假定任意格式均可接受。
+
+- [x] 先 RED：生成器仍取 24 字节而非 16 字节；写入边界原本接受非 UUID。补 UUID v4/variant 位、canonical 小写格式及 0/全 1 随机输入回归后 GREEN。
+- [x] 新请求在 pending 持久化、payload 和网络发送前验证 canonical UUID；UI 预校验常量同步合同，实际请求仍使用新生成的随机 UUID。
+- [x] 旧 pending 48hex 继续原样 GET；即使服务拒绝格式也保留原标识、阻止新写入，不自动换 UUID 或重发 POST。
+- [x] 全量 161/161（0 skipped）、类型、安全、格式与 diff 检查通过。
+- [x] 主会话确认自有 dev 正常停止、端口释放后，本轮一次 `build:dev` 成功（utoo 4238ms），未自行重启。
+- [ ] 完成 main、精确 SHA CI 与远端读回；真实接口/Chrome 仍由主会话验收。

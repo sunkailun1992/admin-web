@@ -23,7 +23,7 @@ function load(path) {
   return module.exports;
 }
 const model = load('../../src/pages/Configuration/Storage/storageModel.ts');
-const requestId = 'synthetic-request-id-0001';
+const requestId = '11111111-1111-4111-8111-111111111111';
 const config = () => ({
   id: 'config-1',
   platform: 'platform-1',
@@ -414,13 +414,102 @@ test('metadata projection strips credentials and pending session store is scope 
 });
 
 test('opaque request identities use cryptographic bytes without depending on secure-context randomUUID', () => {
-  const key = model.createStorageRequestId({
-    getRandomValues: (bytes) => {
-      bytes.fill(0x1a);
-      return bytes;
-    },
+  for (const [value, expected] of [
+    [0x1a, '1a1a1a1a-1a1a-4a1a-9a1a-1a1a1a1a1a1a'],
+    [0, '00000000-0000-4000-8000-000000000000'],
+    [255, 'ffffffff-ffff-4fff-bfff-ffffffffffff'],
+  ]) {
+    const key = model.createStorageRequestId({
+      getRandomValues: (bytes) => {
+        assert.equal(bytes.length, 16);
+        bytes.fill(value);
+        return bytes;
+      },
+    });
+    assert.equal(key, expected);
+    assert.match(
+      key,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  }
+});
+
+test('old opaque pending identities only GET and never become a new UUID or POST', async () => {
+  const legacy = '1a'.repeat(24);
+  const store = pendingStore();
+  let generated = 0;
+  let lookedUp;
+  store.save({
+    requestId: legacy,
+    action: 'UPDATE',
+    configurationId: 'config-1',
   });
-  assert.equal(key, '1a'.repeat(24));
+  const controller = model.createStorageController({
+    scope: 'a',
+    liveScope: () => 'a',
+    canManage: () => true,
+    store,
+    requestId: () => {
+      generated++;
+      return requestId;
+    },
+    read: async () => snapshot(),
+    lookup: async (key) => {
+      lookedUp = key;
+      throw { response: { status: 400 } };
+    },
+    changed: () => {},
+  });
+  await controller.load();
+  assert.equal(lookedUp, legacy);
+  assert.equal(generated, 0);
+  assert.equal(store.load().requestId, legacy);
+  await controller.submit(
+    'UPDATE',
+    'config-1',
+    async () => {
+      throw new Error('MUST_NOT_POST');
+    },
+    true,
+  );
+  assert.equal(generated, 0);
+  assert.equal(controller.canSubmit(), false);
+});
+
+test('new mutations reject a noncanonical injected request identity before persistence or network', async () => {
+  const legacy = '1a'.repeat(24);
+  let calls = 0;
+  const store = pendingStore();
+  assert.throws(() =>
+    model.updatePayload(
+      { name: 'synthetic', uploadEnabled: true, credentialAction: 'KEEP' },
+      config(),
+      legacy,
+    ),
+  );
+  const controller = model.createStorageController({
+    scope: 'a',
+    liveScope: () => 'a',
+    canManage: () => true,
+    store,
+    requestId: () => legacy,
+    read: async () => snapshot(),
+    lookup: async () => operation(),
+    changed: () => {},
+  });
+  await controller.load();
+  await controller.submit(
+    'UPDATE',
+    'config-1',
+    async () => {
+      calls++;
+      return operation();
+    },
+    true,
+  );
+  assert.equal(calls, 0);
+  assert.equal(store.load(), undefined);
+  assert.equal(controller.state().phase, 'blocked');
 });
 
 test('pending cleanup refuses to delete a different operation that replaced this scope entry', () => {

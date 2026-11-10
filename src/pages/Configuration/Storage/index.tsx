@@ -41,7 +41,7 @@ import {
 import StorageOperationDrawer from './StorageOperationDrawer';
 import StorageSettingsPanel from './StorageSettingsPanel';
 
-const validationKey = 'storage-validation-only-0001';
+const validationKey = '00000000-0000-4000-8000-000000000000';
 function StorageWorkbench({
   scope,
   liveScope,

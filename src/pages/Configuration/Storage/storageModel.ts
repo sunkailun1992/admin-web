@@ -75,6 +75,16 @@ const requestKey = (value: unknown) => {
     throw new Error('INVALID_STORAGE_REQUEST_ID');
   return key;
 };
+const mutationRequestId = (value: unknown) => {
+  if (
+    typeof value !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
+      value,
+    )
+  )
+    throw new Error('INVALID_STORAGE_REQUEST_ID');
+  return value;
+};
 const endpointOrigin = (value: unknown) => {
   const endpoint = string(value, 2048);
   const url = new URL(endpoint);
@@ -282,7 +292,7 @@ export function updatePayload(
     throw new Error('STORAGE_CREDENTIAL_REQUIRED');
   const action = values.credentialAction as 'KEEP' | 'REPLACE';
   return {
-    requestId: requestKey(requestId),
+    requestId: mutationRequestId(requestId),
     expectedVersion: current.version,
     name: string(values.name, 120),
     uploadEnabled: bool(values.uploadEnabled),
@@ -322,7 +332,7 @@ export function createPayload(
       throw new Error('INVALID_STORAGE_ENDPOINT');
   }
   return {
-    requestId: requestKey(requestId),
+    requestId: mutationRequestId(requestId),
     name: string(values.name, 120),
     provider: provider.code,
     ...(endpoint ? { endpoint } : {}),
@@ -341,7 +351,7 @@ export function settingsPayload(
 ): AiAPI.StorageSettingsBO {
   const limits = capabilities.limits;
   return {
-    requestId: requestKey(requestId),
+    requestId: mutationRequestId(requestId),
     expectedSettingsVersion: current.version,
     defaultPlatform: optional(values.defaultPlatform),
     uploadTtlSeconds: number(
@@ -431,11 +441,17 @@ type PendingStore = {
 export function createStorageRequestId(
   source: Pick<Crypto, 'getRandomValues'> = globalThis.crypto,
 ) {
-  const bytes = new Uint8Array(24);
+  const bytes = new Uint8Array(16);
   source.getRandomValues(bytes);
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join(
-    '',
-  );
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (value) =>
+    value.toString(16).padStart(2, '0'),
+  ).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(
+    12,
+    16,
+  )}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 const pendingValue = (value: unknown): StoragePending => {
   const row = object(value);
@@ -658,7 +674,7 @@ export function createStorageController(dependencies: {
       let pending: StoragePending;
       try {
         pending = pendingValue({
-          requestId: dependencies.requestId(),
+          requestId: mutationRequestId(dependencies.requestId()),
           action,
           configurationId,
         });
