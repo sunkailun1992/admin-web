@@ -1,0 +1,50 @@
+.workbench {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+.section {
+  margin-bottom: 16px;
+}
+.longValue {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.filters {
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+.search {
+  width: 280px;
+  max-width: 100%;
+}
+.provider {
+  width: 180px;
+}
+.policy {
+  max-width: 760px;
+}
+.tableActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.metadata {
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.policyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+}
+@media (max-width: 600px) {
+  .policyGrid {
+    grid-template-columns: 1fr;
+  }
+  .search {
+    width: 220px;
+  }
+}

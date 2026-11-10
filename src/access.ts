@@ -25,6 +25,9 @@ export default (initialState: { currentUser?: API.CurrentUser }) => {
     canChangeAiModel:
       canManage &&
       initialState.currentUser?.adminType === 'PLATFORM_SUPER_ADMIN',
+    canManageConfiguration:
+      canManage &&
+      initialState.currentUser?.adminType === 'PLATFORM_SUPER_ADMIN',
     canSeeRagDocument: canManageRagDocument,
     canUseRagRetrieval,
     canSeeRagGraph,

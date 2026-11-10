@@ -14,6 +14,7 @@ import {
   Space,
   Typography,
 } from 'antd';
+import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import styles from './index.less';
 import ModelRouteOverview from './ModelRouteOverview';
@@ -25,12 +26,49 @@ import {
 
 type Controller = ReturnType<typeof createModelSelectionController>;
 
-function ModelRouteWorkbench({
+function RouteFrame({
+  embedded,
+  children,
+  title,
+  subTitle,
+  extra,
+  ...props
+}: ComponentProps<typeof PageContainer> & { embedded?: boolean }) {
+  if (!embedded)
+    return (
+      <PageContainer {...props} title={title} subTitle={subTitle} extra={extra}>
+        {children}
+      </PageContainer>
+    );
+  return (
+    <section>
+      <Space
+        wrap
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}
+      >
+        <div>
+          <Typography.Title level={4}>{title}</Typography.Title>
+          <Typography.Text type="secondary">{subTitle}</Typography.Text>
+        </div>
+        {extra}
+      </Space>
+      {children}
+    </section>
+  );
+}
+
+export function ModelRouteWorkbench({
   identityScope,
   canChange,
+  embedded = false,
 }: {
   identityScope: string;
   canChange: boolean;
+  embedded?: boolean;
 }) {
   const liveScope = useRef(identityScope);
   liveScope.current = identityScope;
@@ -74,7 +112,8 @@ function ModelRouteWorkbench({
   }, [selection, form, canChange]);
 
   return (
-    <PageContainer
+    <RouteFrame
+      embedded={embedded}
       title="AI 模型路由"
       subTitle="查看当前默认路由，管理服务支持的供应商选择"
       extra={[
@@ -254,7 +293,7 @@ function ModelRouteWorkbench({
           </Descriptions.Item>
         </Descriptions>
       </Modal>
-    </PageContainer>
+    </RouteFrame>
   );
 }
 

@@ -25,7 +25,10 @@ function loadAppEnvFile(appEnv: string) {
         return;
       }
       const key = line.slice(0, separatorIndex).trim();
-      const value = line.slice(separatorIndex + 1).trim().replace(/^['"]|['"]$/g, '');
+      const value = line
+        .slice(separatorIndex + 1)
+        .trim()
+        .replace(/^['"]|['"]$/g, '');
       if (!process.env[key]) {
         process.env[key] = value;
       }
@@ -145,6 +148,26 @@ export default defineConfig({
           path: '/ai/model',
           component: './Ai/Model',
           access: 'canSeeAiModel',
+        },
+      ],
+    },
+    {
+      name: '统一配置',
+      path: '/configuration',
+      access: 'canManageConfiguration',
+      routes: [
+        { path: '/configuration', redirect: '/configuration/models' },
+        {
+          name: '模型与能力',
+          path: '/configuration/models',
+          component: './Configuration/Model',
+          access: 'canManageConfiguration',
+        },
+        {
+          name: '文件存储',
+          path: '/configuration/storage',
+          component: './Configuration/Storage',
+          access: 'canManageConfiguration',
         },
       ],
     },

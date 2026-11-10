@@ -12,6 +12,14 @@
 
 已认证 user/tenant 明确时，未确认键按 user/tenant/KB 写入同一标签页的 sessionStorage（只存 scope 和不透明键）。刷新或重新进入时优先只读查回，未找到也不自动 POST；用户确认重新构建才允许以原键重发。身份未知时仅在内存保留；存储不可用或内容损坏会阻止创建新提交，不能据此认定旧任务不存在。切换账号/租户会取消旧页面请求并清除旧图显示，旧响应不能覆盖当前身份。
 
+`1.0.7` 新增“统一配置”下的“模型与能力”“文件存储”，两页均要求平台超级管理员身份与 `user:auth:manage`。模型页只读 `GET /api/ai/model-control-plane` 返回的实际 deployment，按语言、向量、重排、OCR、语音、图片、视频分类；管理目录可读不等于模型健康，能力声明不等于业务接入。模型部署、供应商凭据、虚拟密钥、额度、用量及验证使用 LiteLLM 原生控制台的五个固定入口，不重做 CRUD、不携带 token 自动登录、不嵌 iframe。旧 `/ai/model` 路由及只读权限保留，新页面复用原业务默认切换 controller；RAG 索引绑定模型与维度不提供热切换。
+
+文件页按后端 capabilities 提供 OSS、COS、MinIO/S3 兼容配置；位置创建后固定，迁移通过新建和切默认进行。凭据 `KEEP` 完全不提交密钥字段，`REPLACE` 成对单向提交，关闭/提交/身份切换清空表单。停用上传不关闭旧文件读取；默认或有引用配置不能删除。保存版本、生效 revision 和实际读写探测分别显示，历史 revision 的成功不当作当前连接正常。默认指针、签名 TTL（秒）和最大文件字节数通过 settings 乐观锁更新，基础目录、旧空平台映射和私有访问只读。
+
+存储所有变更带不透明 requestId，未知结果只 `GET /api/ai/storage-operations/{requestId}` 查回，不自动重发。已知 user/tenant 的同标签页 sessionStorage 仅保存 scope、requestId、动作及配置 ID，不保存 endpoint、表单或凭据；恢复先 GET，404 也不生成新提交，存储损坏/失败阻止新写入。真实 `READ_WRITE` 探测需明确确认，步骤与清理失败保留，配置保存成功不冒充验证成功。分页、搜索和筛选来自真实服务端，默认选择候选仅当前已加载页，不伪装全量目录。
+
+本批 UI 需要配套 AI 存储和模型控制台摘要接口；未连接时显示未配置或不可读，不使用演示数据填充。配置归属、接口边界和验收计划见[统一配置设计](docs/superpowers/specs/2026-11-11-unified-configuration-design.md)。回滚前端至 `1.0.6` 只撤下新管理入口，不删除后端配置、不回迁 Nacos，也不修改 LiteLLM 的原生模型源。
+
 ## AI 快速识别
 
 ```yaml
@@ -93,6 +101,8 @@ AI 处理本项目任务时，优先读取：
 | 编码生成 | 租户/部门/角色/资源表单 | `POST /auth/manage/codes` |
 | RAG 文档管理 | `/rag-knowledge/documents` | `POST/GET /api/rag/documents`、校验、停用与检索接口 |
 | RAG 知识图谱 | `/rag-knowledge/graph` | `GET /api/rag/graphs`、`POST /api/rag/graphs/sync` |
+| 模型与能力 | `/configuration/models` | `GET /api/ai/model-control-plane`；复用 `GET/PUT /api/ai/model-selection` |
+| 文件存储 | `/configuration/storage` | `GET /api/ai/storage-capabilities`、`GET/POST /api/ai/storage-configurations`、`PUT/DELETE /{id}`、`GET/PUT /api/ai/storage-settings`、显式 probes 与操作只读查询 |
 
 ## 后端约定
 
@@ -274,7 +284,7 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 请求的最终路径、方法、分页参数、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.2`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.7`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
 
 ## RAG 文档上传
 

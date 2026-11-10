@@ -1,0 +1,74 @@
+.workbench {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin-bottom: 24px;
+}
+.consoleLinks {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.consoleLink {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  color: #595959;
+  font-size: 12px;
+  border: 1px solid #e5eaf0;
+  border-radius: 6px;
+  background: #fafcff;
+  overflow-wrap: anywhere;
+  &:hover,
+  &:focus-visible {
+    border-color: #1677ff;
+    background: #f0f7ff;
+  }
+}
+.linkTitle {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1677ff;
+}
+.filters {
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+.search {
+  width: 320px;
+  max-width: 100%;
+}
+.capability {
+  width: 180px;
+}
+.hint {
+  margin-top: 14px;
+  margin-bottom: 0 !important;
+  font-size: 12px;
+}
+.longValue {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.page {
+  min-width: 0;
+  overflow: hidden;
+}
+@media (max-width: 1000px) {
+  .consoleLinks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .consoleLinks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .search {
+    width: 240px;
+  }
+}
