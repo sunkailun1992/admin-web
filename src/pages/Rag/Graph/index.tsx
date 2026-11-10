@@ -1,13 +1,14 @@
 import PageContainer from '@/components/AppPageContainer';
 import {
   getRagGraphBuild,
+  getRagGraphSubmission,
   queryRagKnowledgeGraph,
   syncRagKnowledgeGraph,
 } from '@/services/rag';
 import { ApartmentOutlined, SyncOutlined } from '@ant-design/icons';
 import type { IElementEvent } from '@antv/g6';
 import { EdgeEvent, Graph, NodeEvent } from '@antv/g6';
-import { useAccess } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import {
   Alert,
   Button,
@@ -42,6 +43,10 @@ import {
   readGraphSync,
 } from './graphModel';
 import styles from './index.less';
+import {
+  createGraphSubmissionTracker,
+  submitGraphSafely,
+} from './submissionModel';
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
 
@@ -190,6 +195,18 @@ function GraphCanvas({
 
 export default function RagKnowledgeGraphPage() {
   const access = useAccess();
+  const { initialState } = useModel('@@initialState');
+  const userId = initialState?.currentUser?.userId;
+  const tenantId = initialState?.currentTenantId;
+  const identityScope = JSON.stringify([userId, tenantId]);
+  const currentIdentity = useRef(identityScope);
+  currentIdentity.current = identityScope;
+  const persistSubmission =
+    typeof userId === 'string' &&
+    !!userId.trim() &&
+    typeof tenantId === 'string' &&
+    !!tenantId.trim();
+  const submissions = useRef(createGraphSubmissionTracker());
   const [form] = Form.useForm<RagAPI.KnowledgeGraphQuery>();
   const currentViewMode = Form.useWatch('viewMode', form);
   const [graph, setGraph] = useState<RagAPI.KnowledgeGraphVO>();
@@ -201,6 +218,7 @@ export default function RagKnowledgeGraphPage() {
   const [watching, setWatching] = useState(false);
   const [graphError, setGraphError] = useState(false);
   const [buildError, setBuildError] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState(false);
   const [build, setBuild] = useState<RagAPI.GraphBuild>();
   const [trackedBuild, setTrackedBuild] = useState<{
     buildId: string;
@@ -227,7 +245,12 @@ export default function RagKnowledgeGraphPage() {
       graph?.backend,
     );
     const knowledgeBase = params.knowledgeBase || DEFAULT_KNOWLEDGE_BASE;
-    if (!mounted.current || scope.current !== knowledgeBase) return;
+    if (
+      !mounted.current ||
+      scope.current !== knowledgeBase ||
+      currentIdentity.current !== identityScope
+    )
+      return;
     const request = graphGate.current.begin();
     if (resume) {
       buildGate.current.cancel();
@@ -240,7 +263,8 @@ export default function RagKnowledgeGraphPage() {
         { ...params, knowledgeBase },
         request.signal,
       );
-      if (!request.isCurrent()) return;
+      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+        return;
       const data = response.data;
       if (
         !data ||
@@ -271,9 +295,11 @@ export default function RagKnowledgeGraphPage() {
           void watchBuild(currentBuild.buildId, knowledgeBase);
       }
     } catch {
-      if (request.isCurrent()) setGraphError(true);
+      if (request.isCurrent() && currentIdentity.current === identityScope)
+        setGraphError(true);
     } finally {
-      if (request.isCurrent()) setLoading(false);
+      if (request.isCurrent() && currentIdentity.current === identityScope)
+        setLoading(false);
     }
   };
 
@@ -281,7 +307,12 @@ export default function RagKnowledgeGraphPage() {
     buildId: string,
     knowledgeBase: string,
   ): Promise<void> => {
-    if (!mounted.current || scope.current !== knowledgeBase) return;
+    if (
+      !mounted.current ||
+      scope.current !== knowledgeBase ||
+      currentIdentity.current !== identityScope
+    )
+      return;
     const request = buildGate.current.begin();
     setTrackedBuild({ buildId, knowledgeBase });
     setWatching(true);
@@ -296,52 +327,120 @@ export default function RagKnowledgeGraphPage() {
             await getRagGraphBuild(id, kb, signal)
           ).data,
         onUpdate: (value) => {
-          if (request.isCurrent()) setBuild(value);
+          if (request.isCurrent() && currentIdentity.current === identityScope)
+            setBuild(value);
         },
       });
-      if (!request.isCurrent()) return;
+      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+        return;
       if (terminal.status === 'SUCCEEDED') {
         message.success('图谱构建完成');
         await loadGraph({ ...form.getFieldsValue(), knowledgeBase }, false);
       }
     } catch {
-      if (request.isCurrent()) setBuildError(true);
+      if (request.isCurrent() && currentIdentity.current === identityScope)
+        setBuildError(true);
     } finally {
-      if (request.isCurrent()) setWatching(false);
+      if (request.isCurrent() && currentIdentity.current === identityScope)
+        setWatching(false);
     }
   };
 
   useEffect(() => {
+    let cancelled = false;
     mounted.current = true;
+    setGraph(undefined);
+    setBuild(undefined);
+    setTrackedBuild(undefined);
+    setSelection(undefined);
+    setChunkDocument(undefined);
+    setPendingSubmission(false);
+    setBuildError(false);
+    setGraphError(false);
+    setSyncing(false);
+    setWatching(false);
     void loadGraph({
-      knowledgeBase: DEFAULT_KNOWLEDGE_BASE,
+      knowledgeBase: scope.current,
       viewMode: 'OVERVIEW',
       limit: 240,
+    }).then(() => {
+      if (cancelled) return;
+      try {
+        const identity = JSON.stringify([userId, tenantId, scope.current]);
+        if (submissions.current.peek(identity, persistSubmission))
+          void handleSync(false);
+      } catch {
+        setPendingSubmission(true);
+        setBuildError(true);
+        message.error('无法安全读取图谱提交身份，请恢复浏览器会话存储后查回');
+      }
     });
     return () => {
+      cancelled = true;
       mounted.current = false;
       cancelRequests();
     };
-  }, []);
+  }, [userId, tenantId]);
 
-  const handleSync = async () => {
+  const handleSync = async (allowSubmit = true) => {
     const values = await form.validateFields(['knowledgeBase']);
     const knowledgeBase = values.knowledgeBase || DEFAULT_KNOWLEDGE_BASE;
-    if (!mounted.current || scope.current !== knowledgeBase) return;
+    if (
+      !mounted.current ||
+      scope.current !== knowledgeBase ||
+      currentIdentity.current !== identityScope
+    )
+      return;
     const request = syncGate.current.begin();
+    const submissionScope = JSON.stringify([userId, tenantId, knowledgeBase]);
     graphGate.current.cancel();
     buildGate.current.cancel();
     setLoading(false);
     setWatching(false);
     setSyncing(true);
+    setPendingSubmission(true);
     setBuildError(false);
     try {
-      const response = await syncRagKnowledgeGraph(
-        knowledgeBase,
-        request.signal,
+      const submission = submissions.current.begin(
+        submissionScope,
+        persistSubmission,
       );
-      if (!request.isCurrent()) return;
-      const outcome = readGraphSync(response.data, knowledgeBase);
+      const response = await submitGraphSafely({
+        reused: submission.reused,
+        allowSubmit,
+        submit: async () => {
+          if (
+            !request.isCurrent() ||
+            currentIdentity.current !== identityScope
+          ) {
+            throw new DOMException('Graph identity changed', 'AbortError');
+          }
+          return (
+            await syncRagKnowledgeGraph(
+              knowledgeBase,
+              request.signal,
+              submission.key,
+            )
+          ).data;
+        },
+        lookup: async () =>
+          (
+            await getRagGraphSubmission(
+              submission.key,
+              knowledgeBase,
+              request.signal,
+            )
+          ).data,
+      });
+      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+        return;
+      const outcome = readGraphSync(response, knowledgeBase);
+      submissions.current.finish(
+        submissionScope,
+        submission.key,
+        persistSubmission,
+      );
+      setPendingSubmission(false);
       if (outcome.kind === 'build') {
         setBuild(undefined);
         message.info('图谱任务已接收，正在读取构建状态');
@@ -352,10 +451,19 @@ export default function RagKnowledgeGraphPage() {
         );
         await loadGraph();
       }
-    } catch {
-      if (request.isCurrent()) setBuildError(true);
+    } catch (error) {
+      if (request.isCurrent() && currentIdentity.current === identityScope) {
+        setBuildError(true);
+        if (
+          error instanceof Error &&
+          /^(无法安全|未查到)/.test(error.message)
+        ) {
+          message.error(error.message);
+        }
+      }
     } finally {
-      if (request.isCurrent()) setSyncing(false);
+      if (request.isCurrent() && currentIdentity.current === identityScope)
+        setSyncing(false);
     }
   };
 
@@ -410,6 +518,7 @@ export default function RagKnowledgeGraphPage() {
                 setWatching(false);
                 setGraphError(false);
                 setBuildError(false);
+                setPendingSubmission(false);
               }
               if (changed.viewMode === 'OVERVIEW') {
                 const currentType = form.getFieldValue('nodeType');
@@ -483,7 +592,7 @@ export default function RagKnowledgeGraphPage() {
                   <Popconfirm
                     title="确认从当前知识库的活动文档重新构建图谱？"
                     description="构建完成前继续使用已发布图谱，构建失败不会撤销活动向量。"
-                    onConfirm={handleSync}
+                    onConfirm={() => handleSync()}
                     disabled={buildBusy}
                   >
                     <Button
@@ -554,19 +663,33 @@ export default function RagKnowledgeGraphPage() {
                   showIcon
                   type="error"
                   message="图谱任务提交或状态读取失败，已显示的图谱保持不变。"
+                  description={
+                    pendingSubmission
+                      ? '提交结果尚未确认，请查回同一提交；查无记录后如需重发，请明确确认重新构建，仍复用原提交键。'
+                      : undefined
+                  }
                   action={
-                    trackedBuild && (
+                    pendingSubmission ? (
                       <Button
                         size="small"
-                        onClick={() =>
-                          void watchBuild(
-                            trackedBuild.buildId,
-                            trackedBuild.knowledgeBase,
-                          )
-                        }
+                        onClick={() => void handleSync(false)}
                       >
-                        重试读取状态
+                        查回提交结果
                       </Button>
+                    ) : (
+                      trackedBuild && (
+                        <Button
+                          size="small"
+                          onClick={() =>
+                            void watchBuild(
+                              trackedBuild.buildId,
+                              trackedBuild.knowledgeBase,
+                            )
+                          }
+                        >
+                          重试读取状态
+                        </Button>
+                      )
                     )
                   }
                 />

@@ -126,6 +126,24 @@ test('graph sync preserves POST, knowledge base and synchronization timeout', as
   assert.equal(calls[0].options.timeout, 300000);
 });
 
+test('graph submission preserves the opaque retry key and offers a scoped read-only recovery', async () => {
+  const { service, calls } = runtime();
+  const signal = new AbortController().signal;
+  const key = 'synthetic-submission-0001';
+  await service.syncRagKnowledgeGraph('fixture-kb', signal, key);
+  assert.equal(calls[0].options.headers?.['X-Graph-Submission-Key'], key);
+  assert.equal(typeof service.getRagGraphSubmission, 'function');
+  await service.getRagGraphSubmission(key, 'fixture-kb', signal);
+  assert.equal(
+    calls[1].url,
+    '/api/rag/graphs/submissions/synthetic-submission-0001',
+  );
+  assert.equal(calls[1].options.method || 'GET', 'GET');
+  assert.equal(calls[1].options.params.knowledgeBase, 'fixture-kb');
+  assert.equal(calls[1].options.signal, signal);
+  assert.equal(Object.hasOwn(calls[1].options.params, 'tenantId'), false);
+});
+
 test('graph requests preserve cancellation and scope build reads to an encoded job and knowledge base', async () => {
   const { service, calls } = runtime();
   const signal = new AbortController().signal;

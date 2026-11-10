@@ -79,7 +79,7 @@ export default function RagDocumentPage() {
           showIcon
           type="info"
           message="结构化切片与重复处理"
-          description="Excel 按工作表、表头和记录行切片，Word 按标题段落和表格行切片。PDF 与图片需服务器已开通文档解析，扫描件还需 OCR 服务。同一文件再次上传直接复用，同一文档编码的新内容生成新版本，重复内容合并向量但保留来源位置。"
+          description="Excel 按工作表、表头和记录行切片，Word 按标题段落和表格行切片。PDF 与图片需服务器已开通文档解析，扫描件还需 OCR 服务。同一文件再次上传复用向量和该活动版本的图谱任务；图谱失败可在知识图谱页明确重新构建。同一文档编码的新内容生成新版本，重复内容合并向量但保留来源位置。"
         />
         {graphNotice && (
           <Alert

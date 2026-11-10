@@ -78,6 +78,7 @@ export async function queryRagKnowledgeGraph(
 export async function syncRagKnowledgeGraph(
   knowledgeBase?: string,
   signal?: AbortSignal,
+  submissionKey?: string,
 ) {
   return ragRequest<API.ApiResponse<RagAPI.KnowledgeGraphSyncVO>>(
     '/api/rag/graphs/sync',
@@ -86,7 +87,21 @@ export async function syncRagKnowledgeGraph(
       params: { knowledgeBase: knowledgeBase || undefined },
       timeout: 5 * 60 * 1000,
       signal,
+      headers: submissionKey
+        ? { 'X-Graph-Submission-Key': submissionKey }
+        : undefined,
     },
+  );
+}
+
+export async function getRagGraphSubmission(
+  submissionKey: string,
+  knowledgeBase: string,
+  signal?: AbortSignal,
+) {
+  return ragRequest<API.ApiResponse<RagAPI.GraphBuild | null>>(
+    `/api/rag/graphs/submissions/${encodeURIComponent(submissionKey)}`,
+    { params: { knowledgeBase }, signal },
   );
 }
 

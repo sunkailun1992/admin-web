@@ -197,6 +197,20 @@ export const request: RequestConfig = {
         message.error(responseData?.errorMessage || responseData?.msg || '无权限访问');
         return;
       }
+      const config = 'config' in error ? error.config : undefined;
+      const submissionKey =
+        config?.headers?.['X-Graph-Submission-Key'] ||
+        config?.headers?.['x-graph-submission-key'];
+      if (
+        !status &&
+        config?.url === '/api/rag/graphs/sync' &&
+        config.method?.toUpperCase() === 'POST' &&
+        typeof submissionKey === 'string' &&
+        /^[A-Za-z0-9_-]{16,128}$/.test(submissionKey)
+      ) {
+        // 页面先按键查回，再展示可操作的提交状态；HTTP鉴权失败仍走上面的统一处理。
+        return;
+      }
       message.error(
         responseData?.errorMessage ||
           responseData?.msg ||

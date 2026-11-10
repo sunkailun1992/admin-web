@@ -110,3 +110,34 @@ test('runtime interceptor preserves Basic credentials and traffic headers', () =
   assert.equal(config.headers['X-Trace-Id'], 'fixture');
   assert.equal(Object.hasOwn(config, 'skipAuth'), false);
 });
+
+test('only a keyed graph POST defers uncertain network errors while authorization failures remain global', () => {
+  const { request, effects } = runtime();
+  const config = {
+    url: '/api/rag/graphs/sync',
+    method: 'post',
+    headers: { 'X-Graph-Submission-Key': 'synthetic-submission-0001' },
+  };
+  request.errorConfig.errorHandler({
+    config,
+    message: 'uncertain graph submission',
+  });
+  assert.deepEqual(effects.messages, []);
+  request.errorConfig.errorHandler({
+    config: { ...config, url: '/api/rag/other' },
+    message: 'other API',
+  });
+  request.errorConfig.errorHandler({
+    config: { ...config, headers: {} },
+    message: 'unkeyed POST',
+  });
+  request.errorConfig.errorHandler({ config, response: { status: 403 } });
+  request.errorConfig.errorHandler({ config, response: { status: 401 } });
+  assert.deepEqual(effects.messages, [
+    'other API',
+    'unkeyed POST',
+    '无权限访问',
+    '登录已失效，请重新登录',
+  ]);
+  assert.equal(effects.cleared, 1);
+});
