@@ -11,6 +11,7 @@ import {
 import styles from './index.less';
 import type { StorageState } from './storageModel';
 import { storageFailureText } from './storageModel';
+import StorageTimestamp from './StorageTimestamp';
 const statusLabels: Record<string, string> = {
   NOT_STARTED: '未开始',
   PENDING: '待执行',
@@ -120,10 +121,10 @@ export default function StorageOperationDrawer({
               {operation.checkedRevision ?? '不适用'}
             </Descriptions.Item>
             <Descriptions.Item label="开始时间">
-              {operation.startedAt || '未返回'}
+              <StorageTimestamp value={operation.startedAt} />
             </Descriptions.Item>
             <Descriptions.Item label="结束时间">
-              {operation.finishedAt || '未返回'}
+              <StorageTimestamp value={operation.finishedAt} />
             </Descriptions.Item>
             <Descriptions.Item label="探测对象清理">
               <Tag color={color(operation.cleanupStatus)}>

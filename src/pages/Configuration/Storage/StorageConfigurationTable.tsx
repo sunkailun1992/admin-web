@@ -1,6 +1,7 @@
 import { Button, Table, Tag, Typography } from 'antd';
 import styles from './index.less';
 import { probeState, runtimeState } from './storageModel';
+import StorageTimestamp from './StorageTimestamp';
 export type StorageRowIntent = {
   action: 'DELETE' | 'PROBE' | 'TOGGLE' | 'DEFAULT';
   row: AiAPI.StorageConfigurationVO;
@@ -124,7 +125,10 @@ export default function StorageConfigurationTable({
                       检查 r{row.lastProbe.checkedRevision}
                     </div>
                     <div className={styles.metadata}>
-                      {row.lastProbe.finishedAt || '尚无完成时间'}
+                      <StorageTimestamp
+                        value={row.lastProbe.finishedAt}
+                        fallback="尚无完成时间"
+                      />
                     </div>
                   </>
                 ) : null}

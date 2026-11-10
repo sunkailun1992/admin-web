@@ -149,6 +149,14 @@ test('real storage table disables referenced/default delete, renders revision di
   const storageModel = load(
     '../../src/pages/Configuration/Storage/storageModel.ts',
   );
+  const timestamp = load(
+    '../../src/pages/Configuration/Storage/StorageTimestamp.tsx',
+    {
+      antd,
+      './storageModel': storageModel,
+      'react/jsx-runtime': ui('react/jsx-runtime'),
+    },
+  ).default;
   let table;
   const view = load(
     '../../src/pages/Configuration/Storage/StorageConfigurationTable.tsx',
@@ -161,6 +169,7 @@ test('real storage table disables referenced/default delete, renders revision di
         },
       },
       './storageModel': storageModel,
+      './StorageTimestamp': { default: timestamp },
       './index.less': { default: {} },
       'react/jsx-runtime': ui('react/jsx-runtime'),
     },

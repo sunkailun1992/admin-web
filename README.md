@@ -24,6 +24,8 @@
 
 `1.0.9` 将存储新操作的 requestId 对齐后端 canonical UUID 合同：使用 16 字节加密随机数并设置 UUID v4/variant 位，不依赖安全上下文限定的 `randomUUID`。新写入在持久化或发送前验证 UUID；旧 pending 不透明键仍原样保留并仅只读查回，读取失败不会自动换键或重新写入。
 
+`1.1.0` 收紧存储编辑的无改动提交：名称和上传开关未变且保留凭据时禁止保存，修改后还原也恢复禁用；替换凭据仍需明确选择并成对输入。探测与操作时间按浏览器本地时间显示 UTC 偏移和时区，原始 ISO 保留在提示中，缺失时间不补造。文件策略同时展示当前输入与服务端上限的 MiB 和精确字节数，请求仍使用字节。
+
 ## AI 快速识别
 
 ```yaml
@@ -288,7 +290,7 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.9`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.1.0`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
 
 ## RAG 文档上传
 

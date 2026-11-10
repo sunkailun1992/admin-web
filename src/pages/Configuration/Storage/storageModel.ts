@@ -270,6 +270,50 @@ export function decodeStorageOperation(
 }
 
 type FormValues = Record<string, unknown>;
+export function hasStorageConfigurationChanges(
+  values: FormValues,
+  current: AiAPI.StorageConfigurationVO,
+) {
+  return (
+    values.credentialAction === 'REPLACE' ||
+    (typeof values.name === 'string' && values.name.trim() !== current.name) ||
+    (typeof values.uploadEnabled === 'boolean' &&
+      values.uploadEnabled !== current.uploadEnabled)
+  );
+}
+export function formatStorageTimestamp(
+  value: string | null,
+  timeZone?: string,
+) {
+  if (!value || !Number.isFinite(Date.parse(value))) return null;
+  const formatter = new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZoneName: 'shortOffset',
+    ...(timeZone ? { timeZone } : {}),
+  });
+  return {
+    text: `${formatter.format(new Date(value))}（${
+      formatter.resolvedOptions().timeZone
+    }）`,
+    iso: value,
+  };
+}
+export function formatStorageSize(value: unknown) {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1)
+    return '未提供';
+  const mib = value / 1024 / 1024;
+  const size =
+    mib < 0.01
+      ? '小于 0.01'
+      : mib.toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+  return `${size} MiB（${value.toLocaleString('zh-CN')} 字节）`;
+}
 const credentialPair = (values: FormValues) => {
   for (const key of ['accessKeyId', 'secretKey'])
     if (
@@ -290,6 +334,8 @@ export function updatePayload(
 ): AiAPI.StorageUpdateBO {
   if (!['KEEP', 'REPLACE'].includes(String(values.credentialAction)))
     throw new Error('STORAGE_CREDENTIAL_REQUIRED');
+  if (!hasStorageConfigurationChanges(values, current))
+    throw new Error('STORAGE_CONFIG_UNCHANGED');
   const action = values.credentialAction as 'KEEP' | 'REPLACE';
   return {
     requestId: mutationRequestId(requestId),

@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
+import { formatStorageSize } from './storageModel';
 export default function StorageSettingsPanel({
   settings,
   capabilities,
@@ -34,6 +35,7 @@ export default function StorageSettingsPanel({
   ) => boolean;
 }) {
   const [form] = Form.useForm<AiAPI.StorageSettingsVO>();
+  const maxUploadBytes = Form.useWatch('maxUploadBytes', form);
   const [dirty, setDirty] = useState(false);
   const [confirmation, setConfirmation] = useState<AiAPI.StorageSettingsVO>();
   useEffect(() => {
@@ -142,7 +144,13 @@ export default function StorageSettingsPanel({
         <Form.Item
           label="最大文件大小（字节）"
           name="maxUploadBytes"
-          extra="50 MiB = 52,428,800 字节；服务端仍会按实际内容与权限校验。"
+          extra={`当前输入：${formatStorageSize(
+            maxUploadBytes === undefined
+              ? settings.maxUploadBytes
+              : maxUploadBytes,
+          )}；服务端上限：${formatStorageSize(
+            capabilities.limits.maxUploadBytes.max,
+          )}。服务端仍会按实际内容与权限校验。`}
           rules={[
             {
               required: true,

@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
+import { hasStorageConfigurationChanges } from './storageModel';
 
 export type StorageFormValues = {
   name: string;
@@ -43,6 +44,14 @@ export default function StorageConfigurationDrawer({
   const [form] = Form.useForm<StorageFormValues>();
   const providerCode = Form.useWatch('provider', form);
   const credentialAction = Form.useWatch('credentialAction', form);
+  const name = Form.useWatch('name', form);
+  const uploadEnabled = Form.useWatch('uploadEnabled', form);
+  const changed =
+    !current ||
+    hasStorageConfigurationChanges(
+      { name, uploadEnabled, credentialAction },
+      current,
+    );
   const provider = capabilities.providers.find(
     (entry) => entry.code === (current?.provider || providerCode),
   );
@@ -70,7 +79,7 @@ export default function StorageConfigurationDrawer({
     return () => {
       form.resetFields();
     };
-  }, [open, current?.id, form]);
+  }, [open, current?.id, current?.version, form]);
   const close = () => {
     setConfirmedValues(undefined);
     form.resetFields();
@@ -89,7 +98,7 @@ export default function StorageConfigurationDrawer({
             <Button onClick={close}>取消</Button>
             <Button
               type="primary"
-              disabled={disabled}
+              disabled={disabled || !changed}
               onClick={() => form.submit()}
             >
               保存配置
@@ -132,7 +141,14 @@ export default function StorageConfigurationDrawer({
           disabled={disabled}
           preserve={false}
           autoComplete="off"
-          onFinish={setConfirmedValues}
+          onFinish={(values) => {
+            if (
+              disabled ||
+              (current && !hasStorageConfigurationChanges(values, current))
+            )
+              return;
+            setConfirmedValues(values);
+          }}
         >
           <Form.Item
             label="显示名称"
@@ -288,10 +304,17 @@ export default function StorageConfigurationDrawer({
         open={!!confirmedValues}
         okText="确认保存"
         cancelText="返回编辑"
-        okButtonProps={{ disabled }}
+        okButtonProps={{ disabled: disabled || !changed }}
         onCancel={() => setConfirmedValues(undefined)}
         onOk={() => {
-          if (!confirmedValues || disabled) return;
+          if (
+            !confirmedValues ||
+            disabled ||
+            !changed ||
+            (current &&
+              !hasStorageConfigurationChanges(confirmedValues, current))
+          )
+            return;
           const values = confirmedValues;
           setConfirmedValues(undefined);
           if (onSubmit(values)) form.resetFields();
