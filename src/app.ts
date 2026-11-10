@@ -1,6 +1,7 @@
-import { BACKEND_BASE_URL } from '@/constants/auth';
 import LayoutRightContent from '@/components/LayoutRightContent';
+import SessionRecovery from '@/components/SessionRecovery';
 import TenantSwitcher from '@/components/TenantSwitcher';
+import { BACKEND_BASE_URL } from '@/constants/auth';
 import { currentResources, logoutSession } from '@/services/auth';
 import {
   clearAccessToken,
@@ -10,8 +11,10 @@ import {
   setSelectedTenantId,
   setStoredLoginInfo,
 } from '@/utils/auth';
-import { getTrafficHeaders } from '@/utils/traffic';
 import { applyAccessToken, isOAuthTokenRequest } from '@/utils/requestAuth';
+import type { SessionBootstrapState } from '@/utils/sessionBootstrap';
+import { bootstrapSession } from '@/utils/sessionBootstrap';
+import { getTrafficHeaders } from '@/utils/traffic';
 import type {
   AxiosError,
   AxiosRequestConfig,
@@ -48,69 +51,65 @@ const authRequestInterceptor = (config: AxiosRequestConfig) => {
   return applyAccessToken(config, token);
 };
 
-export async function getInitialState(): Promise<{
-  currentUser?: API.CurrentUser;
-  currentTenantId?: string;
-  availableTenants?: API.AuthTenantVO[];
-  name?: string;
-}> {
-  const token = getAccessToken();
-  if (!token) {
-    return {};
-  }
-
-  const storedLoginInfo = getStoredLoginInfo();
-  try {
-    const resourceResponse = await currentResources();
-    const resources = resourceResponse.data;
-    const availableTenants =
-      resources.availableTenants?.length
-        ? resources.availableTenants
-        : storedLoginInfo?.availableTenants?.length
-          ? storedLoginInfo.availableTenants
-          : [{ id: resources.tenantId, name: resources.tenantId }];
-    const storedTenantId = getSelectedTenantId();
-    const currentTenantId = availableTenants.some(
-      (tenant) => tenant.id === storedTenantId,
-    )
-      ? storedTenantId!
-      : resources.tenantId;
-    setSelectedTenantId(currentTenantId);
-    const currentUser: API.CurrentUser = {
-      ...(storedLoginInfo || {}),
-      userId: resources.userId,
-      username: storedLoginInfo?.username || resources.userId,
-      nickname: storedLoginInfo?.nickname,
-      tenantId: resources.tenantId,
-      permissions: resources.permissions,
-      availableTenants,
-      frontendResources: resources.frontendResources,
-      backendResources: resources.backendResources,
-      token,
-      name: storedLoginInfo?.nickname || storedLoginInfo?.username || '管理员',
-    };
-    setStoredLoginInfo(currentUser);
-    return {
-      currentUser,
-      currentTenantId,
-      availableTenants,
-      name: currentUser.name,
-    };
-  } catch {
-    clearAccessToken();
-    return {};
-  }
+export async function getInitialState(
+  signal?: AbortSignal,
+): Promise<SessionBootstrapState> {
+  return bootstrapSession(
+    {
+      session: getAccessToken,
+      stored: getStoredLoginInfo,
+      selectedTenant: getSelectedTenantId,
+      read: (requestSignal) =>
+        currentResources({ signal: requestSignal, skipErrorHandler: true }),
+      clear: clearAccessToken,
+      store: setStoredLoginInfo,
+      selectTenant: setSelectedTenantId,
+    },
+    signal,
+  );
 }
 
-export const layout: RunTimeLayoutConfig = ({ initialState }) => {
+export const layout: RunTimeLayoutConfig = ({
+  initialState,
+  setInitialState,
+}) => {
+  const recovery = initialState?.sessionRecovery
+    ? createElement(SessionRecovery, {
+        read: getInitialState,
+        session: getAccessToken,
+        apply: async (state: SessionBootstrapState) => {
+          await setInitialState(state);
+          if (state.currentUser) history.push('/dashboard');
+          else if (!state.sessionRecovery && !getAccessToken())
+            history.push(loginPath);
+        },
+        onLogout: async () => {
+          const session = getAccessToken();
+          const refreshToken = getStoredLoginInfo()?.refreshToken;
+          try {
+            await logoutSession({ refreshToken });
+          } catch {
+            /* 服务撤销为最佳努力，本地退出仍须完成。 */
+          } finally {
+            if (getAccessToken() === session) {
+              clearAccessToken();
+              await setInitialState({});
+              history.push(loginPath);
+            }
+          }
+        },
+      })
+    : undefined;
   return {
     logo: false,
     menu: {
       locale: false,
     },
     menuDataRender: disableMenuTooltip,
+    unAccessible: recovery,
     onPageChange: () => {
       const { location } = history;
+      if (initialState?.sessionRecovery && getAccessToken()) return;
       if (
         !initialState?.currentUser &&
         !getAccessToken() &&
@@ -136,25 +135,28 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
         setInitialState,
       }),
     childrenRender: (dom) =>
-      createElement(
-        'div',
-        { style: { position: 'relative', minHeight: '100%' } },
-        dom,
-        initialState?.currentUser
-          ? createElement(
-              'div',
-              {
-                style: {
-                  position: 'absolute',
-                  right: 32,
-                  top: 24,
-                  zIndex: 10,
-                },
-              },
-              createElement(TenantSwitcher),
-            )
-          : null,
-      ),
+      recovery ||
+      (!initialState?.currentUser
+        ? null
+        : createElement(
+            'div',
+            { style: { position: 'relative', minHeight: '100%' } },
+            dom,
+            initialState?.currentUser
+              ? createElement(
+                  'div',
+                  {
+                    style: {
+                      position: 'absolute',
+                      right: 32,
+                      top: 24,
+                      zIndex: 10,
+                    },
+                  },
+                  createElement(TenantSwitcher),
+                )
+              : null,
+          )),
   };
 };
 
@@ -194,7 +196,9 @@ export const request: RequestConfig = {
         return;
       }
       if (status === 403) {
-        message.error(responseData?.errorMessage || responseData?.msg || '无权限访问');
+        message.error(
+          responseData?.errorMessage || responseData?.msg || '无权限访问',
+        );
         return;
       }
       const config = 'config' in error ? error.config : undefined;

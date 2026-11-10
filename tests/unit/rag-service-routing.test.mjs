@@ -64,6 +64,19 @@ test('document upload preserves multipart data and ingestion timeout', async () 
   assert.equal(calls[0].options.timeout, 600000);
 });
 
+test('document list upload and retrieval forward cancellation without inventing tenant parameters', async () => {
+  const { service, calls } = runtime();
+  const signal = new AbortController().signal;
+  await service.listRagDocuments('fixture-kb', signal);
+  await service.uploadRagDocument(new FormData(), signal);
+  await service.retrieveRagKnowledge({ query: '合成问题', topK: 6 }, signal);
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.equal(call.options.signal, signal);
+    assert.equal(Object.hasOwn(call.options.params || {}, 'tenantId'), false);
+  }
+});
+
 test('validation keeps a document identifier in one encoded path segment', async () => {
   const { service, calls } = runtime();
   await service.validateRagDocument('doc/a b?x');

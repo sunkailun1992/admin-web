@@ -36,9 +36,12 @@ export async function logoutSession(data: API.LogoutSessionRequest = {}) {
   });
 }
 
-export async function currentResources() {
+export async function currentResources(
+  options?: Pick<AuthRequestOptions, 'signal' | 'skipErrorHandler'>,
+) {
   return authRequest<API.ApiResponse<API.AuthCurrentResourceVO>>(
     '/auth/current/resources',
+    options,
   );
 }
 

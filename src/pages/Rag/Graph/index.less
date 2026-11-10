@@ -1,49 +1,239 @@
+.workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.filterPanel {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+
+  :global(.ant-form) {
+    gap: 12px 0;
+  }
+  :global(.ant-form-item) {
+    margin-bottom: 0;
+  }
+}
+
 .knowledgeBaseInput {
   width: 180px;
 }
-
 .viewSelect,
 .typeSelect {
   width: 132px;
 }
+.buildStatus {
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
 
+  :global(.ant-collapse-header) {
+    padding: 8px 0 !important;
+  }
+  :global(.ant-collapse-content-box) {
+    padding: 0 !important;
+  }
+}
+.workspace {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+.workspaceHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.nodeLocator {
+  width: 260px;
+  max-width: 100%;
+}
+.workspaceContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-width: 0;
+}
+.canvasPane {
+  min-width: 0;
+  min-height: 0;
+}
+.canvasShell {
+  position: relative;
+  width: 100%;
+  height: clamp(520px, 65vh, 760px);
+  min-width: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
 .graphCanvas,
 .emptyGraph {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: clamp(520px, 68vh, 760px);
+  height: 100%;
   overflow: hidden;
-  background: radial-gradient(
-      circle at 20% 15%,
-      rgba(22, 119, 255, 0.07),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 80% 85%,
-      rgba(250, 140, 22, 0.08),
-      transparent 36%
-    ),
-    #fafcff;
 }
-
 .emptyGraph {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
 }
-
+.canvasControls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  max-width: calc(100% - 32px);
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+.zoomRatio {
+  display: inline-block;
+  min-width: 45px;
+  text-align: center;
+  font-size: 12px;
+  color: #475569;
+}
+.detailColumn {
+  min-width: 0;
+  max-height: clamp(520px, 65vh, 760px);
+  overflow: auto;
+  border-left: 1px solid #e2e8f0;
+}
+.detailPanel {
+  padding: 16px;
+  :global(.ant-tabs-tab) {
+    font-size: 12px;
+  }
+}
+.detailHeader {
+  padding-bottom: 4px;
+}
+.detailTitle {
+  margin-top: 4px !important;
+  overflow-wrap: anywhere;
+}
+.detailEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 24px;
+}
+.nodeLink {
+  max-width: 100%;
+  height: auto;
+  padding: 0;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.relationItem {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+}
+.graphFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+}
 .breakText {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-
 .evidence {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+.workspace:fullscreen,
+.workspaceExpanded {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  .workspaceContent {
+    flex: 1;
+    min-height: 0;
+  }
+  .detailColumn {
+    max-height: none;
+  }
+  .canvasShell,
+  .canvasPane :global(.ant-spin-nested-loading),
+  .canvasPane :global(.ant-spin-container) {
+    height: 100%;
+  }
+}
+.workspaceExpanded {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+}
 
+@media (max-width: 1100px) {
+  .workspaceContent {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
 @media (max-width: 991px) {
-  .graphCanvas,
-  .emptyGraph {
+  .workspaceHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .nodeLocator {
+    width: 100%;
+  }
+  .workspaceContent {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .canvasShell {
     height: min(64vh, 620px);
+    min-height: 380px;
+  }
+  .detailColumn {
+    max-height: 420px;
+    border-top: 1px solid #e2e8f0;
+    border-left: 0;
+  }
+  .workspace:fullscreen,
+  .workspaceExpanded {
+    overflow: auto;
+    .workspaceContent {
+      flex: none;
+    }
+    .canvasShell {
+      height: 60vh;
+      min-height: 300px;
+    }
+    .detailColumn {
+      max-height: 40vh;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace * {
+    scroll-behavior: auto;
   }
 }

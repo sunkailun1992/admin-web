@@ -5,43 +5,43 @@ import {
   queryRagKnowledgeGraph,
   syncRagKnowledgeGraph,
 } from '@/services/rag';
-import { ApartmentOutlined, SyncOutlined } from '@ant-design/icons';
-import type { IElementEvent } from '@antv/g6';
-import { EdgeEvent, Graph, NodeEvent } from '@antv/g6';
+import {
+  ApartmentOutlined,
+  ReloadOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { useAccess, useModel } from '@umijs/max';
 import {
   Alert,
   Button,
-  Card,
-  Col,
-  Descriptions,
-  Empty,
   Form,
   Input,
   InputNumber,
   Popconfirm,
-  Row,
   Select,
   Space,
-  Statistic,
+  Spin,
   Tag,
+  Typography,
   message,
 } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DocumentChunksDrawer from '../Document/DocumentChunksDrawer';
-import GraphSources from './GraphSources';
+import GraphBuildStatus from './GraphBuildStatus';
+import type { GraphCanvasHandle } from './GraphCanvas';
+import GraphCanvas from './GraphCanvas';
+import GraphDetails from './GraphDetails';
 import {
   createGraphRequestGate,
-  graphBuildMeta,
   graphNodeMeta,
   graphNodeTypes,
   isBuildPending,
-  nodePresentation,
   pollGraphBuild,
   queryForGraphBackend,
   readGraphBuild,
   readGraphSync,
 } from './graphModel';
+import type { GraphSelection } from './graphViewModel';
 import styles from './index.less';
 import {
   createGraphSubmissionTracker,
@@ -49,149 +49,6 @@ import {
 } from './submissionModel';
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
-
-type GraphSelection =
-  | { kind: 'node'; value: RagAPI.KnowledgeGraphNodeVO }
-  | { kind: 'edge'; value: RagAPI.KnowledgeGraphEdgeVO };
-
-type GraphCanvasProps = {
-  canSync: boolean;
-  graph?: RagAPI.KnowledgeGraphVO;
-  onSelect: (selection?: GraphSelection) => void;
-  onSync: () => Promise<void>;
-  syncing: boolean;
-};
-
-function GraphCanvas({
-  canSync,
-  graph: data,
-  onSelect,
-  onSync,
-  syncing,
-}: GraphCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!containerRef.current || !data?.nodes.length) return undefined;
-    const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
-    const edgesById = new Map(data.edges.map((edge) => [edge.id, edge]));
-    const instance = new Graph({
-      container: containerRef.current,
-      autoFit: 'view',
-      // 少量节点的自动适配也受缩放上限约束，避免单节点和标签被放大到铺满画布。
-      zoomRange: [0.01, 1.5],
-      data: {
-        nodes: data.nodes.map((node) => ({ id: node.id, data: node })),
-        edges: data.edges.map((edge) => ({
-          id: edge.id,
-          source: edge.source,
-          target: edge.target,
-          data: edge,
-        })),
-      },
-      node: {
-        type: 'circle',
-        style: {
-          size: (datum) => nodePresentation(datum.data?.type).size,
-          fill: (datum) => nodePresentation(datum.data?.type).color,
-          stroke: '#ffffff',
-          lineWidth: 2,
-          labelText: (datum) => {
-            const name = String(datum.data?.name || '');
-            return name.length > 16 ? `${name.slice(0, 16)}…` : name;
-          },
-          labelPlacement: 'bottom',
-          labelMaxWidth: 132,
-          labelBackground: true,
-          labelBackgroundFill: 'rgba(255,255,255,0.9)',
-          labelBackgroundRadius: 3,
-          cursor: 'pointer',
-        },
-        state: {
-          selected: {
-            lineWidth: 4,
-            stroke: '#52c41a',
-          },
-        },
-      },
-      edge: {
-        type: 'line',
-        style: {
-          stroke: '#c9cdd4',
-          lineWidth: 1.2,
-          endArrow: true,
-          endArrowSize: 5,
-          labelText: (datum) =>
-            String(datum.data?.label || datum.data?.type || ''),
-          labelFontSize: 10,
-          labelMaxWidth: 120,
-          labelBackground: true,
-          labelBackgroundFill: 'rgba(255,255,255,0.9)',
-        },
-        state: { selected: { stroke: '#52c41a', lineWidth: 3 } },
-      },
-      layout: {
-        type: 'd3-force',
-        animation: false,
-        manyBody: { strength: -260 },
-        link: { distance: 110, strength: 0.8 },
-        collide: { radius: 34 },
-      },
-      behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element'],
-    });
-    let selectedId: string | undefined;
-    instance.on<IElementEvent>(NodeEvent.CLICK, (event) => {
-      const id = String(event.target.id);
-      if (selectedId && selectedId !== id) {
-        instance.setElementState(selectedId, []);
-      }
-      selectedId = id;
-      instance.setElementState(id, ['selected']);
-      const node = nodesById.get(id);
-      onSelect(node ? { kind: 'node', value: node } : undefined);
-    });
-    instance.on<IElementEvent>(EdgeEvent.CLICK, (event) => {
-      const id = String(event.target.id);
-      if (selectedId && selectedId !== id)
-        instance.setElementState(selectedId, []);
-      selectedId = id;
-      instance.setElementState(id, ['selected']);
-      const edge = edgesById.get(id);
-      onSelect(edge ? { kind: 'edge', value: edge } : undefined);
-    });
-    instance.render();
-    return () => {
-      instance.destroy();
-    };
-  }, [data, onSelect]);
-
-  if (!data?.nodes.length) {
-    return (
-      <div className={styles.emptyGraph}>
-        <Empty
-          description={
-            canSync
-              ? '当前知识库尚无可显示图谱，可从活动文档构建；已接收任务的进度见构建状态。'
-              : '当前知识库尚无图谱数据，请联系有图谱管理权限的管理员执行同步。'
-          }
-        >
-          {canSync && (
-            <Popconfirm
-              title="确认从当前知识库的活动文档重新构建图谱？"
-              onConfirm={onSync}
-              disabled={syncing}
-            >
-              <Button icon={<SyncOutlined />} loading={syncing} type="primary">
-                构建图谱
-              </Button>
-            </Popconfirm>
-          )}
-        </Empty>
-      </div>
-    );
-  }
-  return <div className={styles.graphCanvas} ref={containerRef} />;
-}
 
 export default function RagKnowledgeGraphPage() {
   const access = useAccess();
@@ -211,6 +68,9 @@ export default function RagKnowledgeGraphPage() {
   const currentViewMode = Form.useWatch('viewMode', form);
   const [graph, setGraph] = useState<RagAPI.KnowledgeGraphVO>();
   const [selection, setSelection] = useState<GraphSelection>();
+  const canvasRef = useRef<GraphCanvasHandle>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const [chunkDocument, setChunkDocument] =
     useState<Pick<RagAPI.DocumentVO, 'documentId' | 'title' | 'sourceName'>>();
   const [loading, setLoading] = useState(false);
@@ -471,31 +331,53 @@ export default function RagKnowledgeGraphPage() {
     () =>
       graphNodeTypes(graph?.backend, 'DETAIL').map((type) => (
         <Tag color={graphNodeMeta[type].color} key={type}>
-          {graphNodeMeta[type].name} {graph?.nodeTypeCounts?.[type] || 0}
+          {graphNodeMeta[type].name}{' '}
+          {graph?.nodes.filter((node) => node.type === type).length || 0}
         </Tag>
       )),
     [graph],
   );
   const buildBusy = syncing || watching || isBuildPending(build?.status);
-  const selectedNode = selection?.kind === 'node' ? selection.value : undefined;
-  const selectedEdge = selection?.kind === 'edge' ? selection.value : undefined;
-  const nodeName = (id: string) =>
-    graph?.nodes.find((node) => node.id === id)?.name || id;
 
   return (
-    <PageContainer title="RAG知识图谱">
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <Alert
-          showIcon
-          type="info"
-          message="实体关系与来源证据"
-          description={
-            graph?.backend === 'neo4j'
-              ? '当前为语义图谱，显示活动来源中抽取的实体与关系。模型关系应结合来源证据判断，点击节点或关系可查看摘录；上传向量与图谱构建分别记录状态。'
-              : '图谱按实际后端展示实体关系或来源结构。旧结构图总览查看文档与概念，结构明细追溯区段与切片；语义关系应结合来源证据判断。上传向量与图谱构建分别记录状态。'
-          }
-        />
-        <Card>
+    <PageContainer
+      title="知识图谱"
+      extra={[
+        <Button
+          key="refresh"
+          icon={<ReloadOutlined />}
+          loading={loading}
+          disabled={syncing}
+          onClick={() => form.submit()}
+        >
+          刷新
+        </Button>,
+        access.canManageRagGraph && (
+          <Popconfirm
+            key="rebuild"
+            title="确认从当前知识库的活动文档重新构建图谱？"
+            description="构建完成前继续使用已发布图谱，构建失败不会撤销活动向量。"
+            onConfirm={() => handleSync()}
+            disabled={buildBusy}
+          >
+            <Button
+              icon={<SyncOutlined />}
+              loading={syncing}
+              disabled={buildBusy}
+            >
+              重新构建图谱
+            </Button>
+          </Popconfirm>
+        ),
+      ]}
+    >
+      <div className={styles.workbench}>
+        <Typography.Text type="secondary">
+          {graph?.backend === 'neo4j'
+            ? '语义关系需结合来源证据判断，点击节点或关系核对摘录。构建完成前继续显示已发布图谱。'
+            : '查看实体关系与来源结构，点击节点或关系追溯来源。上传向量与图谱构建分别记录状态。'}
+        </Typography.Text>
+        <div className={styles.filterPanel}>
           <Form<RagAPI.KnowledgeGraphQuery>
             form={form}
             initialValues={{
@@ -541,11 +423,11 @@ export default function RagKnowledgeGraphPage() {
             >
               <Input className={styles.knowledgeBaseInput} />
             </Form.Item>
-            <Form.Item label="查找节点" name="query">
+            <Form.Item label="搜索图谱" name="query">
               <Input
                 allowClear
                 maxLength={80}
-                placeholder="实体、概念、文档或来源位置"
+                placeholder="搜索服务端的实体或来源"
               />
             </Form.Item>
             <Form.Item
@@ -588,246 +470,117 @@ export default function RagKnowledgeGraphPage() {
                 >
                   查询图谱
                 </Button>
-                {access.canManageRagGraph && (
-                  <Popconfirm
-                    title="确认从当前知识库的活动文档重新构建图谱？"
-                    description="构建完成前继续使用已发布图谱，构建失败不会撤销活动向量。"
-                    onConfirm={() => handleSync()}
-                    disabled={buildBusy}
-                  >
-                    <Button
-                      icon={<SyncOutlined />}
-                      loading={syncing}
-                      disabled={buildBusy}
-                    >
-                      重新构建图谱
-                    </Button>
-                  </Popconfirm>
-                )}
               </Space>
             </Form.Item>
           </Form>
-        </Card>
-        {(build || watching || buildError) && (
-          <Card
-            title="构建状态"
-            extra={
-              build && (
-                <Tag color={graphBuildMeta[build.status].color}>
-                  {graphBuildMeta[build.status].name}
-                </Tag>
-              )
-            }
-          >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {build ? (
-                <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 4 }}>
-                  <Descriptions.Item label="处理文档">
-                    {build.processedDocumentCount} / {build.documentCount}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="实体出现次数">
-                    {build.nodeCount}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="关系出现次数">
-                    {build.edgeCount}
-                  </Descriptions.Item>
-                  {build.updatedAt && (
-                    <Descriptions.Item label="更新时间">
-                      {build.updatedAt}
-                    </Descriptions.Item>
-                  )}
-                  {build.errorCode && (
-                    <Descriptions.Item label="错误代码">
-                      {build.errorCode}
-                    </Descriptions.Item>
-                  )}
-                </Descriptions>
-              ) : (
-                watching && <span>任务已接收，正在读取构建状态。</span>
-              )}
-              {build && (
-                <span>
-                  构建计数按来源累计，当前图按实体与关系聚合，两者数量可能不同。
-                </span>
-              )}
-              {build &&
-                (build.status === 'FAILED' || build.status === 'CANCELLED') && (
-                  <Alert
-                    showIcon
-                    type="warning"
-                    message="本次图谱未构建成功，当前视图保留已发布结果；可重新构建。"
-                  />
-                )}
-              {buildError && (
-                <Alert
-                  showIcon
-                  type="error"
-                  message="图谱任务提交或状态读取失败，已显示的图谱保持不变。"
-                  description={
-                    pendingSubmission
-                      ? '提交结果尚未确认，请查回同一提交；查无记录后如需重发，请明确确认重新构建，仍复用原提交键。'
-                      : undefined
-                  }
-                  action={
-                    pendingSubmission ? (
-                      <Button
-                        size="small"
-                        onClick={() => void handleSync(false)}
-                      >
-                        查回提交结果
-                      </Button>
-                    ) : (
-                      trackedBuild && (
-                        <Button
-                          size="small"
-                          onClick={() =>
-                            void watchBuild(
-                              trackedBuild.buildId,
-                              trackedBuild.knowledgeBase,
-                            )
-                          }
-                        >
-                          重试读取状态
-                        </Button>
-                      )
-                    )
-                  }
-                />
-              )}
-            </Space>
-          </Card>
-        )}
+        </div>
+        <GraphBuildStatus
+          build={build}
+          watching={watching}
+          error={buildError}
+          pendingSubmission={pendingSubmission}
+          canReadBuild={Boolean(trackedBuild)}
+          onLookup={() => void handleSync(false)}
+          onReadBuild={() => {
+            if (trackedBuild)
+              void watchBuild(trackedBuild.buildId, trackedBuild.knowledgeBase);
+          }}
+        />
         {graphError && (
           <Alert
             showIcon
             type="error"
-            message="图谱读取失败，已显示的结果保持不变，请重试查询。"
+            message="图谱读取失败，已显示结果保持不变，请重试查询"
+            action={
+              <Button size="small" onClick={() => form.submit()}>
+                重新查询
+              </Button>
+            }
           />
         )}
-        {graph?.truncated && (
-          <Alert
-            showIcon
-            type="warning"
-            message="图谱已按节点上限截断；请缩小搜索范围或提高上限后重试。"
-          />
-        )}
-        <Row gutter={16}>
-          <Col lg={17} xs={24}>
-            <Card
-              bodyStyle={{ padding: 0 }}
-              loading={loading}
-              title={
-                <Space size={[4, 4]} wrap>
-                  <span>关系网络</span>
-                  {legend}
-                </Space>
-              }
-            >
-              <GraphCanvas
-                canSync={access.canManageRagGraph}
-                graph={graph}
-                onSelect={setSelection}
-                onSync={handleSync}
-                syncing={buildBusy}
-              />
-            </Card>
-          </Col>
-          <Col lg={7} xs={24}>
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              <Card title="当前结果">
-                <Row gutter={12}>
-                  <Col span={12}>
-                    <Statistic title="节点" value={graph?.nodeCount || 0} />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic title="关系" value={graph?.edgeCount || 0} />
-                  </Col>
-                </Row>
-              </Card>
-              <Card title={selectedEdge ? '关系详情' : '节点详情'}>
-                {selection ? (
-                  <Space
-                    direction="vertical"
-                    size={12}
-                    style={{ width: '100%' }}
-                  >
-                    <Descriptions column={1} size="small">
-                      {selectedNode && (
-                        <>
-                          <Descriptions.Item label="类型">
-                            <Tag
-                              color={nodePresentation(selectedNode.type).color}
-                            >
-                              {nodePresentation(selectedNode.type).name}
-                            </Tag>
-                          </Descriptions.Item>
-                          <Descriptions.Item label="名称">
-                            <span className={styles.breakText}>
-                              {selectedNode.name}
-                            </span>
-                          </Descriptions.Item>
-                          {selectedNode.label && (
-                            <Descriptions.Item label="标签">
-                              <span className={styles.breakText}>
-                                {selectedNode.label}
-                              </span>
-                            </Descriptions.Item>
-                          )}
-                        </>
-                      )}
-                      {selectedEdge && (
-                        <>
-                          <Descriptions.Item label="主体">
-                            <span className={styles.breakText}>
-                              {nodeName(selectedEdge.source)}
-                            </span>
-                          </Descriptions.Item>
-                          <Descriptions.Item label="关系">
-                            <span className={styles.breakText}>
-                              {selectedEdge.label || selectedEdge.type}
-                            </span>
-                          </Descriptions.Item>
-                          <Descriptions.Item label="类型">
-                            {selectedEdge.type}
-                          </Descriptions.Item>
-                          <Descriptions.Item label="客体">
-                            <span className={styles.breakText}>
-                              {nodeName(selectedEdge.target)}
-                            </span>
-                          </Descriptions.Item>
-                          {selectedEdge.sourceLocator && (
-                            <Descriptions.Item label="来源位置">
-                              {selectedEdge.sourceLocator}
-                            </Descriptions.Item>
-                          )}
-                        </>
-                      )}
-                    </Descriptions>
-                    <GraphSources
-                      properties={selection.value.properties}
-                      legacy={selectedNode}
-                      canViewDocument={access.canSeeRagDocument}
-                      onOpenDocument={setChunkDocument}
-                    />
-                  </Space>
-                ) : (
-                  <Empty
-                    description="点击节点或关系查看来源"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  />
-                )}
-              </Card>
+        <div
+          className={`${styles.workspace}${
+            fullscreen ? ` ${styles.workspaceExpanded}` : ''
+          }`}
+          ref={workspaceRef}
+        >
+          <div className={styles.workspaceHeading}>
+            <Space size={10} wrap>
+              <Typography.Text strong>关系网络</Typography.Text>
+              <Typography.Text type="secondary">
+                当前结果 {graph?.nodes.length || 0} 个节点 ·{' '}
+                {graph?.edges.length || 0} 条关系
+              </Typography.Text>
             </Space>
-          </Col>
-        </Row>
-      </Space>
-      {access.canSeeRagDocument && chunkDocument && (
-        <DocumentChunksDrawer
-          key={chunkDocument.documentId}
-          document={chunkDocument}
-          onClose={() => setChunkDocument(undefined)}
-        />
-      )}
+            <Select
+              aria-label="定位当前结果节点"
+              allowClear
+              showSearch
+              className={styles.nodeLocator}
+              disabled={!graph?.nodes.length}
+              placeholder="定位当前结果节点"
+              value={
+                selection?.kind === 'node' ? selection.value.id : undefined
+              }
+              options={
+                graph?.nodes.map((node) => ({
+                  label: node.name || node.id,
+                  value: node.id,
+                })) || []
+              }
+              optionFilterProp="label"
+              getPopupContainer={(trigger) => workspaceRef.current || trigger}
+              onChange={(id?: string) => {
+                if (id) canvasRef.current?.focusNode(id);
+                else setSelection(undefined);
+              }}
+            />
+          </div>
+          <div className={styles.workspaceContent}>
+            <div className={styles.canvasPane}>
+              <Spin spinning={loading}>
+                <GraphCanvas
+                  ref={canvasRef}
+                  graph={graph}
+                  selection={selection}
+                  onSelect={setSelection}
+                  fullscreenTarget={workspaceRef}
+                  onFullscreenChange={setFullscreen}
+                />
+              </Spin>
+            </div>
+            <div className={styles.detailColumn}>
+              <GraphDetails
+                graph={graph}
+                selection={selection}
+                canViewDocument={access.canSeeRagDocument}
+                onOpenDocument={setChunkDocument}
+                onFocus={(id) => canvasRef.current?.focusNode(id)}
+              />
+            </div>
+          </div>
+          <div className={styles.graphFooter}>
+            <Space size={[4, 4]} wrap aria-label="节点类型图例">
+              {legend}
+            </Space>
+            {graph?.truncated && (
+              <Typography.Text type="warning">
+                当前结果已按节点上限截断；请缩小搜索范围或提高上限。
+              </Typography.Text>
+            )}
+          </div>
+          {access.canSeeRagDocument && chunkDocument && (
+            <DocumentChunksDrawer
+              key={chunkDocument.documentId}
+              document={chunkDocument}
+              getContainer={
+                fullscreen ? workspaceRef.current || undefined : undefined
+              }
+              onClose={() => setChunkDocument(undefined)}
+            />
+          )}
+        </div>
+      </div>
     </PageContainer>
   );
 }

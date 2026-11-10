@@ -1,5 +1,5 @@
-import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
 import MessageCenter from '@/components/MessageCenter';
+import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
 import { logoutSession } from '@/services/auth';
 import { clearAccessToken, getStoredLoginInfo } from '@/utils/auth';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
@@ -27,6 +27,7 @@ export default function LayoutRightContent({
   setInitialState,
 }: LayoutRightContentProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const currentUser = initialState?.currentUser;
   const showAvatar = initialState?.avatar || initialState?.name || currentUser;
   const disableAvatarImg = initialState?.avatar === false;
@@ -64,7 +65,20 @@ export default function LayoutRightContent({
   };
 
   const avatar = (
-    <span className="umi-plugin-layout-action">
+    <button
+      type="button"
+      aria-label="账户菜单"
+      aria-haspopup="menu"
+      aria-expanded={accountMenuOpen}
+      className="umi-plugin-layout-action"
+      style={{
+        background: 'transparent',
+        border: 0,
+        color: 'inherit',
+        font: 'inherit',
+        outlineOffset: -3,
+      }}
+    >
       {!disableAvatarImg ? (
         <Avatar
           alt="avatar"
@@ -74,7 +88,7 @@ export default function LayoutRightContent({
         />
       ) : null}
       <span className={nameClassName}>{initialState?.name || displayName}</span>
-    </span>
+    </button>
   );
 
   return (
@@ -85,6 +99,9 @@ export default function LayoutRightContent({
           currentUser={currentUser}
         />
         <Dropdown
+          trigger={['click']}
+          open={accountMenuOpen}
+          onOpenChange={setAccountMenuOpen}
           menu={{
             className: 'umi-plugin-layout-menu',
             items: [

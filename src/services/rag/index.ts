@@ -9,22 +9,27 @@ function ragRequest<T>(url: string, options?: AxiosRequestConfig): Promise<T> {
     : (request<T>(requestUrl) as unknown as Promise<T>);
 }
 
-export async function uploadRagDocument(data: FormData) {
+export async function uploadRagDocument(data: FormData, signal?: AbortSignal) {
   return ragRequest<API.ApiResponse<RagAPI.DocumentIngestionVO>>(
     '/api/rag/documents',
     {
       method: 'POST',
       data,
       timeout: 10 * 60 * 1000,
+      signal,
     },
   );
 }
 
-export async function listRagDocuments(knowledgeBase?: string) {
+export async function listRagDocuments(
+  knowledgeBase?: string,
+  signal?: AbortSignal,
+) {
   return ragRequest<API.ApiResponse<RagAPI.DocumentVO[]>>(
     '/api/rag/documents',
     {
       params: { knowledgeBase: knowledgeBase || undefined },
+      signal,
     },
   );
 }
@@ -54,13 +59,17 @@ export async function deactivateRagDocument(documentId: string) {
   );
 }
 
-export async function retrieveRagKnowledge(data: RagAPI.RetrievalRequest) {
+export async function retrieveRagKnowledge(
+  data: RagAPI.RetrievalRequest,
+  signal?: AbortSignal,
+) {
   return ragRequest<API.ApiResponse<RagAPI.RetrievalVO>>(
     '/api/rag/retrievals',
     {
       method: 'POST',
       data,
       timeout: 2 * 60 * 1000,
+      signal,
     },
   );
 }
