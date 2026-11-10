@@ -22,12 +22,15 @@ const text = (value: unknown, limit = 512) =>
 const requiredText = (value: unknown) => {
   const result = text(value);
   if (!result) throw new Error('INVALID_CONTROL_PLANE_METADATA');
-  return result;
+  return value as string;
 };
 const timestamp = (value: unknown) =>
   typeof value === 'string' && Number.isFinite(Date.parse(value))
     ? value
     : null;
+export const catalogRowKey = (
+  row: Pick<AiAPI.ModelCatalogItem, 'id' | 'modelName'>,
+) => JSON.stringify([row.id, row.modelName]);
 const capability = (value: unknown): AiAPI.ModelCapability =>
   typeof value === 'string' && Object.hasOwn(capabilityLabels, value)
     ? (value as AiAPI.ModelCapability)
@@ -90,16 +93,18 @@ export function decodeControlPlane(value: unknown): AiAPI.ModelControlPlaneVO {
     data.taskBindings.length > 200
   )
     throw new Error('INVALID_CONTROL_PLANE_METADATA');
-  const ids = new Set<string>();
+  const rows = new Set<string>();
   const modelCatalog = data.modelCatalog.map(
     (value): AiAPI.ModelCatalogItem => {
       const row = record(value);
       const id = requiredText(row.id);
-      if (ids.has(id)) throw new Error('DUPLICATE_MODEL_ID');
-      ids.add(id);
+      const modelName = requiredText(row.modelName);
+      const rowKey = catalogRowKey({ id, modelName });
+      if (rows.has(rowKey)) throw new Error('DUPLICATE_MODEL_ROW');
+      rows.add(rowKey);
       return {
         id,
-        modelName: requiredText(row.modelName),
+        modelName,
         provider: text(row.provider),
         model: text(row.model),
         capabilities:

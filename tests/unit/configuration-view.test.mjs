@@ -103,6 +103,48 @@ test('unavailable model catalog is never rendered as a successful empty director
   assert.doesNotMatch(html, /0 个已配置部署/);
   assert.doesNotMatch(html, /本环境尚无已配置模型部署|href=/);
 });
+
+test('real model table renders native aliases with stable distinct composite row keys', () => {
+  let table;
+  const view = load(
+    '../../src/pages/Configuration/Model/ModelControlPlaneView.tsx',
+    {
+      antd: {
+        ...antd,
+        Table: (props) => {
+          if (
+            props.dataSource?.some(
+              (row) => row.modelName === 'synthetic-language-alias',
+            )
+          )
+            table = props;
+          return React.createElement(antd.Table, props);
+        },
+      },
+      '@ant-design/icons': require('@ant-design/icons'),
+      './controlPlaneModel': control,
+      './index.less': { default: {} },
+      'react/jsx-runtime': ui('react/jsx-runtime'),
+    },
+  ).default;
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL('../fixtures/model-control-plane-aliases.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const html = renderToStaticMarkup(
+    React.createElement(view, { data: fixture }),
+  );
+  assert.match(html, /synthetic-language-default/);
+  assert.match(html, /synthetic-language-alias/);
+  assert.match(html, /1 个部署 \/ 2 条目录记录/);
+  assert.equal(typeof table.rowKey, 'function');
+  assert.notEqual(
+    table.rowKey(fixture.modelCatalog[0]),
+    table.rowKey(fixture.modelCatalog[1]),
+  );
+});
 test('real storage table disables referenced/default delete, renders revision distinction and ignores arbitrary keys', () => {
   const storageModel = load(
     '../../src/pages/Configuration/Storage/storageModel.ts',

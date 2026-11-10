@@ -28,3 +28,15 @@
 - 初始复数 `Models` 目录被 Umi `plugin-model` 当作保留的 `models` 目录扫描，产生大小写重复导入。已改为单数 `Model`，公开路由仍 `/configuration/models`；生成的错误 model 导入已消失，未关闭 TypeScript 检查。
 - 未修改 NAS/Nacos/真实供应商凭据，未登录 LiteLLM，未发模型请求或真实存储探测，不把 mock/构建成功称为实际供应商连接通过。
 - 回滚前端仅撤下管理入口，后端配置与旧对象引用继续保留；不删除配置、桶或文件，不把 LiteLLM DB 模型源回迁 Nacos。
+
+## 后续修复：1.0.8 原生别名目录
+
+固定 LiteLLM v1.108.4 的 `model_group_alias` 与 wildcard 展开保留原 `model_info.id`；同一个 deployment 可以合法对应多个 `model_name`。此前前后端以 ID 全局唯一拒绝整个合法目录，主会话已批准改为 `(id, modelName)` 精确复合身份。
+
+- [x] 合成但符合真实响应 DTO 的双别名 fixture：同 ID、不同名称必须保留，完全相同 pair 重复仍拒绝；原 decoder 先 RED `DUPLICATE_MODEL_ID`。
+- [x] 真实 Table rowKey 回归：原字符串 `id` 先 RED；改为精确 pair 的稳定 JSON 键，不修改真实 ID、不丢别名，不引入持久化新标识。
+- [x] 保留名称原始字符作为身份，目录分别统计部署 ID 数与记录数，避免别名膨胀物理部署数量。
+- [x] 全量 159/159 测试（0 skipped）、类型、安全、格式与 diff 检查通过；主会话确认自有 dev 停止/端口释放后，本轮一次 `build:dev` 成功（utoo 3049ms）。公开 API 与存储代码保持。
+- [ ] fresh fetch 后正常 main/精确 SHA CI；源码 stable 后才通知 dev 重启，避免 checkout 窗口。
+
+依据：[固定版本 alias 复制](https://github.com/BerriAI/litellm/blob/e6f080fb5633aa71ea81b652bd72069aff1f0228/litellm/router.py#L12562)、[固定版本 wildcard 展开](https://github.com/BerriAI/litellm/blob/e6f080fb5633aa71ea81b652bd72069aff1f0228/litellm/proxy/auth/model_checks.py#L381)。fixture 为合成元数据，无代理实例/模型调用；真实部署验收仍由主会话负责。

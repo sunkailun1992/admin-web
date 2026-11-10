@@ -1,0 +1,30 @@
+{
+  "available": true,
+  "status": "AVAILABLE",
+  "platformVersion": null,
+  "consoleBaseUrl": "https://gateway.example.invalid/ui",
+  "checkedAt": "2026-11-11T00:00:00Z",
+  "modelCatalog": [
+    {
+      "id": "synthetic-shared-deployment",
+      "modelName": "synthetic-language-default",
+      "provider": "openai",
+      "model": "openai/synthetic-language-model",
+      "capabilities": ["CHAT"],
+      "contextWindow": 8192,
+      "verificationStatus": "NOT_CHECKED",
+      "verifiedAt": null
+    },
+    {
+      "id": "synthetic-shared-deployment",
+      "modelName": "synthetic-language-alias",
+      "provider": "openai",
+      "model": "openai/synthetic-language-model",
+      "capabilities": ["CHAT"],
+      "contextWindow": 8192,
+      "verificationStatus": "NOT_CHECKED",
+      "verifiedAt": null
+    }
+  ],
+  "taskBindings": []
+}

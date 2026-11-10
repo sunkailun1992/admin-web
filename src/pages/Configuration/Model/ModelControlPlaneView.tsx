@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import {
   capabilityLabels,
+  catalogRowKey,
   consoleLinks,
   filterCatalog,
 } from './controlPlaneModel';
@@ -105,7 +106,9 @@ export default function ModelControlPlaneView({
         extra={
           <Typography.Text type="secondary">
             {data.available
-              ? `${data.modelCatalog.length} 个已配置部署`
+              ? `${
+                  new Set(data.modelCatalog.map((row) => row.id)).size
+                } 个部署 / ${data.modelCatalog.length} 条目录记录`
               : '部署数量尚未确认'}
           </Typography.Text>
         }
@@ -133,7 +136,7 @@ export default function ModelControlPlaneView({
           />
         </Space>
         <Table<AiAPI.ModelCatalogItem>
-          rowKey="id"
+          rowKey={catalogRowKey}
           size="small"
           dataSource={rows}
           scroll={{ x: 880 }}

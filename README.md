@@ -20,6 +20,8 @@
 
 本批 UI 需要配套 AI 存储和模型控制台摘要接口；未连接时显示未配置或不可读，不使用演示数据填充。配置归属、接口边界和验收计划见[统一配置设计](docs/superpowers/specs/2026-11-11-unified-configuration-design.md)。回滚前端至 `1.0.6` 只撤下新管理入口，不删除后端配置、不回迁 Nacos，也不修改 LiteLLM 的原生模型源。
 
+`1.0.8` 兼容 LiteLLM 原生别名：多个调用名称可合法保留同一个 deployment ID，目录行按 `(id, modelName)` 稳定区分，只有完全相同的行身份重复才拒绝。页面分别显示去重的部署数与目录记录数，不把别名当作新建的物理部署；不修改真实 ID、不丢弃别名、不增加模型调用或配置写入。
+
 ## AI 快速识别
 
 ```yaml
@@ -284,7 +286,7 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.7`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.0.8`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
 
 ## RAG 文档上传
 

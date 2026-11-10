@@ -66,6 +66,46 @@ const metadata = () => ({
   apiKey: 'MUST_NOT_KEEP',
 });
 
+test('native aliases retain the same deployment ID while catalog identity uses the exact ID and name pair', () => {
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL('../fixtures/model-control-plane-aliases.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const decoded = model.decodeControlPlane(fixture);
+  assert.equal(decoded.modelCatalog.length, 2);
+  assert.equal(decoded.modelCatalog[0].id, decoded.modelCatalog[1].id);
+  assert.notEqual(
+    model.catalogRowKey(decoded.modelCatalog[0]),
+    model.catalogRowKey(decoded.modelCatalog[1]),
+  );
+  assert.equal(
+    model.catalogRowKey(decoded.modelCatalog[0]),
+    model.catalogRowKey({ ...decoded.modelCatalog[0] }),
+  );
+  const exactNames = {
+    ...fixture,
+    modelCatalog: [
+      fixture.modelCatalog[0],
+      {
+        ...fixture.modelCatalog[0],
+        modelName: `${fixture.modelCatalog[0].modelName} `,
+      },
+    ],
+  };
+  assert.equal(
+    model.decodeControlPlane(exactNames).modelCatalog[1].modelName,
+    `${fixture.modelCatalog[0].modelName} `,
+  );
+  assert.throws(() =>
+    model.decodeControlPlane({
+      ...fixture,
+      modelCatalog: [...fixture.modelCatalog, { ...fixture.modelCatalog[0] }],
+    }),
+  );
+});
+
 test('native console links use five fixed v1.108.4 paths and never carry auth or arbitrary query', () => {
   assert.equal(typeof model.consoleLinks, 'function');
   const links = model.consoleLinks(metadata().consoleBaseUrl);
