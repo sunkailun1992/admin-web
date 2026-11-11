@@ -198,25 +198,95 @@ export function decodeStorageCapabilities(
     },
   };
 }
+export type StorageDefaultPlatform = Pick<
+  AiAPI.StorageConfigurationVO,
+  'platform' | 'name'
+>;
 export type StorageSnapshot = {
   list: AiAPI.StorageList;
   settings: AiAPI.StorageSettingsVO;
   capabilities: AiAPI.StorageCapabilitiesVO;
+  defaultPlatforms: StorageDefaultPlatform[];
 };
-export function decodeStorageSnapshot(value: unknown): StorageSnapshot {
-  const row = object(value);
-  const list = object(row.list);
+type StorageReadOptions = { signal: AbortSignal };
+type ReadStoragePage = (
+  query: AiAPI.StorageListQuery,
+  options: StorageReadOptions,
+) => Promise<unknown>;
+function decodeStorageList(value: unknown): AiAPI.StorageList {
+  const list = object(value);
   if (!Array.isArray(list.items) || list.items.length > 100)
     throw new Error('INVALID_STORAGE_LIST');
   return {
-    list: {
-      items: list.items.map(decodeStorageConfiguration),
-      page: number(list.page, 1),
-      size: number(list.size, 1, 100),
-      total: number(list.total),
-    },
+    items: list.items.map(decodeStorageConfiguration),
+    page: number(list.page, 1),
+    size: number(list.size, 1, 100),
+    total: number(list.total),
+  };
+}
+async function readDefaultPlatforms(
+  list: ReadStoragePage,
+  options: StorageReadOptions,
+): Promise<StorageDefaultPlatform[]> {
+  const size = 100;
+  const seen = new Set<string>();
+  const platforms: StorageDefaultPlatform[] = [];
+  let total: number | undefined;
+  for (let page = 1; ; page += 1) {
+    if (options.signal.aborted) throw new Error('STORAGE_READ_ABORTED');
+    const result = decodeStorageList(
+      await list({ page, size, uploadEnabled: true }, options),
+    );
+    total ??= result.total;
+    if (
+      result.page !== page ||
+      result.size !== size ||
+      result.total !== total ||
+      result.items.length !== Math.min(size, total - seen.size)
+    )
+      throw new Error('INVALID_STORAGE_DEFAULT_PAGE');
+    for (const entry of result.items) {
+      if (!entry.uploadEnabled || seen.has(entry.platform))
+        throw new Error('INVALID_STORAGE_DEFAULT_PLATFORM');
+      seen.add(entry.platform);
+      if (
+        entry.runtimeStatus === 'APPLIED' &&
+        entry.appliedRevision === entry.configRevision
+      )
+        platforms.push({ platform: entry.platform, name: entry.name });
+    }
+    if (seen.size === total) return platforms;
+  }
+}
+export async function readStorageSnapshot(
+  query: AiAPI.StorageListQuery,
+  options: StorageReadOptions,
+  services: {
+    list: ReadStoragePage;
+    settings: (options: StorageReadOptions) => Promise<unknown>;
+    capabilities: (options: StorageReadOptions) => Promise<unknown>;
+  },
+) {
+  const [list, settings, capabilities, defaultPlatforms] = await Promise.all([
+    services.list(query, options),
+    services.settings(options),
+    services.capabilities(options),
+    readDefaultPlatforms(services.list, options),
+  ]);
+  return { list, settings, capabilities, defaultPlatforms };
+}
+export function decodeStorageSnapshot(value: unknown): StorageSnapshot {
+  const row = object(value);
+  if (!Array.isArray(row.defaultPlatforms))
+    throw new Error('INVALID_STORAGE_DEFAULT_PLATFORMS');
+  return {
+    list: decodeStorageList(row.list),
     settings: decodeStorageSettings(row.settings),
     capabilities: decodeStorageCapabilities(row.capabilities),
+    defaultPlatforms: row.defaultPlatforms.map((value) => {
+      const option = object(value);
+      return { platform: string(option.platform), name: string(option.name) };
+    }),
   };
 }
 export function decodeStorageOperation(
@@ -394,12 +464,19 @@ export function settingsPayload(
   current: AiAPI.StorageSettingsVO,
   capabilities: AiAPI.StorageCapabilitiesVO,
   requestId: string,
+  defaultPlatforms: readonly StorageDefaultPlatform[],
 ): AiAPI.StorageSettingsBO {
   const limits = capabilities.limits;
+  const defaultPlatform = optional(values.defaultPlatform);
+  if (
+    defaultPlatform !== current.defaultPlatform &&
+    !defaultPlatforms.some((entry) => entry.platform === defaultPlatform)
+  )
+    throw new Error('STORAGE_DEFAULT_PLATFORM_UNAVAILABLE');
   return {
     requestId: mutationRequestId(requestId),
     expectedSettingsVersion: current.version,
-    defaultPlatform: optional(values.defaultPlatform),
+    defaultPlatform,
     uploadTtlSeconds: number(
       values.uploadTtlSeconds,
       limits.uploadTtlSeconds.min,

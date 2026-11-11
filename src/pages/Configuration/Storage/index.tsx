@@ -35,6 +35,7 @@ import {
   createStorageController,
   createStoragePendingStore,
   createStorageRequestId,
+  readStorageSnapshot,
   settingsPayload,
   updatePayload,
 } from './storageModel';
@@ -85,14 +86,12 @@ function StorageWorkbench({
       canManage,
       store,
       requestId: () => createStorageRequestId(),
-      read: async (query, options) => {
-        const [list, settings, capabilities] = await Promise.all([
-          listStorageConfigurations(query, options),
-          getStorageSettings(options),
-          getStorageCapabilities(options),
-        ]);
-        return { list, settings, capabilities };
-      },
+      read: (query, options) =>
+        readStorageSnapshot(query, options, {
+          list: listStorageConfigurations,
+          settings: getStorageSettings,
+          capabilities: getStorageCapabilities,
+        }),
       lookup: getStorageOperation,
       changed: setState,
     });
@@ -184,6 +183,7 @@ function StorageWorkbench({
         snapshot.settings,
         snapshot.capabilities,
         validationKey,
+        snapshot.defaultPlatforms,
       );
       return submit('UPDATE_SETTINGS', null, (requestId, options) =>
         updateStorageSettings({ ...payload, requestId }, options),
@@ -324,12 +324,12 @@ function StorageWorkbench({
             <StorageSettingsPanel
               settings={snapshot.settings}
               capabilities={snapshot.capabilities}
-              configurations={snapshot.list.items}
+              defaultPlatforms={snapshot.defaultPlatforms}
               disabled={!writable}
               onSubmit={saveSettings}
             />
             <Card
-              title="存储配置"
+              title="已保存的存储配置"
               size="small"
               extra={
                 state.operation ? (

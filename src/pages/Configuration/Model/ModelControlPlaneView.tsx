@@ -24,7 +24,7 @@ const verification: Record<
   { text: string; color?: string }
 > = {
   NOT_CHECKED: { text: '未验证' },
-  VERIFIED: { text: '已有验证记录', color: 'success' },
+  VERIFIED: { text: '上次实测通过', color: 'success' },
   FAILED: { text: '最近验证失败', color: 'error' },
   UNKNOWN: { text: '验证状态未知', color: 'warning' },
 };
@@ -198,7 +198,7 @@ export default function ModelControlPlaneView({
                 value ? `${value.toLocaleString()} tokens` : '未提供',
             },
             {
-              title: '实际验证',
+              title: '最近实测',
               key: 'verification',
               width: 200,
               render: (_, row) => (

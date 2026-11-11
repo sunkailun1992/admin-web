@@ -74,6 +74,7 @@ const snapshot = () => ({
   list: { items: [config()], page: 1, size: 20, total: 1 },
   settings: settings(),
   capabilities: capabilities(),
+  defaultPlatforms: [{ platform: config().platform, name: config().name }],
 });
 const operation = (status = 'SUCCEEDED', action = 'UPDATE') => ({
   requestId,
@@ -100,6 +101,193 @@ const pendingStore = () => {
     },
   };
 };
+
+test('global default choices include eligible providers outside the filtered table and first option page', async () => {
+  const query = { page: 2, size: 20, search: '私有', provider: 'MINIO' };
+  const signal = new AbortController().signal;
+  const calls = [];
+  const minio = config();
+  const oss = {
+    ...config(),
+    id: 'oss-config',
+    name: '合成 OSS',
+    platform: 'oss-platform',
+    provider: 'ALIYUN_OSS',
+  };
+  const cos = {
+    ...config(),
+    id: 'cos-config',
+    name: '合成 COS',
+    platform: 'cos-platform',
+    provider: 'TENCENT_COS',
+  };
+  const firstOptionsPage = [
+    minio,
+    oss,
+    ...Array.from({ length: 98 }, (_, index) => ({
+      ...config(),
+      id: `unapplied-${index}`,
+      platform: `unapplied-${index}`,
+      appliedRevision: 1,
+      runtimeStatus: 'APPLY_FAILED',
+    })),
+  ];
+  const result = await model.readStorageSnapshot(
+    query,
+    { signal },
+    {
+      list: async (parameters, options) => {
+        assert.equal(options.signal, signal);
+        calls.push({ ...parameters });
+        if (parameters.provider === 'MINIO')
+          return { items: [], page: 2, size: 20, total: 1 };
+        return {
+          items: parameters.page === 1 ? firstOptionsPage : [cos],
+          page: parameters.page,
+          size: 100,
+          total: 101,
+        };
+      },
+      settings: async () => settings(),
+      capabilities: async () => capabilities(),
+    },
+  );
+  assert.deepEqual(
+    Array.from(result.defaultPlatforms ?? [], (entry) => ({ ...entry })),
+    [
+      { platform: minio.platform, name: minio.name },
+      { platform: oss.platform, name: oss.name },
+      { platform: cos.platform, name: cos.name },
+    ],
+  );
+  assert.deepEqual(calls, [
+    query,
+    { page: 1, size: 100, uploadEnabled: true },
+    { page: 2, size: 100, uploadEnabled: true },
+  ]);
+  assert.equal(result.list.items.length, 0);
+});
+
+test('switching to a global choice outside the table reads back the authoritative default and version', async () => {
+  const query = { page: 2, size: 20, provider: 'MINIO' };
+  const cos = {
+    ...config(),
+    id: 'cos-config',
+    platform: 'cos-platform',
+    provider: 'TENCENT_COS',
+    isDefault: false,
+  };
+  let persisted = settings();
+  let writes = 0;
+  const tableReads = [];
+  const control = model.createStorageController({
+    scope: 'admin-1/tenant-1',
+    liveScope: () => 'admin-1/tenant-1',
+    canManage: () => true,
+    store: pendingStore(),
+    requestId: () => requestId,
+    read: (parameters, options) =>
+      model.readStorageSnapshot(parameters, options, {
+        list: async (parameters) => {
+          if (parameters.provider === 'MINIO') {
+            tableReads.push({ ...parameters });
+            return { items: [], page: 2, size: 20, total: 1 };
+          }
+          return { items: [config(), cos], page: 1, size: 100, total: 2 };
+        },
+        settings: async () => persisted,
+        capabilities: async () => capabilities(),
+      }),
+    lookup: async () => {
+      assert.fail('a completed write needs a settings readback, not recovery');
+    },
+    changed: () => {},
+  });
+  await control.load(query);
+  const initial = control.state().snapshot;
+  assert.equal(initial.list.items.length, 0);
+  const selected = initial.defaultPlatforms.find(
+    (entry) => entry.platform === cos.platform,
+  );
+  assert.ok(selected);
+  await control.submit(
+    'UPDATE_SETTINGS',
+    null,
+    async (key) => {
+      writes += 1;
+      const payload = model.settingsPayload(
+        { ...initial.settings, defaultPlatform: selected.platform },
+        initial.settings,
+        initial.capabilities,
+        key,
+        initial.defaultPlatforms,
+      );
+      assert.equal(payload.expectedSettingsVersion, 1);
+      assert.equal(payload.defaultPlatform, cos.platform);
+      assert.equal(payload.requestId, requestId);
+      persisted = { ...settings(), version: 2, defaultPlatform: cos.platform };
+      return {
+        ...operation('SUCCEEDED', 'UPDATE_SETTINGS'),
+        configurationId: null,
+        result: persisted,
+      };
+    },
+    true,
+  );
+  assert.equal(writes, 1);
+  assert.deepEqual(tableReads, [query, query]);
+  assert.equal(control.state().phase, 'ready');
+  assert.equal(control.state().snapshot.settings.version, 2);
+  assert.equal(control.state().snapshot.settings.defaultPlatform, cos.platform);
+});
+
+test('a changing global default catalogue refuses a partially read option set', async () => {
+  await assert.rejects(
+    model.readStorageSnapshot(
+      { page: 1, size: 20 },
+      { signal: new AbortController().signal },
+      {
+        list: async ({ page, size }) =>
+          size === 20
+            ? snapshot().list
+            : {
+                items:
+                  page === 1
+                    ? Array.from({ length: 100 }, (_, index) => ({
+                        ...config(),
+                        platform: `platform-${index}`,
+                      }))
+                    : [config()],
+                page,
+                size,
+                total: page === 1 ? 101 : 102,
+              },
+        settings: async () => settings(),
+        capabilities: async () => capabilities(),
+      },
+    ),
+    /INVALID_STORAGE_DEFAULT_PAGE/,
+  );
+});
+
+test('a refreshed catalogue rejects a stale platform selection but permits keeping the existing default', () => {
+  const current = settings();
+  const draft = { ...current, defaultPlatform: 'formerly-eligible-cos' };
+  assert.throws(
+    () => model.settingsPayload(draft, current, capabilities(), requestId, []),
+    /STORAGE_DEFAULT_PLATFORM_UNAVAILABLE/,
+  );
+  const keep = model.settingsPayload(
+    { ...current, uploadTtlSeconds: 120 },
+    current,
+    capabilities(),
+    requestId,
+    [],
+  );
+  assert.equal(keep.defaultPlatform, current.defaultPlatform);
+  assert.equal(keep.expectedSettingsVersion, current.version);
+  assert.equal(keep.uploadTtlSeconds, 120);
+});
 
 test('KEEP omits both credential fields and update payload cannot relocate existing objects', () => {
   assert.equal(typeof model.updatePayload, 'function');
@@ -195,6 +383,7 @@ test('policy uses seconds, exact version and never writes legacy path/private ac
     settings(),
     capabilities(),
     requestId,
+    [],
   );
   assert.equal(value.expectedSettingsVersion, 1);
   assert.equal(value.uploadTtlSeconds, 61);
@@ -208,6 +397,7 @@ test('policy uses seconds, exact version and never writes legacy path/private ac
       settings(),
       capabilities(),
       requestId,
+      [],
     ),
   );
 });

@@ -16,7 +16,7 @@
 
 文件页按后端 capabilities 提供 OSS、COS、MinIO/S3 兼容配置；位置创建后固定，迁移通过新建和切默认进行。凭据 `KEEP` 完全不提交密钥字段，`REPLACE` 成对单向提交，关闭/提交/身份切换清空表单。停用上传不关闭旧文件读取；默认或有引用配置不能删除。保存版本、生效 revision 和实际读写探测分别显示，历史 revision 的成功不当作当前连接正常。默认指针、签名 TTL（秒）和最大文件字节数通过 settings 乐观锁更新，基础目录、旧空平台映射和私有访问只读。
 
-存储所有变更带不透明 requestId，未知结果只 `GET /api/ai/storage-operations/{requestId}` 查回，不自动重发。已知 user/tenant 的同标签页 sessionStorage 仅保存 scope、requestId、动作及配置 ID，不保存 endpoint、表单或凭据；恢复先 GET，404 也不生成新提交，存储损坏/失败阻止新写入。真实 `READ_WRITE` 探测需明确确认，步骤与清理失败保留，配置保存成功不冒充验证成功。分页、搜索和筛选来自真实服务端，默认选择候选仅当前已加载页，不伪装全量目录。
+存储所有变更带不透明 requestId，未知结果只 `GET /api/ai/storage-operations/{requestId}` 查回，不自动重发。已知 user/tenant 的同标签页 sessionStorage 仅保存 scope、requestId、动作及配置 ID，不保存 endpoint、表单或凭据；恢复先 GET，404 也不生成新提交，存储损坏/失败阻止新写入。真实 `READ_WRITE` 探测需明确确认，步骤与清理失败保留，配置保存成功不冒充验证成功。分页、搜索和筛选来自真实服务端。自 `1.1.1` 起，默认平台候选独立读取所有允许新上传的配置页，仅列出当前 revision 已生效的候选。切换作用于各租户之后的新上传，历史文件继续按原平台读取。
 
 本批 UI 需要配套 AI 存储和模型控制台摘要接口；未连接时显示未配置或不可读，不使用演示数据填充。配置归属、接口边界和验收计划见[统一配置设计](docs/superpowers/specs/2026-11-11-unified-configuration-design.md)。回滚前端至 `1.0.6` 只撤下新管理入口，不删除后端配置、不回迁 Nacos，也不修改 LiteLLM 的原生模型源。
 
@@ -290,7 +290,7 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.1.0`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.1.1`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
 
 ## RAG 文档上传
 

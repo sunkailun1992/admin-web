@@ -12,17 +12,18 @@ import {
 } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './index.less';
+import type { StorageDefaultPlatform } from './storageModel';
 import { formatStorageSize } from './storageModel';
 export default function StorageSettingsPanel({
   settings,
   capabilities,
-  configurations,
+  defaultPlatforms,
   disabled,
   onSubmit,
 }: {
   settings: AiAPI.StorageSettingsVO;
   capabilities: AiAPI.StorageCapabilitiesVO;
-  configurations: AiAPI.StorageConfigurationVO[];
+  defaultPlatforms: StorageDefaultPlatform[];
   disabled: boolean;
   onSubmit: (
     values: Pick<
@@ -43,24 +44,19 @@ export default function StorageSettingsPanel({
     setDirty(false);
     setConfirmation(undefined);
   }, [settings.version, form]);
-  const options = configurations
-    .filter(
-      (entry) =>
-        entry.uploadEnabled &&
-        entry.runtimeStatus === 'APPLIED' &&
-        entry.appliedRevision === entry.configRevision,
-    )
-    .map((entry) => ({
-      value: entry.platform,
-      label: `${entry.name} · ${entry.platform}`,
-    }));
+  const options = defaultPlatforms.map((entry) => ({
+    value: entry.platform,
+    label: `${entry.name} · ${entry.platform}`,
+    disabled: false,
+  }));
   if (
     settings.defaultPlatform &&
     !options.some((entry) => entry.value === settings.defaultPlatform)
   )
     options.unshift({
       value: settings.defaultPlatform,
-      label: `当前平台：${settings.defaultPlatform}`,
+      label: `当前平台：${settings.defaultPlatform}（当前不可选）`,
+      disabled: true,
     });
   return (
     <Card title="默认存储与私有访问策略" size="small">
@@ -97,9 +93,9 @@ export default function StorageSettingsPanel({
         onFinish={setConfirmation}
       >
         <Form.Item
-          label="默认上传平台"
+          label="全局默认上传平台"
           name="defaultPlatform"
-          extra="可选项来自当前已加载页，且须已生效并允许新上传；切换不搬移旧文件。"
+          extra="切换后，各租户的新上传使用所选平台，历史文件仍按原平台读取。可选平台须已生效并允许新上传。"
         >
           <Select options={options} placeholder="请先新增并启用存储配置" />
         </Form.Item>

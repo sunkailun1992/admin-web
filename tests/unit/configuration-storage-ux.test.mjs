@@ -237,6 +237,7 @@ test('real timestamp view keeps original ISO in tooltip and visibly shows the zo
 
 test('real settings panel explains current bytes and MiB without changing the input unit', () => {
   let sizeField;
+  let defaultOptions;
   const box = ({ children }) => React.createElement('div', null, children);
   const Form = (props) => box(props);
   Form.Item = (props) => {
@@ -264,7 +265,10 @@ test('real settings panel explains current bytes and MiB without changing the in
         Form,
         InputNumber: box,
         Modal: () => null,
-        Select: box,
+        Select: (props) => {
+          defaultOptions = props.options;
+          return box(props);
+        },
         Space: box,
         Typography: { Text: box },
       },
@@ -279,7 +283,7 @@ test('real settings panel explains current bytes and MiB without changing the in
     React.createElement(view, {
       settings: {
         version: 1,
-        defaultPlatform: null,
+        defaultPlatform: 'prior-platform',
         maxUploadBytes: 20 * 1024 * 1024,
       },
       capabilities: {
@@ -289,13 +293,21 @@ test('real settings panel explains current bytes and MiB without changing the in
           maxUploadBytes: limits,
         },
       },
-      configurations: [],
+      defaultPlatforms: [{ platform: 'global-cos', name: '合成 COS' }],
       disabled: false,
       onSubmit() {},
     }),
   );
   assert.match(html, /当前输入：20 MiB（20,971,520 字节）/);
   assert.match(html, /服务端上限：50 MiB（52,428,800 字节）/);
+  assert.match(html, /全局默认上传平台/);
+  assert.deepEqual(
+    Array.from(defaultOptions, ({ value, disabled }) => ({ value, disabled })),
+    [
+      { value: 'prior-platform', disabled: true },
+      { value: 'global-cos', disabled: false },
+    ],
+  );
   assert.equal(sizeField.label, '最大文件大小（字节）');
   assert.equal(sizeField.children.props.max, 52428800);
 });
