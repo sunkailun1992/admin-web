@@ -60,91 +60,81 @@ function validResources(value: unknown): value is API.AuthCurrentResourceVO {
   );
 }
 
+function tenantDenied(value: unknown) {
+  if (!value || typeof value !== 'object') return false;
+  return (value as { response?: { status?: number } }).response?.status === 403;
+}
+
 type BootstrapDependencies = {
-  session: () => string | null;
-  stored: () => API.AuthLoginVO | undefined;
   selectedTenant: () => string | null;
+  clearTenant: () => void;
   read: (
     signal?: AbortSignal,
   ) => Promise<API.ApiResponse<API.AuthCurrentResourceVO>>;
-  clear: () => void;
-  store: (user: API.AuthLoginVO) => void;
   selectTenant: (tenant: string) => void;
 };
 
-/** 权限只来自本次成功读回；瞬时失败保留凭据但不构造可用用户。 */
+/**
+ * 登录态在网关会话里，前端只能靠一次成功的当前用户资源读回判断：401 表示未登录（返回空状态，由调用方跳网关登录）；
+ * 选中的租户不再可用（403）时清掉选择、按归属租户重读一次；其他瞬时失败进入恢复页，不构造可用用户。
+ */
 export async function bootstrapSession(
   dependencies: BootstrapDependencies,
   signal?: AbortSignal,
 ): Promise<SessionBootstrapState> {
-  const token = dependencies.session();
-  if (!token) return {};
-  const stored = dependencies.stored();
-  if (dependencies.session() !== token) return {};
   try {
-    const response = await dependencies.read(signal);
-    if (signal?.aborted || dependencies.session() !== token) return {};
-    if (identityRejected(response)) {
-      dependencies.clear();
-      return {};
+    let response: API.ApiResponse<API.AuthCurrentResourceVO>;
+    try {
+      response = await dependencies.read(signal);
+    } catch (error) {
+      if (signal?.aborted || !tenantDenied(error) || !dependencies.selectedTenant()) throw error;
+      dependencies.clearTenant();
+      response = await dependencies.read(signal);
     }
+    if (signal?.aborted) return {};
+    if (identityRejected(response)) return {};
     if (response?.success !== true || !validResources(response.data))
       return recoveryState();
     const resources = response.data;
     const availableTenants = resources.availableTenants?.length
       ? resources.availableTenants
       : [{ id: resources.tenantId, name: resources.tenantId }];
-    const selected = dependencies.selectedTenant();
-    const currentTenantId = availableTenants.some(
-      (tenant) => tenant.id === selected,
-    )
-      ? selected!
-      : resources.tenantId;
-    const sameUser = stored?.userId === resources.userId ? stored : undefined;
     const currentUser: API.CurrentUser = {
-      token,
-      refreshToken: sameUser?.refreshToken,
-      expiresIn: sameUser?.expiresIn,
-      refreshExpiresIn: sameUser?.refreshExpiresIn,
-      tokenType: sameUser?.tokenType,
       userId: resources.userId,
-      username: sameUser?.username || resources.userId,
-      nickname: sameUser?.nickname,
+      username: resources.username || resources.userId,
+      nickname: resources.nickname,
       tenantId: resources.tenantId,
       deptId: resources.deptId,
       adminType: resources.adminType,
+      dataScope: resources.dataScope,
+      dataScopeDeptIds: resources.dataScopeDeptIds,
       permissions: resources.permissions,
       availableTenants,
       frontendResources: resources.frontendResources,
       backendResources: resources.backendResources,
-      name: sameUser?.nickname || sameUser?.username || '管理员',
+      name: resources.nickname || resources.username || '管理员',
     };
-    dependencies.selectTenant(currentTenantId);
-    dependencies.store(currentUser);
+    dependencies.selectTenant(resources.tenantId);
     return {
       currentUser,
-      currentTenantId,
+      currentTenantId: resources.tenantId,
       availableTenants,
       name: currentUser.name,
     };
   } catch (error) {
-    if (signal?.aborted || dependencies.session() !== token) return {};
-    if (identityRejected(error)) {
-      dependencies.clear();
-      return {};
-    }
+    if (signal?.aborted) return {};
+    if (identityRejected(error)) return {};
     return recoveryState();
   }
 }
 
 type RecoveryDependencies = {
-  session: () => string | null;
   read: (signal: AbortSignal) => Promise<SessionBootstrapState>;
   apply: (state: SessionBootstrapState) => void | Promise<void>;
   loading: (value: boolean) => void;
 };
 
-/** 只有手动重试调用 read；并发点击、卸载及更新过的会话不接纳旧结果。 */
+/** 只有手动重试调用 read；并发点击与卸载后的结果不接纳。 */
 export function createSessionRecoveryController(
   dependencies: RecoveryDependencies,
 ) {
@@ -157,25 +147,15 @@ export function createSessionRecoveryController(
       busy = true;
       controller = new AbortController();
       const signal = controller.signal;
-      const session = dependencies.session();
       dependencies.loading(true);
       try {
-        const state = session ? await dependencies.read(signal) : {};
-        const currentSession = dependencies.session();
-        const clearedIdentity =
-          !currentSession && !state.currentUser && !state.sessionRecovery;
-        if (
-          active &&
-          !signal.aborted &&
-          (currentSession === session || clearedIdentity)
-        )
-          await dependencies.apply(state);
+        const state = await dependencies.read(signal);
+        if (active && !signal.aborted) await dependencies.apply(state);
       } catch {
         // 保持恢复页，不从异常文本推断身份失效或恢复缓存权限。
       } finally {
         busy = false;
-        if (active && !signal.aborted && dependencies.session() === session)
-          dependencies.loading(false);
+        if (active && !signal.aborted) dependencies.loading(false);
       }
     },
     dispose() {

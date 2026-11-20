@@ -105,8 +105,7 @@ src/pages/System/Resource
 
 ## 请求规范
 
-- 登录接口：`POST /auth/sessions`。
-- 登录前租户下拉接口：`GET /auth/tenants`。
+- 登录：整页跳网关 `GET /oauth2/authorization/keycloak`（Keycloak 授权码加 PKCE），前端没有登录页；退出：`POST /logout`。
 - 当前用户资源接口：`GET /auth/current/resources`。
 - 管理接口统一位于 `/auth/manage/**`。
 - 分页查询使用 `GET /auth/manage/{resources}` 并传 `current`、`size` 查询参数；下拉、树形、授权回显等轻量选项查询使用 `GET /auth/manage/{resources}/options`。
@@ -119,12 +118,12 @@ src/pages/System/Resource
 - 请求头统一追加：
 
 ```text
-Authorization: Bearer <token>
+X-XSRF-TOKEN: <XSRF-TOKEN Cookie>   # 写请求；会话在网关 Cookie 里，前端不带 Authorization
 ```
 
 - 后端统一响应 `success=false` 时必须抛错并展示 `errorMessage` 或 `msg`。
-- 普通管理请求 401 清理管理员会话并跳转登录；精确 OAuth token 入口的 401 只提示 Client 认证失败，403 保留登录态并提示权限不足。skipAuth 请求不能携带管理员 Bearer token。
-- 前端通过 Umi request baseURL 请求网关，本地默认 `http://localhost:7100`；当前用户中心 service path 为 `/auth/**`，不额外追加 `/user`，不直连 user 服务或另建 dev proxy。
+- 任何请求 401 都整页跳网关登录入口；403 显示后端给的说明（如 CSRF 令牌失效、无权访问所请求的租户）。
+- 页面与接口同源：`request.baseURL` 为空，开发时 `.umirc.ts` 的代理把业务前缀与 `/oauth2`、`/login/oauth2`、`/logout` 转给网关（保留 Host）；当前用户中心 service path 为 `/auth/**`。
 
 ## 权限规范
 
@@ -146,10 +145,9 @@ menu:resource
 
 ## 登录态规范
 
-- Token 存储 key：`admin_web_access_token`。
-- 登录用户信息存储 key：`admin_web_login_info`。
-- `getInitialState` 在存在 Token 时调用 `/auth/current/resources` 刷新权限资源。
-- 页面跳转由 `layout.onPageChange` 统一兜底，未登录用户进入业务页必须跳转 `/login`。
+- 登录态只在网关会话（Cookie）里，前端不存访问令牌；本地只存选中的租户（`admin_web_selected_tenant_id`），启动时清掉旧版的令牌键。
+- `getInitialState` 读 `/auth/current/resources` 判断是否已登录并刷新权限资源；选中的租户不可用（403）时清掉选择重读一次。
+- 页面跳转由 `layout.onPageChange` 统一兜底，没有当前用户也不在恢复页时整页跳网关登录入口。
 
 ## 表单规范
 

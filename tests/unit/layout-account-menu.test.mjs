@@ -23,19 +23,27 @@ function renderAccount({ initialState, rejectLogout = false } = {}) {
     '@/constants/auth': { ADMIN_TYPE_VALUE_ENUM: {} },
     '@/components/MessageCenter': { default: () => null },
     '@/services/auth': {
-      logoutSession: async (request) => {
-        effects.push(['revoke', request.refreshToken]);
-        if (rejectLogout) throw new Error('Synthetic revocation failure');
+      logout: async () => {
+        effects.push(['logout']);
+        if (rejectLogout) throw new Error('Synthetic logout failure');
+        return { response: { status: 202, headers: { location: 'https://keycloak.example.invalid/logout' } } };
       },
     },
     '@/utils/auth': {
-      getStoredLoginInfo: () => ({ refreshToken: 'synthetic-refresh' }),
-      clearAccessToken: () => effects.push(['clear']),
+      clearSelectedTenantId: () => effects.push(['clearTenant']),
+    },
+    '@/utils/sessionLogin': {
+      logoutAndLeave: async (logout) => {
+        let location;
+        try {
+          location = (await logout()).response?.headers?.location;
+        } catch {
+          location = undefined;
+        }
+        effects.push(['navigate', location || '/']);
+      },
     },
     '@ant-design/icons': require('@ant-design/icons'),
-    '@umijs/max': {
-      history: { push: (path) => effects.push(['navigate', path]) },
-    },
     antd: {
       ...antd,
       Dropdown: (props) => {
@@ -65,11 +73,7 @@ function renderAccount({ initialState, rejectLogout = false } = {}) {
     }),
   );
   const html = renderToStaticMarkup(
-    React.createElement(module.exports.default, {
-      initialState,
-      setInitialState: (state) =>
-        effects.push(['initialState', Object.keys(state)]),
-    }),
+    React.createElement(module.exports.default, { initialState }),
   );
   return { html, dropdown, effects };
 }
@@ -105,19 +109,18 @@ test('account menu stays absent without an authenticated display identity', () =
 });
 
 for (const rejectLogout of [false, true]) {
-  test(`account logout clears local state after ${
-    rejectLogout ? 'failed' : 'successful'
-  } revocation`, async () => {
+  test(`account logout clears the selected tenant and leaves through the gateway after ${
+    rejectLogout ? 'a failed' : 'a successful'
+  } logout`, async () => {
     const { dropdown, effects } = renderAccount({
       initialState: identity,
       rejectLogout,
     });
     await dropdown.menu.items.find((item) => item.key === 'logout').onClick();
     assert.deepEqual(effects, [
-      ['revoke', 'synthetic-refresh'],
-      ['clear'],
-      ['initialState', []],
-      ['navigate', '/login'],
+      ['clearTenant'],
+      ['logout'],
+      ['navigate', rejectLogout ? '/' : 'https://keycloak.example.invalid/logout'],
     ]);
   });
 }

@@ -1,13 +1,12 @@
 import MessageCenter from '@/components/MessageCenter';
 import { ADMIN_TYPE_VALUE_ENUM } from '@/constants/auth';
-import { logoutSession } from '@/services/auth';
-import { clearAccessToken, getStoredLoginInfo } from '@/utils/auth';
+import { logout as logoutGatewaySession } from '@/services/auth';
+import { clearSelectedTenantId } from '@/utils/auth';
+import { logoutAndLeave } from '@/utils/sessionLogin';
 import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
-import { history } from '@umijs/max';
 import { Avatar, Descriptions, Dropdown, Modal } from 'antd';
 import { useState } from 'react';
 
-const loginPath = '/login';
 const defaultAvatar =
   'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png';
 
@@ -19,12 +18,10 @@ interface LayoutRightContentProps {
     currentTenantId?: string;
     availableTenants?: API.AuthTenantVO[];
   };
-  setInitialState: (state: Record<string, unknown>) => void;
 }
 
 export default function LayoutRightContent({
   initialState,
-  setInitialState,
 }: LayoutRightContentProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -52,16 +49,9 @@ export default function LayoutRightContent({
   }
 
   const logout = async () => {
-    const refreshToken = getStoredLoginInfo()?.refreshToken;
-    try {
-      await logoutSession({ refreshToken });
-    } catch {
-      // 退出时以后端撤销为最佳努力，前端本地登录态仍必须清理。
-    } finally {
-      clearAccessToken();
-      setInitialState({});
-      history.push(loginPath);
-    }
+    // 网关作废会话后整页导航到 Keycloak 的注销地址，选中的租户一并清掉。
+    clearSelectedTenantId();
+    await logoutAndLeave(logoutGatewaySession);
   };
 
   const avatar = (

@@ -2,18 +2,17 @@ import LayoutRightContent from '@/components/LayoutRightContent';
 import SessionRecovery from '@/components/SessionRecovery';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import { BACKEND_BASE_URL } from '@/constants/auth';
-import { currentResources, logoutSession } from '@/services/auth';
+import { currentResources, logout } from '@/services/auth';
 import {
-  clearAccessToken,
-  getAccessToken,
+  clearLegacyTokens,
+  clearSelectedTenantId,
   getSelectedTenantId,
-  getStoredLoginInfo,
   setSelectedTenantId,
-  setStoredLoginInfo,
 } from '@/utils/auth';
-import { applyAccessToken, isOAuthTokenRequest } from '@/utils/requestAuth';
+import { applySessionHeaders } from '@/utils/requestAuth';
 import type { SessionBootstrapState } from '@/utils/sessionBootstrap';
 import { bootstrapSession } from '@/utils/sessionBootstrap';
+import { logoutAndLeave, redirectToLogin } from '@/utils/sessionLogin';
 import { getTrafficHeaders } from '@/utils/traffic';
 import type {
   AxiosError,
@@ -24,8 +23,6 @@ import type {
 import { history } from '@umijs/max';
 import { message } from 'antd';
 import { createElement } from 'react';
-
-const loginPath = '/login';
 
 type MenuItemWithTooltip = {
   children?: MenuItemWithTooltip[];
@@ -42,27 +39,30 @@ const disableMenuTooltip = (
     children: item.children ? disableMenuTooltip(item.children) : item.children,
   }));
 
-const authRequestInterceptor = (config: AxiosRequestConfig) => {
-  const token = getAccessToken();
-  config.headers = {
-    ...getTrafficHeaders(),
-    ...config.headers,
-  };
-  return applyAccessToken(config, token);
+/** 登录态在网关会话（Cookie）里：带流量治理头、CSRF 头、XHR 标记与选中的租户，不带 Authorization。 */
+const sessionRequestInterceptor = (config: AxiosRequestConfig) =>
+  applySessionHeaders(
+    { ...config, headers: { ...getTrafficHeaders(), ...config.headers } },
+    document.cookie,
+    getSelectedTenantId(),
+  );
+
+/** 退出：网关作废会话后导航到 Keycloak 的注销地址；选中的租户一并清掉。 */
+const leave = async () => {
+  clearSelectedTenantId();
+  await logoutAndLeave(logout);
 };
 
 export async function getInitialState(
   signal?: AbortSignal,
 ): Promise<SessionBootstrapState> {
+  clearLegacyTokens();
   return bootstrapSession(
     {
-      session: getAccessToken,
-      stored: getStoredLoginInfo,
       selectedTenant: getSelectedTenantId,
+      clearTenant: clearSelectedTenantId,
       read: (requestSignal) =>
         currentResources({ signal: requestSignal, skipErrorHandler: true }),
-      clear: clearAccessToken,
-      store: setStoredLoginInfo,
       selectTenant: setSelectedTenantId,
     },
     signal,
@@ -76,28 +76,12 @@ export const layout: RunTimeLayoutConfig = ({
   const recovery = initialState?.sessionRecovery
     ? createElement(SessionRecovery, {
         read: getInitialState,
-        session: getAccessToken,
         apply: async (state: SessionBootstrapState) => {
           await setInitialState(state);
           if (state.currentUser) history.push('/dashboard');
-          else if (!state.sessionRecovery && !getAccessToken())
-            history.push(loginPath);
+          else if (!state.sessionRecovery) redirectToLogin();
         },
-        onLogout: async () => {
-          const session = getAccessToken();
-          const refreshToken = getStoredLoginInfo()?.refreshToken;
-          try {
-            await logoutSession({ refreshToken });
-          } catch {
-            /* 服务撤销为最佳努力，本地退出仍须完成。 */
-          } finally {
-            if (getAccessToken() === session) {
-              clearAccessToken();
-              await setInitialState({});
-              history.push(loginPath);
-            }
-          }
-        },
+        onLogout: leave,
       })
     : undefined;
   return {
@@ -108,31 +92,15 @@ export const layout: RunTimeLayoutConfig = ({
     menuDataRender: disableMenuTooltip,
     unAccessible: recovery,
     onPageChange: () => {
-      const { location } = history;
-      if (initialState?.sessionRecovery && getAccessToken()) return;
-      if (
-        !initialState?.currentUser &&
-        !getAccessToken() &&
-        location.pathname !== loginPath
-      ) {
-        history.push(loginPath);
+      // 没有当前用户也不在恢复页：网关会话不存在或已失效，整页跳网关登录。
+      if (!initialState?.currentUser && !initialState?.sessionRecovery) {
+        redirectToLogin();
       }
     },
-    logout: async () => {
-      const refreshToken = getStoredLoginInfo()?.refreshToken;
-      try {
-        await logoutSession({ refreshToken });
-      } catch {
-        // 退出时以后端撤销为最佳努力，前端本地登录态仍必须清理。
-      } finally {
-        clearAccessToken();
-        history.push(loginPath);
-      }
-    },
-    rightRender: (state, setInitialState) =>
+    logout: leave,
+    rightRender: (state) =>
       createElement(LayoutRightContent, {
         initialState: state,
-        setInitialState,
       }),
     childrenRender: (dom) =>
       recovery ||
@@ -163,6 +131,7 @@ export const layout: RunTimeLayoutConfig = ({
 export const request: RequestConfig = {
   baseURL: BACKEND_BASE_URL,
   timeout: 10000,
+  withCredentials: true,
   errorConfig: {
     errorThrower: (res: API.ApiResponse<unknown>) => {
       if (res.success === false) {
@@ -185,14 +154,8 @@ export const request: RequestConfig = {
         return;
       }
       if (status === 401) {
-        const requestUrl = 'config' in error ? error.config?.url : undefined;
-        if (isOAuthTokenRequest(requestUrl)) {
-          message.error('OAuth Client 认证失败');
-          return;
-        }
-        clearAccessToken();
-        history.push(loginPath);
-        message.error('登录已失效，请重新登录');
+        // 网关会话不存在或已失效：整页跳网关登录，Keycloak 登录后回到本站。
+        redirectToLogin();
         return;
       }
       if (status === 403) {
@@ -223,5 +186,5 @@ export const request: RequestConfig = {
       );
     },
   },
-  requestInterceptors: [authRequestInterceptor],
+  requestInterceptors: [sessionRequestInterceptor],
 };

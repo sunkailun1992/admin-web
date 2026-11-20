@@ -8,136 +8,43 @@ import ts from 'typescript';
 const utilityModule = { exports: {} };
 runInContext(ts.transpileModule(readFileSync(new URL('../../src/utils/requestAuth.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
-}).outputText, createContext({ exports: utilityModule.exports, URL }));
-const { applyAccessToken, isOAuthTokenRequest } = utilityModule.exports;
+}).outputText, createContext({ exports: utilityModule.exports }));
+const { applySessionHeaders } = utilityModule.exports;
 
-test('normal requests attach the current administrator token', () => {
-  const config = applyAccessToken({ headers: { 'X-Trace-Id': 'fixture' } }, 'test-access-token');
-  assert.equal(config.headers.Authorization, 'Bearer test-access-token');
-  assert.equal(config.headers['X-Trace-Id'], 'fixture');
-});
+const COOKIES = 'theme=dark; XSRF-TOKEN=fixture%2Dxsrf; other=1';
 
-test('explicit client credentials survive skipAuth and internal flag is removed', () => {
-  const config = applyAccessToken({ skipAuth: true, headers: { Authorization: 'Basic fixture' } }, 'test-access-token');
-  assert.equal(config.headers.Authorization, 'Basic fixture');
-  assert.equal(Object.hasOwn(config, 'skipAuth'), false);
-});
-
-test('public request with skipAuth never receives administrator credentials', () => {
-  const config = applyAccessToken({ skipAuth: true, headers: {} }, 'test-access-token');
-  assert.equal(config.headers.Authorization, undefined);
-  assert.equal(Object.hasOwn(config, 'skipAuth'), false);
-});
-
-test('request without a stored session preserves existing authentication', () => {
-  assert.equal(applyAccessToken({ headers: { Authorization: 'Basic fixture' } }, null).headers.Authorization, 'Basic fixture');
-});
-
-test('only token endpoint errors preserve the administrator session', () => {
-  for (const url of ['/oauth2/token', '/oauth2/token?scope=fixture', 'https://auth.example.invalid/oauth2/token']) {
-    assert.equal(isOAuthTokenRequest(url), true);
-  }
-  for (const url of [undefined, '', '/auth/current/resources', '/oauth2/token/revoke', '/api?redirect=/oauth2/token']) {
-    assert.equal(isOAuthTokenRequest(url), false);
+test('requestsCarryNoAuthorizationHeader', () => {
+  for (const name of ['Authorization', 'authorization']) {
+    const config = applySessionHeaders({ method: 'get', headers: { [name]: 'Bearer stale-token', 'X-Trace-Id': 'fixture' } }, COOKIES, null);
+    assert.equal(config.headers.Authorization, undefined);
+    assert.equal(config.headers.authorization, undefined);
+    assert.equal(config.headers['X-Trace-Id'], 'fixture');
+    assert.equal(config.withCredentials, true);
   }
 });
 
-// 直接执行 Umi 运行时的错误处理与拦截器，验证控制标记接入后的实际登录态行为。
-function runtime() {
-  const effects = { cleared: 0, redirects: [], messages: [] };
-  const module = { exports: {} };
-  const sources = {
-    '@/constants/auth': { BACKEND_BASE_URL: 'http://gateway.example.invalid' },
-    '@/utils/auth': {
-      getAccessToken: () => 'test-access-token',
-      clearAccessToken: () => effects.cleared++,
-    },
-    '@/utils/traffic': { getTrafficHeaders: () => ({ 'X-Trace-Id': 'fixture' }) },
-    '@/utils/requestAuth': { applyAccessToken, isOAuthTokenRequest },
-    '@umijs/max': { history: { push: (path) => effects.redirects.push(path) } },
-    antd: { message: { error: (text) => effects.messages.push(text) } },
-    react: { createElement: () => null },
-  };
-  const code = ts.transpileModule(readFileSync(new URL('../../src/app.ts', import.meta.url), 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText;
-  runInContext(code, createContext({
-    exports: module.exports,
-    require: (name) => sources[name] || {},
-  }));
-  return { request: module.exports.request, effects };
-}
-
-test('runtime keeps administrator session on OAuth client failure and hides raw response', () => {
-  const { request, effects } = runtime();
-  request.errorConfig.errorHandler({ config: { url: '/oauth2/token' }, response: { status: 401, data: { msg: 'synthetic internal details' } } });
-  assert.equal(effects.cleared, 0);
-  assert.deepEqual(effects.redirects, []);
-  assert.deepEqual(effects.messages, ['OAuth Client 认证失败']);
+test('writeRequestsCarryXsrfHeaderFromCookie', () => {
+  for (const method of ['post', 'PUT', 'patch', 'DELETE']) {
+    assert.equal(applySessionHeaders({ method, headers: {} }, COOKIES, null).headers['X-XSRF-TOKEN'], 'fixture-xsrf');
+  }
+  assert.equal(applySessionHeaders({ method: 'get', headers: {} }, COOKIES, null).headers['X-XSRF-TOKEN'], undefined);
+  assert.equal(applySessionHeaders({ headers: {} }, COOKIES, null).headers['X-XSRF-TOKEN'], undefined);
+  assert.equal(applySessionHeaders({ method: 'post', headers: {} }, 'theme=dark', null).headers['X-XSRF-TOKEN'], undefined);
 });
 
-test('runtime still expires ordinary unauthorized administrator requests', () => {
-  const { request, effects } = runtime();
-  request.errorConfig.errorHandler({ config: { url: '/auth/current/resources' }, response: { status: 401 } });
-  assert.equal(effects.cleared, 1);
-  assert.deepEqual(effects.redirects, ['/login']);
+test('requests are marked as XHR so the gateway answers 401 instead of redirecting', () => {
+  assert.equal(applySessionHeaders({ headers: {} }, '', null).headers['X-Requested-With'], 'XMLHttpRequest');
 });
 
-test('runtime silently ignores confirmed client cancellation during graph scope changes', () => {
-  const { request, effects } = runtime();
-  request.errorConfig.errorHandler({ code: 'ERR_CANCELED', message: 'canceled' });
-  request.errorConfig.errorHandler({ name: 'AbortError', message: 'aborted' });
-  assert.deepEqual(effects.messages, []);
-  assert.deepEqual(effects.redirects, []);
-  assert.equal(effects.cleared, 0);
+test('selectedTenantTravelsInXTenantId', () => {
+  assert.equal(applySessionHeaders({ headers: {} }, '', 'fixture-tenant').headers['X-Tenant-Id'], 'fixture-tenant');
+  assert.equal(applySessionHeaders({ headers: {} }, '', null).headers['X-Tenant-Id'], undefined);
+  assert.equal(applySessionHeaders({ headers: { 'X-Tenant-Id': 'explicit' } }, '', 'selected').headers['X-Tenant-Id'], 'explicit');
 });
 
-test('runtime still reports timeouts, ordinary network errors and HTTP authorization failures', () => {
-  const { request, effects } = runtime();
-  request.errorConfig.errorHandler({ code: 'ECONNABORTED', message: 'timeout' });
-  request.errorConfig.errorHandler({ message: 'canceled by network' });
-  request.errorConfig.errorHandler({ code: 'ERR_CANCELED', response: { status: 403 } });
-  request.errorConfig.errorHandler({ name: 'AbortError', response: { status: 401 } });
-  assert.deepEqual(effects.messages, ['timeout', 'canceled by network', '无权限访问', '登录已失效，请重新登录']);
-  assert.equal(effects.cleared, 1);
-  assert.deepEqual(effects.redirects, ['/login']);
-});
-
-test('runtime interceptor preserves Basic credentials and traffic headers', () => {
-  const { request } = runtime();
-  const config = request.requestInterceptors[0]({ skipAuth: true, headers: { Authorization: 'Basic fixture' } });
-  assert.equal(config.headers.Authorization, 'Basic fixture');
-  assert.equal(config.headers['X-Trace-Id'], 'fixture');
-  assert.equal(Object.hasOwn(config, 'skipAuth'), false);
-});
-
-test('only a keyed graph POST defers uncertain network errors while authorization failures remain global', () => {
-  const { request, effects } = runtime();
-  const config = {
-    url: '/api/rag/graphs/sync',
-    method: 'post',
-    headers: { 'X-Graph-Submission-Key': 'synthetic-submission-0001' },
-  };
-  request.errorConfig.errorHandler({
-    config,
-    message: 'uncertain graph submission',
-  });
-  assert.deepEqual(effects.messages, []);
-  request.errorConfig.errorHandler({
-    config: { ...config, url: '/api/rag/other' },
-    message: 'other API',
-  });
-  request.errorConfig.errorHandler({
-    config: { ...config, headers: {} },
-    message: 'unkeyed POST',
-  });
-  request.errorConfig.errorHandler({ config, response: { status: 403 } });
-  request.errorConfig.errorHandler({ config, response: { status: 401 } });
-  assert.deepEqual(effects.messages, [
-    'other API',
-    'unkeyed POST',
-    '无权限访问',
-    '登录已失效，请重新登录',
-  ]);
-  assert.equal(effects.cleared, 1);
+test('interceptorDoesNotMutateTheCallersConfig', () => {
+  const headers = { Authorization: 'Bearer stale-token' };
+  const original = { method: 'post', headers };
+  applySessionHeaders(original, COOKIES, 'fixture-tenant');
+  assert.deepEqual(original, { method: 'post', headers: { Authorization: 'Bearer stale-token' } });
 });

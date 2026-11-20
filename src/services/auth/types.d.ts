@@ -26,19 +26,7 @@ declare namespace API {
     pages?: number;
   }
 
-  interface LoginRequest {
-    tenantId?: string;
-    tenantCode?: string;
-    username: string;
-    password: string;
-  }
-
-  interface AuthLoginVO {
-    token: string;
-    refreshToken?: string;
-    expiresIn?: number;
-    refreshExpiresIn?: number;
-    tokenType?: string;
+  interface CurrentUser {
     userId: string;
     username: string;
     nickname?: string;
@@ -51,19 +39,14 @@ declare namespace API {
     permissions?: string[];
     frontendResources?: AuthResourceVO[];
     backendResources?: AuthResourceVO[];
-  }
-
-  interface LogoutSessionRequest {
-    refreshToken?: string;
-  }
-
-  interface CurrentUser extends AuthLoginVO {
     name: string;
     avatar?: string;
   }
 
   interface AuthCurrentResourceVO {
     userId: string;
+    username?: string;
+    nickname?: string;
     tenantId: string;
     deptId?: string;
     adminType?: AdminType;

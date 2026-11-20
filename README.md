@@ -41,17 +41,16 @@ backend:
   gatewayBaseUrl: http://localhost:7100
   localPath: ../user
   serviceName: user
-  devBaseUrl: http://localhost:7100
-  testBaseUrl: http://localhost:7100
-  prodBaseUrl: http://localhost:7100
+  devProxyTarget: http://localhost:7100   # ADMIN_WEB_GATEWAY_URL，只给开发服务器
   userDirectUrl: http://localhost:7500
-  requestMode: env-baseURL
+  requestMode: same-origin（baseURL 为空，开发时 Umi 代理转给网关）
 auth:
-  tenants: GET /auth/tenants
-  login: POST /auth/sessions
+  login: GET /oauth2/authorization/keycloak   # 网关 BFF，跳 Keycloak 登录（授权码加 PKCE）
+  logout: POST /logout                        # 网关回 202 与 Keycloak 注销地址
   currentResources: GET /auth/current/resources
-  tokenHeader: 'Authorization: Bearer <token>'
-  tokenStorageKey: admin_web_access_token
+  session: 网关会话 Cookie __Host-SESSION（前端不存令牌）
+  csrf: 写请求带 X-XSRF-TOKEN（值取自 XSRF-TOKEN Cookie）
+  tenant: X-Tenant-Id（选中的租户，能否访问由 user 核对）
 permissions:
   backendManage: user:auth:manage
   frontendMenus:
@@ -92,8 +91,7 @@ AI 处理本项目任务时，优先读取：
 
 | 功能 | 前端页面 | 后端接口 |
 | --- | --- | --- |
-| 登录租户下拉 | `/login` | `GET /auth/tenants` |
-| 登录 | `/login` | `POST /auth/sessions` |
+| 登录 | 网关 `/oauth2/authorization/keycloak` | Keycloak 登录页（前端没有登录页） |
 | 当前资源 | 运行时初始化 | `GET /auth/current/resources` |
 | 工作台 | `/dashboard` | 登录态与资源数据 |
 | 租户管理 | `/system/tenant` | `GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT/DELETE /auth/manage/tenants/{id}` |
@@ -153,7 +151,7 @@ password: 123456
 
 ## 权限模型
 
-登录返回：
+`GET /auth/current/resources` 返回（按活动租户）：
 
 - `permissions`：后端权限码，用于接口访问判断。
 - `frontendResources`：前端菜单/页面资源，用于菜单展示控制。
@@ -195,9 +193,8 @@ src/
   app.ts                    # Umi 运行时配置、登录态初始化、请求拦截、错误处理
   access.ts                 # 路由权限判断
   components/TenantSelect/  # 租户选择组件
-  constants/auth.ts         # 登录存储 key、枚举映射、默认租户常量
+  constants/auth.ts         # 选中租户的存储 key、枚举映射、默认租户常量
   hooks/useTenantOptions.ts # 租户名称展示与 valueEnum
-  pages/Login/              # 登录页
   pages/Dashboard/          # 工作台
   pages/System/Tenant/      # 租户管理
   pages/System/User/        # 用户管理和绑定角色
@@ -207,7 +204,7 @@ src/
   pages/Rag/Graph/          # 图谱查询、同步和节点来源展示
   services/auth/            # 后端接口封装和 API 类型
   services/rag/             # RAG 服务接口封装和 API 类型
-  utils/auth.ts             # Token 和登录信息存储
+  utils/auth.ts             # 选中租户的存储与旧令牌清理
   utils/table.ts            # ProTable 查询参数、payload 清理
 docs/
   ai-coding/
@@ -247,12 +244,11 @@ http://localhost:8000
 后端接口地址：
 
 ```text
-.env.dev  -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
-.env.test -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
-.env.prod -> UMI_APP_BACKEND_BASE_URL=http://localhost:7100
+.env.*  -> UMI_APP_BACKEND_BASE_URL=          # 空：与页面同源
+.env.*  -> ADMIN_WEB_GATEWAY_URL=http://localhost:7100   # 开发代理的目标
 ```
 
-前端运行时通过 `src/app.ts` 的 `request.baseURL` 直接请求 `UMI_APP_BACKEND_BASE_URL` 指向的网关。当前 USER_SERVICE_PREFIX 为空，`src/services/auth/index.ts` 的 `/auth/**` 直接请求同路径网关，再转发到 user 服务；不额外追加 `/user`。当前 dev/test/prod 暂时都指向 `http://localhost:7100`；后续环境拆开时，只改对应 `.env.*` 文件。开发时需要先启动 `gateway` 和 `user`，并确保 `gateway` 监听 `7100`、`user` 监听 `7500`。如果浏览器出现 CORS 错误，需要在网关允许来自 `http://localhost:8000` 的跨域请求。
+第5阶段起页面与接口同源：`request.baseURL` 为空，开发时 `.umirc.ts` 的代理把业务接口前缀（`/auth`、`/user`、`/message`、`/report`、`/api`，与网关路由一致）以及登录入口 `/oauth2`、Keycloak 回调 `/login/oauth2`、注销 `/logout` 转给网关，保留 `Host`（网关据此生成 Keycloak 回调地址 `http://localhost:8000/login/oauth2/code/keycloak`）。浏览器打开页面（Accept 含 `text/html`）不转发，交给单页应用路由（`/message` 既是页面也是接口前缀）。会话 Cookie 按主机共享，`localhost:8000` 与直连网关的 `localhost:7100` 是同一个网关会话。开发时先启动 `gateway`（依赖 NAS 上的 Keycloak）与 `user`。生产部署也必须让前端与网关同源（反向代理按同样的前缀转发）。
 
 ## 常用命令
 
@@ -288,9 +284,9 @@ kill -9 <PID>
 
 ## 通用安全与架构同步
 
-请求认证由 `src/utils/requestAuth.ts` 统一处理：普通请求携带当前管理员 Bearer，显式 `skipAuth` 的独立认证请求保留调用方认证头并删除内部控制标记。OAuth 标准 `/oauth2/token` 返回 401 时显示固定认证失败提示，不清理管理员会话；其他 401 仍执行原有退出流程。本次不新增 OAuth 管理页面或业务接口。
+请求认证由 `src/utils/requestAuth.ts` 统一处理：前端不存也不发访问令牌（令牌只在网关会话里），每个请求去掉 `Authorization`、标成 XHR（`X-Requested-With`，未登录时网关回 401 JSON 而不是跳转），写请求带 `X-XSRF-TOKEN`，选中的租户放进 `X-Tenant-Id`。任何请求 401 都整页跳到网关登录入口；`getInitialState` 读 `/auth/current/resources` 判断是否已登录，选中的租户不再可用（403）时清掉选择、按归属租户重读一次。退出走 `src/utils/sessionLogin.ts`：`POST /logout`，网关回 202 与 Keycloak 注销地址后整页导航过去。启动时清掉旧版留在本地的令牌键。
 
-`pnpm test:request-auth` 覆盖 Bearer、Basic、匿名、内部标记清理和 token 入口精确匹配。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、凭据省略、未知操作恢复、上传校验与评估报告读取；个人网关直接接收 `/api/rag/**`，`RAG_SERVICE_PREFIX` 为空，不额外追加 `/rag`。当前前端版本为 `1.1.1`，CI 使用 `pnpm build:dev` 验证页面构建，避免普通测试读取生产配置；发布构建入口仍为 `pnpm build`。
+`pnpm test:request-auth` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.mjs` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.mjs` 覆盖会话检查、失效租户重读、恢复页与退出。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
 
 ## RAG 文档上传
 

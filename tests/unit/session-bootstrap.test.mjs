@@ -22,6 +22,7 @@ function load(path, dependencies = {}) {
     createContext({
       exports: module.exports,
       AbortController,
+      document: { cookie: 'XSRF-TOKEN=synthetic-xsrf' },
       require: (name) => {
         assert.ok(
           Object.hasOwn(dependencies, name),
@@ -42,6 +43,8 @@ const recovery = load('../../src/components/SessionRecovery/index.tsx', {
 }).default;
 const resources = {
   userId: 'synthetic-user',
+  username: 'synthetic-login',
+  nickname: '合成用户',
   tenantId: 'synthetic-tenant',
   adminType: 'TENANT_ADMIN',
   permissions: ['rag:graph:view'],
@@ -51,21 +54,29 @@ const resources = {
 };
 function runtime({
   error,
+  errors,
   response,
-  token: initialToken = 'synthetic-session',
+  selected: initialSelected = 'synthetic-tenant',
   logoutFails = false,
 } = {}) {
-  let token = initialToken;
+  let selected = initialSelected;
+  const failures = errors ? [...errors] : error ? [error] : [];
   const effects = {
-    clear: 0,
     reads: 0,
-    redirects: [],
-    applied: [],
     readOptions: [],
+    readTenants: [],
+    redirects: [],
+    logins: 0,
+    leaves: 0,
     logouts: 0,
+    legacyCleared: 0,
+    tenantCleared: 0,
+    selectedTenants: [],
+    applied: [],
+    headerCalls: [],
   };
   const dependencies = {
-    '@/constants/auth': { BACKEND_BASE_URL: 'http://gateway.example.invalid' },
+    '@/constants/auth': { BACKEND_BASE_URL: '' },
     '@/components/LayoutRightContent': { default: () => null },
     '@/components/TenantSwitcher': {
       default: () => React.createElement('div', null, 'TENANT_SWITCHER'),
@@ -75,35 +86,47 @@ function runtime({
       currentResources: async (options) => {
         effects.reads++;
         effects.readOptions.push(options);
-        if (error) throw error;
+        effects.readTenants.push(selected);
+        const failure = failures.shift();
+        if (failure) throw failure;
         return response || { success: true, data: resources };
       },
-      logoutSession: async () => {
+      logout: async () => {
         effects.logouts++;
         if (logoutFails) throw new Error('MUST_NOT_RENDER');
+        return { response: { status: 202, headers: { location: 'https://keycloak.example.invalid/logout' } } };
       },
     },
     '@/utils/auth': {
-      getAccessToken: () => token,
-      getStoredLoginInfo: () => ({
-        userId: 'synthetic-user',
-        username: '合成用户',
-        adminType: 'PLATFORM_SUPER_ADMIN',
-        permissions: ['user:auth:manage'],
-      }),
-      getSelectedTenantId: () => 'synthetic-tenant',
-      setSelectedTenantId: () => {},
-      setStoredLoginInfo: () => {},
-      clearAccessToken: () => {
-        effects.clear++;
-        token = null;
+      clearLegacyTokens: () => effects.legacyCleared++,
+      clearSelectedTenantId: () => {
+        effects.tenantCleared++;
+        selected = null;
+      },
+      getSelectedTenantId: () => selected,
+      setSelectedTenantId: (tenant) => {
+        selected = tenant;
+        effects.selectedTenants.push(tenant);
       },
     },
     '@/utils/sessionBootstrap': bootstrap,
-    '@/utils/traffic': { getTrafficHeaders: () => ({}) },
+    '@/utils/sessionLogin': {
+      redirectToLogin: () => effects.logins++,
+      logoutAndLeave: async (logout) => {
+        effects.leaves++;
+        try {
+          await logout();
+        } catch {
+          // 真实实现回到 /；这里只记离开次数。
+        }
+      },
+    },
+    '@/utils/traffic': { getTrafficHeaders: () => ({ 'X-Traffic-Lane': 'stable' }) },
     '@/utils/requestAuth': {
-      applyAccessToken: (config) => config,
-      isOAuthTokenRequest: () => false,
+      applySessionHeaders: (config, cookies, tenant) => {
+        effects.headerCalls.push([config, cookies, tenant]);
+        return config;
+      },
     },
     '@umijs/max': {
       history: {
@@ -115,31 +138,41 @@ function runtime({
     react: React,
   };
   const app = load('../../src/app.ts', dependencies);
-  return {
-    app,
-    effects,
-    setToken: (next) => {
-      token = next;
-    },
-  };
+  return { app, effects };
 }
 
 for (const [name, error] of [
   ['timeout', { code: 'ECONNABORTED', message: 'MUST_NOT_RENDER' }],
-  ['403', { response: { status: 403 } }],
   ['500', { response: { status: 500 } }],
 ]) {
-  test(`actual bootstrap retains token after ${name}, withholds cached authority and offers recovery`, async () => {
+  test(`bootstrap after ${name} withholds authority and offers recovery without sending the browser to login`, async () => {
     const f = runtime({ error });
     const state = await f.app.getInitialState();
-    assert.equal(f.effects.clear, 0);
     assert.equal(state.currentUser, undefined);
     assert.equal(state.sessionRecovery?.reason, 'resources-unavailable');
     assert.equal(f.effects.readOptions[0]?.skipErrorHandler, true);
+    assert.equal(f.effects.logins, 0);
   });
 }
 
-test('401 and verified existing identity failure codes clear the session instead of entering recovery', async () => {
+test('a stale selected tenant (403) is cleared and the home tenant is read again', async () => {
+  const f = runtime({ errors: [{ response: { status: 403 } }], selected: 'synthetic-old-tenant' });
+  const state = await f.app.getInitialState();
+  assert.equal(f.effects.reads, 2);
+  assert.deepEqual(f.effects.readTenants, ['synthetic-old-tenant', null]);
+  assert.equal(f.effects.tenantCleared, 1);
+  assert.equal(state.currentUser.userId, 'synthetic-user');
+  assert.deepEqual(f.effects.selectedTenants, ['synthetic-tenant']);
+});
+
+test('a 403 without a selected tenant (disabled account) recovers instead of looping', async () => {
+  const f = runtime({ errors: [{ response: { status: 403 } }], selected: null });
+  const state = await f.app.getInitialState();
+  assert.equal(f.effects.reads, 1);
+  assert.equal(state.sessionRecovery?.reason, 'resources-unavailable');
+});
+
+test('401 and identity failure codes mean no gateway session: empty state, and the layout sends the browser to login', async () => {
   for (const error of [
     { response: { status: 401 } },
     { response: { success: false, code: 'A0220' } },
@@ -147,12 +180,13 @@ test('401 and verified existing identity failure codes clear the session instead
   ]) {
     const f = runtime({ error });
     const state = await f.app.getInitialState();
-    assert.equal(f.effects.clear, 1);
     assert.equal(Object.keys(state).length, 0);
+    f.app.layout({ initialState: state, setInitialState: async () => {} }).onPageChange();
+    assert.equal(f.effects.logins, 1);
   }
 });
 
-test('malformed 200 and non-identity business failures recover safely without deleting the token', async () => {
+test('malformed 200 and non-identity business failures recover safely', async () => {
   for (const response of [
     { success: true, data: {} },
     { success: true, data: { ...resources, permissions: undefined } },
@@ -160,28 +194,44 @@ test('malformed 200 and non-identity business failures recover safely without de
   ]) {
     const f = runtime({ response });
     const state = await f.app.getInitialState();
-    assert.equal(f.effects.clear, 0);
     assert.equal(state.currentUser, undefined);
     assert.equal(state.sessionRecovery?.reason, 'resources-unavailable');
   }
 });
 
-test('successful bootstrap uses current server authority and no-token startup remains unauthenticated', async () => {
+test('successful bootstrap builds the user from server resources and clears legacy tokens', async () => {
   const f = runtime();
   const state = await f.app.getInitialState();
+  assert.equal(f.effects.legacyCleared, 1);
   assert.equal(state.currentUser.userId, 'synthetic-user');
+  assert.equal(state.currentUser.username, 'synthetic-login');
+  assert.equal(state.currentUser.nickname, '合成用户');
+  assert.equal(state.currentUser.name, '合成用户');
   assert.equal(state.currentUser.adminType, 'TENANT_ADMIN');
-  assert.deepEqual(Array.from(state.currentUser.permissions), [
-    'rag:graph:view',
-  ]);
+  assert.deepEqual(Array.from(state.currentUser.permissions), ['rag:graph:view']);
+  assert.equal(state.currentTenantId, 'synthetic-tenant');
   assert.equal(state.sessionRecovery, undefined);
-  const empty = runtime({ token: null });
-  assert.equal(Object.keys(await empty.app.getInitialState()).length, 0);
-  assert.equal(empty.effects.reads, 0);
-  empty.app
-    .layout({ initialState: {}, setInitialState: async () => {} })
-    .onPageChange();
-  assert.deepEqual(empty.effects.redirects, ['/login']);
+  assert.equal(Object.hasOwn(state.currentUser, 'token'), false);
+  assert.equal(Object.hasOwn(state.currentUser, 'refreshToken'), false);
+  f.app.layout({ initialState: state, setInitialState: async () => {} }).onPageChange();
+  assert.equal(f.effects.logins, 0);
+});
+
+test('every request goes through the session headers with traffic headers, cookies and the selected tenant', () => {
+  const f = runtime();
+  f.app.request.requestInterceptors[0]({ method: 'post', headers: { 'X-Trace-Id': 'fixture' } });
+  const [config, cookies, tenant] = f.effects.headerCalls[0];
+  assert.deepEqual({ ...config.headers }, { 'X-Traffic-Lane': 'stable', 'X-Trace-Id': 'fixture' });
+  assert.equal(cookies, 'XSRF-TOKEN=synthetic-xsrf');
+  assert.equal(tenant, 'synthetic-tenant');
+  assert.equal(f.app.request.withCredentials, true);
+  assert.equal(f.app.request.baseURL, '');
+});
+
+test('a 401 from any request sends the browser to the gateway login', () => {
+  const f = runtime();
+  f.app.request.errorConfig.errorHandler({ response: { status: 401 }, config: { url: '/auth/manage/users' } });
+  assert.equal(f.effects.logins, 1);
 });
 
 test('actual layout drops the protected Outlet and overrides Umi inaccessible rendering during recovery', () => {
@@ -200,10 +250,7 @@ test('actual layout drops the protected Outlet and overrides Umi inaccessible re
     config.childrenRender(React.createElement(Protected)),
   );
   assert.match(content, /会话暂未恢复/);
-  assert.doesNotMatch(
-    content,
-    /PROTECTED_BODY|TENANT_SWITCHER|MUST_NOT_RENDER/,
-  );
+  assert.doesNotMatch(content, /PROTECTED_BODY|TENANT_SWITCHER|MUST_NOT_RENDER/);
   assert.equal(mounted, 0);
   const exception = load('../../src/.umi/plugin-layout/Exception.tsx', {
     react: { ...React, default: React },
@@ -221,7 +268,7 @@ test('actual layout drops the protected Outlet and overrides Umi inaccessible re
   assert.match(denied, /会话暂未恢复/);
   assert.equal(mounted, 0);
   config.onPageChange();
-  assert.deepEqual(f.effects.redirects, []);
+  assert.equal(f.effects.logins, 0);
 });
 
 test('recovery view exposes explicit retry and logout without cached permissions or raw errors', () => {
@@ -231,48 +278,39 @@ test('recovery view exposes explicit retry and logout without cached permissions
       read: async () => ({}),
       apply: async () => {},
       onLogout: async () => {},
-      session: () => 'synthetic-session',
     }),
   );
   assert.match(html, /会话暂未恢复/);
   assert.match(html, /aria-label="重试"/);
   assert.match(html, />退出登录</);
-  assert.doesNotMatch(
-    html,
-    /user:auth:manage|MUST_NOT_RENDER|synthetic-session/,
-  );
+  assert.doesNotMatch(html, /user:auth:manage|MUST_NOT_RENDER/);
 });
 
-test('manual retry is single-flight and an unmounted or changed session cannot apply its late result', async () => {
+test('manual retry is single-flight and an unmounted controller cannot apply its late result', async () => {
   assert.equal(typeof bootstrap.createSessionRecoveryController, 'function');
-  for (const changedSession of [false, true]) {
-    let resolve;
-    let session = 'synthetic-session';
-    let reads = 0;
-    const applied = [];
-    const controller = bootstrap.createSessionRecoveryController({
-      session: () => session,
-      read: () => {
-        reads++;
-        return new Promise((done) => {
-          resolve = done;
-        });
-      },
-      apply: (value) => applied.push(value),
-      loading: () => {},
-    });
-    const pending = controller.retry();
-    await controller.retry();
-    assert.equal(reads, 1);
-    if (changedSession) session = 'synthetic-new-session';
-    else controller.dispose();
-    resolve({ currentUser: { userId: 'synthetic-user' } });
-    await pending;
-    assert.equal(applied.length, 0);
-  }
+  let resolve;
+  let reads = 0;
+  const applied = [];
+  const controller = bootstrap.createSessionRecoveryController({
+    read: () => {
+      reads++;
+      return new Promise((done) => {
+        resolve = done;
+      });
+    },
+    apply: (value) => applied.push(value),
+    loading: () => {},
+  });
+  const pending = controller.retry();
+  await controller.retry();
+  assert.equal(reads, 1);
+  controller.dispose();
+  resolve({ currentUser: { userId: 'synthetic-user' } });
+  await pending;
+  assert.equal(applied.length, 0);
 });
 
-test('recovery logout attempts revocation and clears local state even when revocation fails', async () => {
+test('recovery logout clears the selected tenant and leaves through the gateway logout even when it fails', async () => {
   for (const logoutFails of [false, true]) {
     const f = runtime({ logoutFails });
     const config = f.app.layout({
@@ -280,48 +318,30 @@ test('recovery logout attempts revocation and clears local state even when revoc
       setInitialState: async (state) => f.effects.applied.push(state),
     });
     await config.unAccessible.props.onLogout();
+    assert.equal(f.effects.tenantCleared, 1);
+    assert.equal(f.effects.leaves, 1);
     assert.equal(f.effects.logouts, 1);
-    assert.equal(f.effects.clear, 1);
-    assert.equal(Object.keys(f.effects.applied[0]).length, 0);
-    assert.deepEqual(f.effects.redirects, ['/login']);
   }
 });
 
-test('successful recovery commits fresh state and returns to the existing dashboard without another bootstrap', async () => {
+test('successful recovery commits fresh state and returns to the dashboard without another bootstrap', async () => {
   const f = runtime();
   const config = f.app.layout({
     initialState: { sessionRecovery: { reason: 'resources-unavailable' } },
     setInitialState: async (state) => f.effects.applied.push(state),
   });
-  await config.unAccessible.props.apply({
-    currentUser: { userId: 'synthetic-user' },
-  });
+  await config.unAccessible.props.apply({ currentUser: { userId: 'synthetic-user' } });
   assert.equal(f.effects.applied[0].currentUser.userId, 'synthetic-user');
   assert.deepEqual(f.effects.redirects, ['/dashboard']);
   assert.equal(f.effects.reads, 0);
 });
 
-test('an old bootstrap 401 cannot clear a newly established different session', async () => {
-  let reject;
-  let session = 'synthetic-old-session';
-  let clear = 0;
-  const pending = bootstrap.bootstrapSession({
-    session: () => session,
-    stored: () => undefined,
-    selectedTenant: () => null,
-    read: () =>
-      new Promise((_, fail) => {
-        reject = fail;
-      }),
-    clear: () => {
-      clear++;
-    },
-    store: () => {},
-    selectTenant: () => {},
+test('recovery that ends without a session sends the browser to login', async () => {
+  const f = runtime();
+  const config = f.app.layout({
+    initialState: { sessionRecovery: { reason: 'resources-unavailable' } },
+    setInitialState: async (state) => f.effects.applied.push(state),
   });
-  session = 'synthetic-new-session';
-  reject({ response: { status: 401 } });
-  const state = await pending;
-  assert.equal(clear, 0);
-  assert.equal(Object.keys(state).length, 0);
+  await config.unAccessible.props.apply({});
+  assert.equal(f.effects.logins, 1);
 });

@@ -21,19 +21,15 @@ function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
   };
 }
 
-export async function login(data: API.LoginRequest) {
-  return authRequest<API.ApiResponse<API.AuthLoginVO>>('/auth/sessions', {
+/** 注销网关会话（请求拦截器加 CSRF 头与 XHR 标记）；网关回 202 与 Keycloak 注销地址。 */
+export async function logout() {
+  return request('/logout', {
     method: 'POST',
-    data,
-  });
-}
-
-export async function logoutSession(data: API.LogoutSessionRequest = {}) {
-  return authRequest<API.ApiResponse<void>>('/auth/sessions/logout', {
-    method: 'POST',
-    data,
+    getResponse: true,
     skipErrorHandler: true,
-  });
+  }) as unknown as Promise<{
+    response?: { status?: number; headers?: Record<string, string | undefined> };
+  }>;
 }
 
 export async function currentResources(
@@ -61,20 +57,6 @@ export async function queryTenants(data: API.AuthTenantQuery) {
       },
     ),
   );
-}
-
-export async function listPublicTenants(
-  params: API.AuthTenantQuery = {},
-  options?: { [key: string]: any },
-) {
-  const response = await authRequest<API.ApiResponse<API.AuthTenantVO[]>>(
-    '/auth/tenants',
-    {
-      params,
-      ...(options || {}),
-    },
-  );
-  return response.data || [];
 }
 
 export async function listTenants(

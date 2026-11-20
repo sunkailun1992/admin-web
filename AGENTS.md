@@ -21,15 +21,15 @@
 - 包管理器：`pnpm`
 - 网关项目：同级仓库 `../gateway`
 - 用户服务项目：同级仓库 `../user`
-- 网关地址：由 `.env.dev`、`.env.test`、`.env.prod` 中的 `UMI_APP_BACKEND_BASE_URL` 决定；本地默认网关为 `http://localhost:7100`，环境实际值以构建入口为准
+- 网关地址：开发代理的目标由 `.env.*` 中的 `ADMIN_WEB_GATEWAY_URL` 决定（本地 `http://localhost:7100`）；`UMI_APP_BACKEND_BASE_URL` 为空，接口与页面同源
 - 用户服务直连地址：`http://localhost:7500`
-- 请求方式：使用 Umi request 的 `baseURL` 直连网关，不使用 Umi dev proxy；页面和 service 不直接写环境地址
+- 请求方式：第5阶段起同源加 Umi 开发代理（`.umirc.ts`），网关是 BFF：登录、会话与令牌都在网关，前端不存不发访问令牌；页面和 service 不直接写环境地址
 
 ## 项目职责
 
 本项目负责管理 `user` 后端认证域能力：
 
-- 登录
+- 登录（跳网关的 Keycloak 登录入口，前端没有登录页）与退出
 - 租户管理
 - 用户管理
 - 角色管理
@@ -120,8 +120,8 @@ src/main/resources/db/migration
 
 ## 接口契约
 
-- 登录：`POST /auth/sessions`
-- 登录前租户列表：`GET /auth/tenants`
+- 登录：浏览器整页跳 `GET /oauth2/authorization/keycloak`（网关，授权码加 PKCE）
+- 退出：`POST /logout`（网关，XHR 回 202 与 Keycloak 注销地址，前端整页导航过去）
 - 当前用户资源：`GET /auth/current/resources`
 - 当前用户可切换租户：`GET /auth/current/tenants`
 - 租户：`GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT|DELETE /auth/manage/tenants/{id}`
@@ -134,13 +134,18 @@ src/main/resources/db/migration
 - 角色数据范围部门：`GET|PUT /auth/manage/roles/{roleId}/data-scope-depts`
 - 编码生成：`POST /auth/manage/codes`
 
-前端通过 Umi request 的 baseURL 请求公开网关；当前 USER_SERVICE_PREFIX 为空，service 的 `/auth/**` 直接走同路径网关，不追加 `/user`，不直连后端服务。
+前端请求与页面同源，开发时 Umi 代理转给网关；当前 USER_SERVICE_PREFIX 为空，service 的 `/auth/**` 直接走同路径网关，不追加 `/user`，不直连后端服务。
 
-所有需要认证的请求必须携带：
+认证靠网关会话 Cookie（`__Host-SESSION`），请求拦截器统一处理：
 
 ```text
-Authorization: Bearer <token>
+不带 Authorization（令牌只在网关会话里）
+X-Requested-With: XMLHttpRequest    # 未登录时网关回 401 JSON
+X-XSRF-TOKEN: <XSRF-TOKEN Cookie>   # 写请求
+X-Tenant-Id: <选中的租户>            # 能否访问由 user 核对
 ```
+
+任何请求 401 都整页跳网关登录入口；本地存储只放选中的租户，不放令牌。
 
 ## 权限契约
 

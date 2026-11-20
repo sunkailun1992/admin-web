@@ -1,8 +1,7 @@
-export const ACCESS_TOKEN_KEY = 'admin_web_access_token';
-export const LOGIN_INFO_KEY = 'admin_web_login_info';
 export const SELECTED_TENANT_ID_KEY = 'admin_web_selected_tenant_id';
 
-const DEFAULT_BACKEND_BASE_URL = 'http://localhost:7100';
+// 缺省为空：同源请求，开发时由 Umi 代理转给网关（会话 Cookie 按主机共享）。
+const DEFAULT_BACKEND_BASE_URL = '';
 
 function normalizeBackendBaseUrl(value?: string) {
   const rawValue = (value ?? '').trim();

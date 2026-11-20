@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 type Props = {
   read: (signal: AbortSignal) => Promise<SessionBootstrapState>;
   apply: (state: SessionBootstrapState) => void | Promise<void>;
-  session: () => string | null;
   onLogout: () => Promise<void>;
 };
 
@@ -19,7 +18,6 @@ export default function SessionRecovery(props: Props) {
   const [exiting, setExiting] = useState(false);
   useEffect(() => {
     const current = createSessionRecoveryController({
-      session: () => live.current.session(),
       read: (signal) => live.current.read(signal),
       apply: (state) => live.current.apply(state),
       loading: setLoading,

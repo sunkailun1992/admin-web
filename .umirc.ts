@@ -48,6 +48,16 @@ const clientEnvKeys = [
   'UMI_APP_CANARY_WEIGHT',
 ];
 
+// 开发代理：页面与接口同源（localhost:8000），网关会话 Cookie 按主机共享。转给网关时保留 Host（changeOrigin: false），
+// 网关据此生成 Keycloak 回调地址 http://localhost:8000/login/oauth2/code/keycloak（已在 Keycloak 登记）；不加 X-Forwarded-*。
+// 业务接口前缀与网关 gateway-spring.yaml 的路由一致；浏览器打开页面（Accept 含 text/html）时不转发、交给单页应用路由
+// （/message 既是页面也是接口前缀）。登录入口、Keycloak 回调与注销一律转给网关。
+const gatewayTarget = process.env.ADMIN_WEB_GATEWAY_URL || 'http://localhost:7100';
+const pageNavigation = (req: { url?: string; headers: { accept?: string } }) =>
+  req.headers.accept?.includes('text/html') ? req.url : undefined;
+const businessApi = { target: gatewayTarget, changeOrigin: false, bypass: pageNavigation };
+const gatewayOwned = { target: gatewayTarget, changeOrigin: false };
+
 const clientEnvDefine = Object.fromEntries(
   clientEnvKeys.map((key) => [
     `process.env.${key}`,
@@ -61,6 +71,16 @@ export default defineConfig({
   model: {},
   initialState: {},
   request: {},
+  proxy: {
+    '/auth': businessApi,
+    '/user': businessApi,
+    '/message': businessApi,
+    '/report': businessApi,
+    '/api': businessApi,
+    '/oauth2': gatewayOwned,
+    '/login/oauth2': gatewayOwned,
+    '/logout': gatewayOwned,
+  },
   layout: {
     title: 'User Admin',
   },
@@ -68,11 +88,6 @@ export default defineConfig({
     {
       path: '/',
       redirect: '/dashboard',
-    },
-    {
-      path: '/login',
-      component: './Login',
-      layout: false,
     },
     {
       name: '工作台',

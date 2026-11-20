@@ -3,7 +3,7 @@ import { useModel } from '@umijs/max';
 import { Select } from 'antd';
 
 export default function TenantSwitcher() {
-  const { initialState, setInitialState } = useModel('@@initialState');
+  const { initialState, refresh } = useModel('@@initialState');
   const tenants = initialState?.availableTenants || [];
   const currentTenantId = initialState?.currentTenantId;
 
@@ -18,11 +18,9 @@ export default function TenantSwitcher() {
         value: tenant.id,
       }))}
       onChange={(tenantId) => {
+        // 请求头 X-Tenant-Id 跟着选择走，按新租户重读菜单、权限与数据范围。
         setSelectedTenantId(tenantId);
-        setInitialState({
-          ...initialState,
-          currentTenantId: tenantId,
-        });
+        void refresh();
       }}
       popupMatchSelectWidth={220}
       showSearch
