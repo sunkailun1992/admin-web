@@ -4,6 +4,7 @@ import {
   type BrowserContext,
   type Locator,
   type Page,
+  type Response,
 } from '@playwright/test';
 import routes from '../../config/routes';
 import {
@@ -30,6 +31,17 @@ const deptName = `e2e-${new Date()
   .slice(0, 14)}`;
 
 type Dept = { id: string; name: string; tenantId: string };
+
+/**
+ * 5xx 记成“状态 方法 路径 错误码”：统一错误体里的 code 能分出 503 是谁回的——网关调 Keycloak 失败是 C0001，
+ * 服务取不到 user 的业务上下文是 C0110，网关灰度找不到目标则没有错误体。只取错误码，不记提示文字。
+ */
+async function describeServerError(response: Response) {
+  const summary = `${response.status()} ${response.request().method()} ${new URL(response.url()).pathname}`;
+  const body = (await response.json().catch(() => undefined)) as
+    { code?: unknown } | undefined;
+  return typeof body?.code === 'string' ? `${summary} ${body.code}` : summary;
+}
 
 async function waitForContent(page: Page, label: string) {
   const main = page.locator('main');
@@ -79,7 +91,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
   let context: BrowserContext;
   let page: Page;
   let problems: ConsoleProblem[];
-  const serverErrors: string[] = [];
+  const serverErrors: Promise<string>[] = [];
 
   test.beforeAll(async ({ browser }) => {
     const username = process.env.ADMIN_WEB_E2E_USERNAME;
@@ -93,9 +105,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
     problems = watchConsole(page);
     page.on('response', (response) => {
       if (response.status() >= 500)
-        serverErrors.push(
-          `${response.status()} ${response.request().method()} ${new URL(response.url()).pathname}`,
-        );
+        serverErrors.push(describeServerError(response));
     });
     // 真实数据里可能有未读系统通知：弹出时点“知道了”，不挡后面的操作。
     await page.addLocatorHandler(
@@ -130,7 +140,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
       await waitForContent(page, name);
       await expect(page, name).toHaveURL(new RegExp(`${path}$`));
     }
-    expect(serverErrors, '服务端 5xx').toStrictEqual([]);
+    expect(await Promise.all(serverErrors), '服务端 5xx').toStrictEqual([]);
     expect(
       unexpectedProblems(problems, consoleAllowlist),
       '控制台错误与警告',
@@ -156,7 +166,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
     await row.getByText('删除', { exact: true }).click();
     await page.getByRole('button', { name: /^确\s*定$/ }).click();
     await expect(row).toHaveCount(0, { timeout: 15_000 });
-    expect(serverErrors, '服务端 5xx').toStrictEqual([]);
+    expect(await Promise.all(serverErrors), '服务端 5xx').toStrictEqual([]);
     expect(
       unexpectedProblems(problems, consoleAllowlist),
       '控制台错误与警告',
