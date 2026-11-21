@@ -1,42 +1,36 @@
-import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
+import access from '@/access';
+import * as model from '@/pages/Ai/Model/modelSelectionModel';
+import { expect, test } from 'vitest';
 
-function load(path) {
-  const module = { exports: {} };
-  const file = new URL(path, import.meta.url);
-  if (!existsSync(file)) return {};
-  runInContext(
-    ts.transpileModule(readFileSync(file, 'utf8'), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS },
-    }).outputText,
-    createContext({ exports: module.exports, AbortController }),
-  );
-  return module.exports;
-}
-const model = load('../../src/pages/Ai/Model/modelSelectionModel.ts');
-const access = load('../../src/access.ts').default;
-const selection = {
+type Options = Parameters<typeof model.createModelSelectionController>[0];
+type Selection = {
+  provider: string;
+  model?: string;
+  supportedProviders: string[];
+  updatedAt?: string;
+};
+type AccessState = Parameters<typeof access>[0];
+const check = (initialState: unknown) => access(initialState as AccessState);
+
+const selection: Selection = {
   provider: 'deepseek',
   model: 'synthetic-model',
   supportedProviders: ['deepseek', 'qwen'],
   updatedAt: '2026-11-10T12:00:00',
 };
-const deferred = () => {
-  let resolve;
-  const promise = new Promise((done) => {
+const deferred = <T>() => {
+  let resolve: (value: T) => void = () => {};
+  const promise = new Promise<T>((done) => {
     resolve = done;
   });
   return { promise, resolve };
 };
-function fixture(overrides = {}) {
-  assert.equal(typeof model.createModelSelectionController, 'function');
+function fixture(overrides: Record<string, unknown> = {}) {
+  expect(typeof model.createModelSelectionController).toBe('function');
   let scope = 'user-a/tenant-a';
   let allowed = true;
-  const calls = [];
-  const updates = [];
+  const calls: unknown[] = [];
+  const updates: unknown[] = [];
   const controller = model.createModelSelectionController({
     scope,
     liveScope: () => scope,
@@ -45,13 +39,13 @@ function fixture(overrides = {}) {
       calls.push('GET');
       return selection;
     },
-    write: async (data) => {
+    write: async (data: { provider: string }) => {
       calls.push(['PUT', data.provider]);
       return { ...selection, provider: data.provider };
     },
-    changed: (state) => updates.push(state),
+    changed: (state: unknown) => updates.push(state),
     ...overrides,
-  });
+  } as unknown as Options);
   return {
     controller,
     calls,
@@ -72,39 +66,42 @@ test('global model changes require platform administrator and management permiss
     ['PLATFORM_SUPER_ADMIN', ['ai:model:manage'], false],
     [undefined, ['user:auth:manage'], false],
     ['PLATFORM_SUPER_ADMIN', [], false],
-  ]) {
-    const result = access({ currentUser: { adminType, permissions } });
-    assert.equal(result.canChangeAiModel, expected);
+  ] as Array<[string | undefined, string[], boolean]>) {
+    const result = check({ currentUser: { adminType, permissions } });
+    expect(result.canChangeAiModel).toBe(expected);
   }
-  assert.equal(
-    access({ currentUser: { permissions: ['ai:model:manage'] } }).canSeeAiModel,
-    true,
-  );
-  assert.equal(access({}).canSeeAiModel, false);
+  expect(
+    check({ currentUser: { permissions: ['ai:model:manage'] } }).canSeeAiModel,
+  ).toBe(true);
+  expect(check({}).canSeeAiModel).toBe(false);
 });
 
 test('metadata does not invent provider options, model names or timestamps', () => {
-  assert.equal(typeof model.decodeModelSelection, 'function');
-  const actual = model.decodeModelSelection({
+  expect(typeof model.decodeModelSelection).toBe('function');
+  const decode = (value: unknown) =>
+    model.decodeModelSelection(
+      value as Parameters<typeof model.decodeModelSelection>[0],
+    );
+  const actual = decode({
     provider: 'deepseek',
     apiKey: 'MUST_NOT_KEEP',
     endpoint: 'MUST_NOT_KEEP',
   });
-  assert.equal(actual.provider, 'deepseek');
-  assert.equal(actual.model, undefined);
-  assert.equal(actual.updatedAt, undefined);
-  assert.equal(actual.supportedProviders.length, 0);
-  assert.equal(Object.hasOwn(actual, 'apiKey'), false);
-  assert.equal(Object.hasOwn(actual, 'endpoint'), false);
-  assert.throws(() => model.decodeModelSelection({ model: 'no-provider' }));
-  assert.equal(model.providerLabel('constructor'), 'constructor');
+  expect(actual.provider).toBe('deepseek');
+  expect(actual.model).toBe(undefined);
+  expect(actual.updatedAt).toBe(undefined);
+  expect(actual.supportedProviders?.length).toBe(0);
+  expect(Object.hasOwn(actual, 'apiKey')).toBe(false);
+  expect(Object.hasOwn(actual, 'endpoint')).toBe(false);
+  expect(() => decode({ model: 'no-provider' })).toThrow();
+  expect(model.providerLabel('constructor')).toBe('constructor');
 });
 
 test('a newer read cancels the old read and cannot be replaced by its delayed metadata', async () => {
-  const old = deferred();
-  const signals = [];
+  const old = deferred<Selection>();
+  const signals: AbortSignal[] = [];
   const f = fixture({
-    read: ({ signal }) => {
+    read: ({ signal }: { signal: AbortSignal }) => {
       signals.push(signal);
       return signals.length === 1
         ? old.promise
@@ -113,14 +110,14 @@ test('a newer read cancels the old read and cannot be replaced by its delayed me
   });
   const first = f.controller.load();
   await f.controller.load();
-  assert.equal(signals[0].aborted, true);
+  expect(signals[0].aborted).toBe(true);
   old.resolve({ ...selection, model: 'old-model' });
   await first;
-  assert.equal(f.controller.state().selection.model, 'new-model');
+  expect(f.controller.state().selection?.model).toBe('new-model');
 });
 
 test('an explicit authorization rejection never becomes a successful or automatically retried write', async () => {
-  const calls = [];
+  const calls: string[] = [];
   const f = fixture({
     read: async () => {
       calls.push('GET');
@@ -133,10 +130,10 @@ test('an explicit authorization rejection never becomes a successful or automati
   });
   await f.controller.load();
   await f.controller.save('qwen', true);
-  assert.deepEqual(calls, ['GET', 'PUT']);
-  assert.equal(f.controller.state().selection.provider, 'deepseek');
-  assert.equal(f.controller.state().notice, undefined);
-  assert.equal(f.controller.state().error.includes('MUST_NOT_RENDER'), false);
+  expect(calls).toStrictEqual(['GET', 'PUT']);
+  expect(f.controller.state().selection?.provider).toBe('deepseek');
+  expect(f.controller.state().notice).toBe(undefined);
+  expect(f.controller.state().error?.includes('MUST_NOT_RENDER')).toBe(false);
 });
 
 test('unconfirmed, current, unsupported and revoked changes never send PUT', async () => {
@@ -147,20 +144,20 @@ test('unconfirmed, current, unsupported and revoked changes never send PUT', asy
   await f.controller.save('google', true);
   f.revoke();
   await f.controller.save('qwen', true);
-  assert.deepEqual(f.calls, ['GET']);
+  expect(f.calls).toStrictEqual(['GET']);
 });
 
 test('a confirmed supported change sends one PUT and accepts only its real response', async () => {
   const f = fixture();
   await f.controller.load();
   await f.controller.save('qwen', true);
-  assert.deepEqual(f.calls, ['GET', ['PUT', 'qwen']]);
-  assert.equal(f.controller.state().phase, 'ready');
-  assert.equal(f.controller.state().selection.provider, 'qwen');
+  expect(f.calls).toStrictEqual(['GET', ['PUT', 'qwen']]);
+  expect(f.controller.state().phase).toBe('ready');
+  expect(f.controller.state().selection?.provider).toBe('qwen');
 });
 
 test('unknown PUT outcome performs only GET and never replays the write', async () => {
-  const calls = [];
+  const calls: string[] = [];
   const f = fixture({
     read: async () => {
       calls.push('GET');
@@ -173,15 +170,15 @@ test('unknown PUT outcome performs only GET and never replays the write', async 
   });
   await f.controller.load();
   await f.controller.save('qwen', true);
-  assert.deepEqual(calls, ['GET', 'PUT', 'GET']);
-  assert.equal(f.controller.state().phase, 'ready');
-  assert.equal(f.controller.state().selection.provider, 'deepseek');
-  assert.equal(f.controller.state().notice, 'readback');
+  expect(calls).toStrictEqual(['GET', 'PUT', 'GET']);
+  expect(f.controller.state().phase).toBe('ready');
+  expect(f.controller.state().selection?.provider).toBe('deepseek');
+  expect(f.controller.state().notice).toBe('readback');
 });
 
 test('failed readback blocks writes and retries only the read until current metadata is recovered', async () => {
   let fail = false;
-  const calls = [];
+  const calls: string[] = [];
   const f = fixture({
     read: async () => {
       calls.push('GET');
@@ -196,14 +193,14 @@ test('failed readback blocks writes and retries only the read until current meta
   });
   await f.controller.load();
   await f.controller.save('qwen', true);
-  assert.equal(f.controller.state().phase, 'uncertain');
+  expect(f.controller.state().phase).toBe('uncertain');
   await f.controller.save('qwen', true);
   await f.controller.load();
-  assert.deepEqual(calls, ['GET', 'PUT', 'GET', 'GET']);
+  expect(calls).toStrictEqual(['GET', 'PUT', 'GET', 'GET']);
   fail = false;
   await f.controller.load();
-  assert.equal(f.controller.state().phase, 'ready');
-  assert.equal(f.controller.state().notice, 'readback');
+  expect(f.controller.state().phase).toBe('ready');
+  expect(f.controller.state().notice).toBe('readback');
 });
 
 test('initial GET failure has a recoverable error and no guessed current selection', async () => {
@@ -213,22 +210,22 @@ test('initial GET failure has a recoverable error and no guessed current selecti
     },
   });
   await f.controller.load();
-  assert.equal(f.controller.state().phase, 'load-error');
-  assert.equal(f.controller.state().selection, undefined);
-  assert.equal(f.controller.state().error.includes('Synthetic'), false);
+  expect(f.controller.state().phase).toBe('load-error');
+  expect(f.controller.state().selection).toBe(undefined);
+  expect(f.controller.state().error?.includes('Synthetic')).toBe(false);
 });
 
 test('identity changes and unmount reject delayed reads and writes before any visible update', async () => {
-  const read = deferred();
+  const read = deferred<Selection>();
   const a = fixture({ read: () => read.promise });
   const pendingRead = a.controller.load();
   a.switchIdentity();
   const previous = a.updates.length;
   read.resolve(selection);
   await pendingRead;
-  assert.equal(a.updates.length, previous);
-  assert.equal(a.controller.state().selection, undefined);
-  const write = deferred();
+  expect(a.updates.length).toBe(previous);
+  expect(a.controller.state().selection).toBe(undefined);
+  const write = deferred<Selection>();
   const b = fixture({ write: () => write.promise });
   await b.controller.load();
   const pendingWrite = b.controller.save('qwen', true);
@@ -236,6 +233,6 @@ test('identity changes and unmount reject delayed reads and writes before any vi
   const count = b.updates.length;
   write.resolve({ ...selection, provider: 'qwen' });
   await pendingWrite;
-  assert.equal(b.updates.length, count);
-  assert.equal(b.controller.state().selection.provider, 'deepseek');
+  expect(b.updates.length).toBe(count);
+  expect(b.controller.state().selection?.provider).toBe('deepseek');
 });

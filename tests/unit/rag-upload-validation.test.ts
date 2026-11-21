@@ -1,22 +1,5 @@
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
-
-const module = { exports: {} };
-const compiled = ts.transpileModule(
-  readFileSync(
-    new URL(
-      '../../src/pages/Rag/Document/uploadValidation.ts',
-      import.meta.url,
-    ),
-    'utf8',
-  ),
-  { compilerOptions: { module: ts.ModuleKind.CommonJS } },
-).outputText;
-runInContext(compiled, createContext({ exports: module.exports }));
-const { validateRagUpload } = module.exports;
+import { validateRagUpload } from '@/pages/Rag/Document/uploadValidation';
+import { expect, test } from 'vitest';
 
 test('allows Office formats and the new PDF and image formats', () => {
   for (const [name, type] of [
@@ -33,10 +16,8 @@ test('allows Office formats and the new PDF and image formats', () => {
     ['scan.jpg', 'image/jpeg'],
     ['scan.jpeg', 'image/jpeg'],
   ]) {
-    assert.equal(
-      validateRagUpload({ name, type, size: 1024 }),
+    expect(validateRagUpload({ name, type, size: 1024 }), name).toBe(
       undefined,
-      name,
     );
   }
 });
@@ -47,18 +28,16 @@ test('allows exactly 20 MiB but rejects one byte more', () => {
     type: 'application/pdf',
     size: 20 * 1024 * 1024,
   };
-  assert.equal(validateRagUpload(file), undefined);
-  assert.equal(
-    validateRagUpload({ ...file, size: file.size + 1 }),
+  expect(validateRagUpload(file)).toBe(undefined);
+  expect(validateRagUpload({ ...file, size: file.size + 1 })).toBe(
     '单文件不能超过 20 MB',
   );
 });
 
 test('rejects an empty file before an upload request can be created', () => {
-  assert.equal(
+  expect(
     validateRagUpload({ name: 'empty.pdf', type: 'application/pdf', size: 0 }),
-    '文件为空或大小无效，请重新选择',
-  );
+  ).toBe('文件为空或大小无效，请重新选择');
 });
 
 test('rejects unsupported and disguised filenames', () => {
@@ -70,8 +49,7 @@ test('rejects unsupported and disguised filenames', () => {
     'file.constructor',
     'file.__proto__',
   ]) {
-    assert.equal(
-      validateRagUpload({ name, type: '', size: 1024 }),
+    expect(validateRagUpload({ name, type: '', size: 1024 })).toBe(
       '仅支持 XLSX、DOCX、PDF、PNG 和 JPG/JPEG 文件',
     );
   }
@@ -79,8 +57,7 @@ test('rejects unsupported and disguised filenames', () => {
 
 test('rejects inconsistent reported content types without reading file contents', () => {
   for (const type of ['text/html', 'image/svg+xml', 'application/javascript']) {
-    assert.equal(
-      validateRagUpload({ name: 'manual.pdf', type, size: 1024 }),
+    expect(validateRagUpload({ name: 'manual.pdf', type, size: 1024 })).toBe(
       '文件类型与扩展名不一致，请检查文件格式',
     );
   }
@@ -93,16 +70,15 @@ test('allows unknown browser MIME and Office ZIP MIME for backend signature vali
     ['knowledge.docx', 'application/zip'],
     ['knowledge.xlsx', 'application/zip'],
   ]) {
-    assert.equal(validateRagUpload({ name, type, size: 1024 }), undefined);
+    expect(validateRagUpload({ name, type, size: 1024 })).toBe(undefined);
   }
-  assert.equal(
+  expect(
     validateRagUpload({
       name: 'manual.pdf',
       type: 'application/zip',
       size: 1024,
     }),
-    '文件类型与扩展名不一致，请检查文件格式',
-  );
+  ).toBe('文件类型与扩展名不一致，请检查文件格式');
 });
 
 test('rejects path components and control characters in filenames', () => {
@@ -113,8 +89,7 @@ test('rejects path components and control characters in filenames', () => {
     'scan\n.png',
     '',
   ]) {
-    assert.equal(
-      validateRagUpload({ name, type: '', size: 1024 }),
+    expect(validateRagUpload({ name, type: '', size: 1024 })).toBe(
       '文件名不合法，请使用不含路径的文件名',
     );
   }

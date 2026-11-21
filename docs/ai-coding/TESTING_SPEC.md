@@ -23,10 +23,11 @@
 
 ## 当前门禁
 
-当前仓库尚未引入 Vitest、Testing Library、MSW、Playwright 等测试依赖。任何功能改动至少执行：
+单元测试用 Vitest（Node 环境，配置见 `vitest.config.ts`）：组件用 `react-dom/server` 渲染后断言，Service 测试在 `request()` 调用边界核对路径、方法与选项；同一文件里不同用例要不同替身时用 `tests/support/loadWithMocks.ts`（`vi.doMock` 加动态 import）。表中推荐的 Testing Library 与 MSW 尚未引入。任何功能改动至少执行：
 
 ```bash
-pnpm test:services
+pnpm typecheck
+pnpm test
 pnpm build:dev
 bash scripts/check-secrets.sh
 ```
@@ -69,7 +70,7 @@ bash scripts/check-secrets.sh
 ## Service/API 测试规则
 
 - `src/services/auth/index.ts` 是请求测试重点，用户中心 `/auth/**` 直接请求同路径网关，不额外追加 `/user`。
-- RAG service 的文档、检索和图谱接口使用 `/api/rag/**`，不得重复追加 `/rag`。当前 Node 请求契约测试直接执行真实 service 与常量，只替换网络出口；与认证拦截测试一起通过 `pnpm test:services` 执行。
+- RAG service 的文档、检索和图谱接口使用 `/api/rag/**`，不得重复追加 `/rag`。请求契约测试直接执行真实 service 与常量，只替换网络出口；与认证拦截测试一起通过 `pnpm test` 执行。
 - 认证请求必须验证 `Authorization`、`X-Release-Version`、`X-Traffic-Lane` 等 header 的传递规则。
 - 列表查询必须验证分页、搜索、排序字段和字段白名单参数。
 - 新增和编辑请求必须验证请求体不携带前端临时字段；编辑请求必须携带后端乐观锁 `version`。
@@ -85,9 +86,9 @@ bash scripts/check-secrets.sh
 
 ## 测试稳定性
 
-- 测试结果只能由输入决定，不依赖真实时间、定时器、网络、执行顺序或本机遗留状态。需要时间的逻辑用 `node:test` 的模拟计时器（引入 Vitest 后用 `vi.useFakeTimers()`）；等待异步结果用有总时限的条件等待，不用固定延时赌时序。
-- 请求一律走桩或模拟（引入 MSW 后统一用 MSW），普通测试不连接真实后端；每个测试自行准备并清理全局状态，如 `globalThis`、`localStorage` 与模块缓存。
-- 新增或修改涉及请求、定时器或并发的测试，合并前本机连续三轮运行 `pnpm test:services` 全部通过。
+- 测试结果只能由输入决定，不依赖真实时间、定时器、网络、执行顺序或本机遗留状态。需要时间的逻辑用 Vitest 的模拟计时器 `vi.useFakeTimers()`；等待异步结果用有总时限的条件等待，不用固定延时赌时序。
+- 请求一律走桩或模拟（现在用 `vi.mock` / `vi.doMock` 替换 `request` 出口，引入 MSW 后统一用 MSW），普通测试不连接真实后端；每个测试自行准备并清理全局状态，如 `globalThis`、`localStorage` 与模块缓存。
+- 新增或修改涉及请求、定时器或并发的测试，合并前本机连续三轮运行 `pnpm test` 全部通过。
 - 偶发失败按缺陷处理：先查明原因再修，不用自动重试、放宽断言、跳过或删除测试换取通过。确需临时跳过时写明原因与恢复条件，并在交付说明中列出。
 - 本机 macOS 通过不代表 CI 的 Linux 通过；只在一个平台验证过的结论要写明平台。
 

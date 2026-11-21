@@ -19,7 +19,6 @@
     "postinstall": "max setup",
     "setup": "max setup",
     "start": "npm run dev",
-    "test:services": "node --test tests/unit/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

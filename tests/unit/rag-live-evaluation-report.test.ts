@@ -1,28 +1,7 @@
-import assert from 'node:assert/strict';
+import { readEvaluationReport } from '@/pages/Rag/Document/readEvaluationReport';
 import { readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
+import { expect, test } from 'vitest';
 
-const modules = new Map();
-function load(name) {
-  if (modules.has(name)) return modules.get(name);
-  const exports = {};
-  const source = readFileSync(
-    new URL(`../../src/pages/Rag/Document/${name}.ts`, import.meta.url),
-    'utf8',
-  );
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText;
-  runInContext(
-    compiled,
-    createContext({ exports, require: (path) => load(path.replace('./', '')) }),
-  );
-  modules.set(name, exports);
-  return exports;
-}
-const { readEvaluationReport } = load('readEvaluationReport');
 // comparison_report 对 q001/q053 和固定合成预测生成指标；未调用模型。
 // 时间、模型名、集合名与哈希均为虚构元数据，不是在线验收证据。
 const fixture = readFileSync(
@@ -30,16 +9,19 @@ const fixture = readFileSync(
   'utf8',
 );
 const sample = () => JSON.parse(fixture);
-const parse = (value) => readEvaluationReport(JSON.stringify(value));
+type Report = ReturnType<typeof sample>;
+const parse = (value: unknown) => readEvaluationReport(JSON.stringify(value));
+// 报告按两种格式之一读出；用例按各自格式的字段读。
+const live = (value: unknown) => value as Report;
 
 test('reads the live_compare wrapper and projects only safe summary fields', () => {
-  const report = readEvaluationReport(fixture);
-  assert.equal(report.kind, 'live-comparison');
-  assert.equal(report.acceptance.passed, true);
-  assert.equal(report.results.dense.recallAtK, 1);
-  assert.equal(report.results.hybrid.latencyP95Ms, 195);
-  assert.equal(report.hybridMinusDense.mrrAtK, 0);
-  assert.equal(report.cleanup.verifiedAbsent, true);
+  const report = live(readEvaluationReport(fixture));
+  expect(report.kind).toBe('live-comparison');
+  expect(report.acceptance.passed).toBe(true);
+  expect(report.results.dense.recallAtK).toBe(1);
+  expect(report.results.hybrid.latencyP95Ms).toBe(195);
+  expect(report.hybridMinusDense.mrrAtK).toBe(0);
+  expect(report.cleanup.verifiedAbsent).toBe(true);
   for (const field of [
     'predictions',
     'temporaryCollection',
@@ -47,21 +29,23 @@ test('reads the live_compare wrapper and projects only safe summary fields', () 
     'provenance',
     'limitations',
   ])
-    assert.equal(field in report, false);
-  assert.equal('details' in report.results.dense, false);
-  assert.equal('topScoreDistribution' in report.results.dense, false);
+    expect(field in report).toBe(false);
+  expect('details' in report.results.dense).toBe(false);
+  expect('topScoreDistribution' in report.results.dense).toBe(false);
 });
 
 test('continues to read the original evaluator format through the same entry point', () => {
-  const report = readEvaluationReport(
-    readFileSync(
-      new URL('../fixtures/rag-evaluation-v1.json', import.meta.url),
-      'utf8',
+  const report = live(
+    readEvaluationReport(
+      readFileSync(
+        new URL('../fixtures/rag-evaluation-v1.json', import.meta.url),
+        'utf8',
+      ),
     ),
   );
-  assert.equal(report.provenance.mode, 'offline');
-  assert.equal(report.gate.passed, true);
-  assert.equal('kind' in report, false);
+  expect(report.provenance.mode).toBe('offline');
+  expect(report.gate.passed).toBe(true);
+  expect('kind' in report).toBe(false);
 });
 
 test('preserves failed acceptance and failed cleanup without inventing a passing gate', () => {
@@ -77,16 +61,16 @@ test('preserves failed acceptance and failed cleanup without inventing a passing
   value.acceptance.checks.runCompleted = false;
   value.acceptance.checks.temporaryCollectionRemoved = false;
   value.acceptance.passed = false;
-  const report = parse(value);
-  assert.equal(report.acceptance.passed, false);
-  assert.equal(report.cleanup.verifiedAbsent, false);
-  assert.equal(report.errorCode, 'INTERRUPTED');
+  const report = live(parse(value));
+  expect(report.acceptance.passed).toBe(false);
+  expect(report.cleanup.verifiedAbsent).toBe(false);
+  expect(report.errorCode).toBe('INTERRUPTED');
   value.acceptance.passed = true;
-  assert.throws(() => parse(value));
+  expect(() => parse(value)).toThrow();
 });
 
 test('rejects hidden body, credential, and unknown fields at every report layer', () => {
-  const additions = [
+  const additions: Array<(value: Report) => void> = [
     (value) => {
       value.apiKey = 'sensitive sentinel';
     },
@@ -109,10 +93,14 @@ test('rejects hidden body, credential, and unknown fields at every report layer'
   for (const mutate of additions) {
     const value = sample();
     mutate(value);
-    assert.throws(
-      () => parse(value),
-      (error) => !/sentinel|private/.test(error.message),
-    );
+    let error: unknown;
+    try {
+      parse(value);
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).not.toMatch(/sentinel|private/);
   }
 });
 
@@ -122,17 +110,18 @@ test('rejects unsupported versions, partial reports, malformed JSON and oversize
   const partial = sample();
   partial.status = 'running';
   delete partial.finishedAt;
-  assert.throws(() => parse(unsupported));
-  assert.throws(() => parse(partial));
-  assert.throws(
-    () => readEvaluationReport('{"private":"unclosed'),
+  expect(() => parse(unsupported)).toThrow();
+  expect(() => parse(partial)).toThrow();
+  expect(() => readEvaluationReport('{"private":"unclosed')).toThrow(
     /不是有效 JSON/,
   );
-  assert.throws(() => readEvaluationReport(' '.repeat(2 * 1024 * 1024 + 1)));
+  expect(() =>
+    readEvaluationReport(' '.repeat(2 * 1024 * 1024 + 1)),
+  ).toThrow();
 });
 
 test('rejects non-finite numbers, inconsistent deltas, counts, and raw prediction mismatches', () => {
-  const mutations = [
+  const mutations: Array<(value: Report) => void> = [
     (value) => {
       value.results.dense.questionCount += 1;
     },
@@ -176,17 +165,17 @@ test('rejects non-finite numbers, inconsistent deltas, counts, and raw predictio
   for (const mutate of mutations) {
     const value = sample();
     mutate(value);
-    assert.throws(() => parse(value));
+    expect(() => parse(value)).toThrow();
   }
-  assert.throws(() =>
+  expect(() =>
     readEvaluationReport(
       fixture.replace('"recallAtK": 1.0', '"recallAtK": 1e400'),
     ),
-  );
+  ).toThrow();
 });
 
 test('rejects an acceptance flag that contradicts metrics or cleanup readback', () => {
-  for (const mutate of [
+  const mutations: Array<(value: Report) => void> = [
     (value) => {
       value.acceptance.checks.correctEmptyResponses = false;
       value.acceptance.passed = false;
@@ -200,15 +189,16 @@ test('rejects an acceptance flag that contradicts metrics or cleanup readback', 
     (value) => {
       delete value.acceptance.checks.temporaryCollectionRemoved;
     },
-  ]) {
+  ];
+  for (const mutate of mutations) {
     const value = sample();
     mutate(value);
-    assert.throws(() => parse(value));
+    expect(() => parse(value)).toThrow();
   }
 });
 
 test('accepts older complete live reports before the optional score-threshold field', () => {
   const value = sample();
   delete value.configuration.rerankScoreThreshold;
-  assert.equal(parse(value).acceptance.passed, true);
+  expect(live(parse(value)).acceptance.passed).toBe(true);
 });

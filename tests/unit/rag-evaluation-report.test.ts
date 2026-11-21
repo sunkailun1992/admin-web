@@ -1,39 +1,27 @@
-import assert from 'node:assert/strict';
+import {
+  MAX_EVALUATION_REPORT_BYTES,
+  parseEvaluationReport,
+} from '@/pages/Rag/Document/evaluationReport';
 import { readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
+import { expect, test } from 'vitest';
 
-const module = { exports: {} };
-const compiled = ts.transpileModule(
-  readFileSync(
-    new URL(
-      '../../src/pages/Rag/Document/evaluationReport.ts',
-      import.meta.url,
-    ),
-    'utf8',
-  ),
-  { compilerOptions: { module: ts.ModuleKind.CommonJS } },
-).outputText;
-runInContext(compiled, createContext({ exports: module.exports }));
-const { parseEvaluationReport, MAX_EVALUATION_REPORT_BYTES } = module.exports;
 // 固定夹具由 rag/evaluation/runner.py 对虚构评估集中的一正一负样本生成，没有调用模型。
 const fixture = readFileSync(
   new URL('../fixtures/rag-evaluation-v1.json', import.meta.url),
   'utf8',
 );
 const sample = () => JSON.parse(fixture);
-const parse = (value) => parseEvaluationReport(JSON.stringify(value));
+const parse = (value: unknown) => parseEvaluationReport(JSON.stringify(value));
 
 test('reads the real Python evaluator report without a network request', () => {
   const report = parseEvaluationReport(fixture);
-  assert.equal(report.schemaVersion, 1);
-  assert.equal(report.questionCount, 2);
-  assert.equal(report.recallAtK, 1);
-  assert.equal(report.details[1].correctEmpty, true);
-  assert.equal(report.latencyP95Ms, 195);
-  assert.equal(report.provenance.mode, 'offline');
-  assert.equal(report.gate.passed, true);
+  expect(report.schemaVersion).toBe(1);
+  expect(report.questionCount).toBe(2);
+  expect(report.recallAtK).toBe(1);
+  expect(report.details[1].correctEmpty).toBe(true);
+  expect(report.latencyP95Ms).toBe(195);
+  expect(report.provenance.mode).toBe('offline');
+  expect(report.gate.passed).toBe(true);
 });
 
 test('rejects raw prediction, unknown fields and unsupported versions', () => {
@@ -42,20 +30,19 @@ test('rejects raw prediction, unknown fields and unsupported versions', () => {
     { ...sample(), schemaVersion: 2 },
     { ...sample(), token: 'must-not-be-read' },
   ])
-    assert.throws(() => parse(value));
+    expect(() => parse(value)).toThrow();
   const report = sample();
   report.details[0].query = 'raw query is not part of a report';
-  assert.throws(() => parse(report));
+  expect(() => parse(report)).toThrow();
 });
 
 test('rejects malformed or oversized JSON without echoing its contents', () => {
-  assert.throws(
-    () => parseEvaluationReport('{"sensitive":"not closed'),
+  expect(() => parseEvaluationReport('{"sensitive":"not closed')).toThrow(
     /不是有效 JSON/,
   );
-  assert.throws(() =>
+  expect(() =>
     parseEvaluationReport(' '.repeat(MAX_EVALUATION_REPORT_BYTES + 1)),
-  );
+  ).toThrow();
 });
 
 test('rejects duplicate question IDs, missing rows and invalid metric values', () => {
@@ -70,31 +57,31 @@ test('rejects duplicate question IDs, missing rows and invalid metric values', (
   const badSources = sample();
   badSources.details[0].retrievedSourceIds = [{ content: 'raw payload' }];
   for (const value of [duplicate, missing, badScore, badLatency, badSources])
-    assert.throws(() => parse(value));
+    expect(() => parse(value)).toThrow();
 });
 
 test('rejects gate results that hide errors or contradict their checks', () => {
   const report = sample();
   report.details[0].failed = true;
   report.errorCount = 1;
-  assert.throws(() => parse(report));
+  expect(() => parse(report)).toThrow();
   report.gate.checks.completeResponses = false;
-  assert.throws(() => parse(report));
+  expect(() => parse(report)).toThrow();
   report.gate.passed = false;
-  assert.equal(parse(report).gate.passed, false);
+  expect(parse(report).gate.passed).toBe(false);
 });
 
 test('accepts explicit failed thresholds and empty latency samples', () => {
   const report = sample();
   report.gate.checks.minimumRecall = false;
   report.gate.passed = false;
-  report.details.forEach((row) => {
+  report.details.forEach((row: { latencyMs: number | null }) => {
     row.latencyMs = null;
   });
   report.latencySampleCount = 0;
   report.latencyP50Ms = null;
   report.latencyP95Ms = null;
-  assert.equal(parse(report).latencyP95Ms, null);
+  expect(parse(report).latencyP95Ms).toBe(null);
   report.latencyP50Ms = 0;
-  assert.throws(() => parse(report));
+  expect(() => parse(report)).toThrow();
 });

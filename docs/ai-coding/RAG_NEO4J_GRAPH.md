@@ -40,9 +40,9 @@
 
 图页仍要求 `menu:rag:graph + rag:graph:view`；重建要求 `rag:graph:manage`；完整切片入口仍要求 `menu:rag:document + rag:document:manage`。所有实际授权由 Java 执行。证据以 React 文本渲染，不使用 HTML 注入，不展示任意模型属性或原始后端异常。
 
-使用现有 `node:test` 与 TypeScript 转译器，不增加测试栈。`rag-graph-model.test.mjs` 覆盖未知类型、多来源、非法字段、异步状态、作用域、取消和上传结果；`rag-graph-sources.test.mjs` 使用已安装的 React/Ant Design 做真实服务端渲染，核对 XSS 转义、来源和完整切片按钮权限；service 测试验证路径、方法、知识库和 AbortSignal；request-auth 测试验证静默取消及未吞掉真实失败。
+单元测试用 Vitest（第6阶段起；之前是 `node:test` 加 TypeScript 转译）。`rag-graph-model.test.ts` 覆盖未知类型、多来源、非法字段、异步状态、作用域、取消和上传结果；`rag-graph-sources.test.tsx` 使用已安装的 React/Ant Design 做真实服务端渲染，核对 XSS 转义、来源和完整切片按钮权限；service 测试验证路径、方法、知识库和 AbortSignal；request-auth 测试验证静默取消及未吞掉真实失败。
 
-执行 `pnpm test:services`、`pnpm exec tsc --noEmit`、`pnpm build:dev`、`bash scripts/check-secrets.sh` 和 `git diff --check`。真实浏览器的画布点击、缩放、重建确认、知识库切换、登录失效及网关联调另行记录；离线测试与构建不替代这些验收。普通测试不访问真实后端。
+执行 `pnpm test`、`pnpm typecheck`、`pnpm build:dev`、`bash scripts/check-secrets.sh` 和 `git diff --check`。真实浏览器的画布点击、缩放、重建确认、知识库切换、登录失效及网关联调另行记录；离线测试与构建不替代这些验收。普通测试不访问真实后端。
 
 ## 回滚
 

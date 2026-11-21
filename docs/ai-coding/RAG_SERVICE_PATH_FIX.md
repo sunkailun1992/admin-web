@@ -14,8 +14,8 @@
 ## 开发与验证入口
 
 - `src/constants/auth.ts`：统一 RAG 模块前缀，与 `../utils/ops/github-dev/nacos/DEFAULT_GROUP/gateway-spring.yaml` 及 `../rag` Controller 契约一致。
-- `tests/unit/rag-service-routing.test.mjs`：覆盖七类请求的最终 URL、方法与参数，使用现有 Node 测试器和 TypeScript 转译器，无新增依赖。
-- `pnpm test:services`：执行请求认证与 RAG 请求契约测试；CI 使用相同入口。
+- `tests/unit/rag-service-routing.test.ts`：覆盖七类请求的最终 URL、方法与参数，用 Vitest 执行（第6阶段起）。
+- `pnpm test`：执行请求认证与 RAG 请求契约测试；CI 使用相同入口。
 - `pnpm build:dev` 与密钥扫描验证本地构建；普通 CI 使用 dev 构建，不读取 `.env.prod`。
 
 ## 发布与回滚

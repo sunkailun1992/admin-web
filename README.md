@@ -288,7 +288,7 @@ kill -9 <PID>
 
 登录失败页（1.2.1 起）：网关登录回调失败时跳到 `/login?error`（与网关 1.3.4 的约定），页面说明登录没有完成，只给“重新登录”按钮。这一页不进布局、`getInitialState` 不读会话、换页也不自动跳登录：否则读不到会话就跳回 Keycloak，回调一直失败时会在网关与 Keycloak 之间整页循环。开发代理只转 `/login/oauth2`，`/login` 本身由单页应用处理；生产的反向代理也要让 `/login` 落到单页应用。
 
-`pnpm test:request-auth` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.mjs` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.mjs` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.mjs` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
+`request-auth.test.ts` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.ts` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.tsx` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.tsx` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
 
 ## RAG 文档上传
 

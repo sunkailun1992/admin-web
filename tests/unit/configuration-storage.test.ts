@@ -1,28 +1,36 @@
-import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
-function load(path) {
-  const file = new URL(path, import.meta.url);
-  if (!existsSync(file)) return {};
-  const module = { exports: {} };
-  runInContext(
-    ts.transpileModule(readFileSync(file, 'utf8'), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS },
-    }).outputText,
-    createContext({
-      exports: module.exports,
-      AbortController,
-      URL,
-      require: (name) => {
-        throw new Error(name);
-      },
-    }),
-  );
-  return module.exports;
-}
-const model = load('../../src/pages/Configuration/Storage/storageModel.ts');
+import * as model from '@/pages/Configuration/Storage/storageModel';
+import { expect, test } from 'vitest';
+
+// 用例按接口的原始形状传参（含故意畸形的值），由被测函数自己校验，这里不先用类型约束；返回值仍按真实类型读。
+const loose = <F extends (...args: never[]) => unknown>(fn: F) =>
+  fn as unknown as (...args: unknown[]) => ReturnType<F>;
+const readStorageSnapshot = loose(model.readStorageSnapshot);
+const createStorageController = loose(model.createStorageController);
+const settingsPayload = loose(model.settingsPayload);
+const updatePayload = loose(model.updatePayload);
+const createPayload = loose(model.createPayload);
+const probeState = loose(model.probeState);
+const runtimeState = loose(model.runtimeState);
+const decodeStorageSnapshot = loose(model.decodeStorageSnapshot);
+const createStoragePendingStore = loose(model.createStoragePendingStore);
+const createStorageRequestId = loose(model.createStorageRequestId);
+
+type ListQuery = {
+  page: number;
+  size: number;
+  provider?: string;
+  search?: string;
+  uploadEnabled?: boolean;
+};
+type CallOptions = { signal?: AbortSignal };
+type Pending = {
+  requestId: string;
+  action: string;
+  configurationId: string | null;
+};
+type Settings = ReturnType<typeof settings>;
+type DefaultPlatform = { platform: string; name: string };
+
 const requestId = '11111111-1111-4111-8111-111111111111';
 const config = () => ({
   id: 'config-1',
@@ -31,7 +39,7 @@ const config = () => ({
   provider: 'MINIO',
   endpoint: 'https://storage.example.invalid',
   bucket: 'synthetic-bucket',
-  region: null,
+  region: null as string | null,
   uploadEnabled: true,
   isDefault: true,
   version: 3,
@@ -41,7 +49,13 @@ const config = () => ({
   credentialsConfigured: true,
   credentialUpdatedAt: null,
   referenceCount: 1,
-  lastProbe: null,
+  lastProbe: null as null | {
+    requestId: string;
+    checkedRevision: number;
+    status: string;
+    finishedAt: string | null;
+    cleanupStatus: string;
+  },
 });
 const settings = () => ({
   version: 1,
@@ -71,7 +85,12 @@ const capabilities = () => ({
   },
 });
 const snapshot = () => ({
-  list: { items: [config()], page: 1, size: 20, total: 1 },
+  list: {
+    items: [config() as ReturnType<typeof config> & Record<string, unknown>],
+    page: 1,
+    size: 20,
+    total: 1,
+  },
   settings: settings(),
   capabilities: capabilities(),
   defaultPlatforms: [{ platform: config().platform, name: config().name }],
@@ -79,7 +98,7 @@ const snapshot = () => ({
 const operation = (status = 'SUCCEEDED', action = 'UPDATE') => ({
   requestId,
   action,
-  configurationId: 'config-1',
+  configurationId: 'config-1' as string | null,
   status,
   checkedRevision: 2,
   startedAt: null,
@@ -87,13 +106,13 @@ const operation = (status = 'SUCCEEDED', action = 'UPDATE') => ({
   failureCode: null,
   steps: [],
   cleanupStatus: 'NOT_NEEDED',
-  result: null,
+  result: null as unknown,
 });
 const pendingStore = () => {
-  let value;
+  let value: Pending | undefined;
   return {
     load: () => value,
-    save: (next) => {
+    save: (next: Pending) => {
       value = next;
     },
     clear: () => {
@@ -101,11 +120,20 @@ const pendingStore = () => {
     },
   };
 };
+const memoryStorage = (memory: Map<string, string>) => ({
+  getItem: (key: string) => memory.get(key) ?? null,
+  setItem: (key: string, value: string) => {
+    memory.set(key, value);
+  },
+  removeItem: (key: string) => {
+    memory.delete(key);
+  },
+});
 
 test('global default choices include eligible providers outside the filtered table and first option page', async () => {
   const query = { page: 2, size: 20, search: '私有', provider: 'MINIO' };
   const signal = new AbortController().signal;
-  const calls = [];
+  const calls: ListQuery[] = [];
   const minio = config();
   const oss = {
     ...config(),
@@ -132,12 +160,12 @@ test('global default choices include eligible providers outside the filtered tab
       runtimeStatus: 'APPLY_FAILED',
     })),
   ];
-  const result = await model.readStorageSnapshot(
+  const result = await readStorageSnapshot(
     query,
     { signal },
     {
-      list: async (parameters, options) => {
-        assert.equal(options.signal, signal);
+      list: async (parameters: ListQuery, options: CallOptions) => {
+        expect(options.signal).toBe(signal);
         calls.push({ ...parameters });
         if (parameters.provider === 'MINIO')
           return { items: [], page: 2, size: 20, total: 1 };
@@ -152,20 +180,19 @@ test('global default choices include eligible providers outside the filtered tab
       capabilities: async () => capabilities(),
     },
   );
-  assert.deepEqual(
+  expect(
     Array.from(result.defaultPlatforms ?? [], (entry) => ({ ...entry })),
-    [
-      { platform: minio.platform, name: minio.name },
-      { platform: oss.platform, name: oss.name },
-      { platform: cos.platform, name: cos.name },
-    ],
-  );
-  assert.deepEqual(calls, [
+  ).toStrictEqual([
+    { platform: minio.platform, name: minio.name },
+    { platform: oss.platform, name: oss.name },
+    { platform: cos.platform, name: cos.name },
+  ]);
+  expect(calls).toStrictEqual([
     query,
     { page: 1, size: 100, uploadEnabled: true },
     { page: 2, size: 100, uploadEnabled: true },
   ]);
-  assert.equal(result.list.items.length, 0);
+  expect((result.list as { items: unknown[] }).items.length).toBe(0);
 });
 
 test('switching to a global choice outside the table reads back the authoritative default and version', async () => {
@@ -177,20 +204,20 @@ test('switching to a global choice outside the table reads back the authoritativ
     provider: 'TENCENT_COS',
     isDefault: false,
   };
-  let persisted = settings();
+  let persisted: Settings = settings();
   let writes = 0;
-  const tableReads = [];
-  const control = model.createStorageController({
+  const tableReads: ListQuery[] = [];
+  const control = createStorageController({
     scope: 'admin-1/tenant-1',
     liveScope: () => 'admin-1/tenant-1',
     canManage: () => true,
     store: pendingStore(),
     requestId: () => requestId,
-    read: (parameters, options) =>
-      model.readStorageSnapshot(parameters, options, {
-        list: async (parameters) => {
-          if (parameters.provider === 'MINIO') {
-            tableReads.push({ ...parameters });
+    read: (parameters: ListQuery, options: CallOptions) =>
+      readStorageSnapshot(parameters, options, {
+        list: async (listQuery: ListQuery) => {
+          if (listQuery.provider === 'MINIO') {
+            tableReads.push({ ...listQuery });
             return { items: [], page: 2, size: 20, total: 1 };
           }
           return { items: [config(), cos], page: 1, size: 100, total: 2 };
@@ -199,32 +226,34 @@ test('switching to a global choice outside the table reads back the authoritativ
         capabilities: async () => capabilities(),
       }),
     lookup: async () => {
-      assert.fail('a completed write needs a settings readback, not recovery');
+      throw new Error(
+        'a completed write needs a settings readback, not recovery',
+      );
     },
     changed: () => {},
   });
-  await control.load(query);
-  const initial = control.state().snapshot;
-  assert.equal(initial.list.items.length, 0);
-  const selected = initial.defaultPlatforms.find(
-    (entry) => entry.platform === cos.platform,
-  );
-  assert.ok(selected);
+  await control.load(query as Parameters<typeof control.load>[0]);
+  const initial = control.state().snapshot!;
+  expect(initial.list.items.length).toBe(0);
+  const selected = (
+    initial.defaultPlatforms as readonly DefaultPlatform[] | undefined
+  )?.find((entry) => entry.platform === cos.platform);
+  expect(selected).toBeTruthy();
   await control.submit(
     'UPDATE_SETTINGS',
     null,
-    async (key) => {
+    async (key: string) => {
       writes += 1;
-      const payload = model.settingsPayload(
-        { ...initial.settings, defaultPlatform: selected.platform },
+      const payload = settingsPayload(
+        { ...initial.settings, defaultPlatform: selected?.platform },
         initial.settings,
         initial.capabilities,
         key,
         initial.defaultPlatforms,
       );
-      assert.equal(payload.expectedSettingsVersion, 1);
-      assert.equal(payload.defaultPlatform, cos.platform);
-      assert.equal(payload.requestId, requestId);
+      expect(payload.expectedSettingsVersion).toBe(1);
+      expect(payload.defaultPlatform).toBe(cos.platform);
+      expect(payload.requestId).toBe(requestId);
       persisted = { ...settings(), version: 2, defaultPlatform: cos.platform };
       return {
         ...operation('SUCCEEDED', 'UPDATE_SETTINGS'),
@@ -234,20 +263,22 @@ test('switching to a global choice outside the table reads back the authoritativ
     },
     true,
   );
-  assert.equal(writes, 1);
-  assert.deepEqual(tableReads, [query, query]);
-  assert.equal(control.state().phase, 'ready');
-  assert.equal(control.state().snapshot.settings.version, 2);
-  assert.equal(control.state().snapshot.settings.defaultPlatform, cos.platform);
+  expect(writes).toBe(1);
+  expect(tableReads).toStrictEqual([query, query]);
+  expect(control.state().phase).toBe('ready');
+  expect(control.state().snapshot?.settings.version).toBe(2);
+  expect(control.state().snapshot?.settings.defaultPlatform).toBe(
+    cos.platform,
+  );
 });
 
 test('a changing global default catalogue refuses a partially read option set', async () => {
-  await assert.rejects(
-    model.readStorageSnapshot(
+  await expect(
+    readStorageSnapshot(
       { page: 1, size: 20 },
       { signal: new AbortController().signal },
       {
-        list: async ({ page, size }) =>
+        list: async ({ page, size }: ListQuery) =>
           size === 20
             ? snapshot().list
             : {
@@ -266,32 +297,30 @@ test('a changing global default catalogue refuses a partially read option set', 
         capabilities: async () => capabilities(),
       },
     ),
-    /INVALID_STORAGE_DEFAULT_PAGE/,
-  );
+  ).rejects.toThrow(/INVALID_STORAGE_DEFAULT_PAGE/);
 });
 
 test('a refreshed catalogue rejects a stale platform selection but permits keeping the existing default', () => {
   const current = settings();
   const draft = { ...current, defaultPlatform: 'formerly-eligible-cos' };
-  assert.throws(
-    () => model.settingsPayload(draft, current, capabilities(), requestId, []),
-    /STORAGE_DEFAULT_PLATFORM_UNAVAILABLE/,
-  );
-  const keep = model.settingsPayload(
+  expect(() =>
+    settingsPayload(draft, current, capabilities(), requestId, []),
+  ).toThrow(/STORAGE_DEFAULT_PLATFORM_UNAVAILABLE/);
+  const keep = settingsPayload(
     { ...current, uploadTtlSeconds: 120 },
     current,
     capabilities(),
     requestId,
     [],
   );
-  assert.equal(keep.defaultPlatform, current.defaultPlatform);
-  assert.equal(keep.expectedSettingsVersion, current.version);
-  assert.equal(keep.uploadTtlSeconds, 120);
+  expect(keep.defaultPlatform).toBe(current.defaultPlatform);
+  expect(keep.expectedSettingsVersion).toBe(current.version);
+  expect(keep.uploadTtlSeconds).toBe(120);
 });
 
 test('KEEP omits both credential fields and update payload cannot relocate existing objects', () => {
-  assert.equal(typeof model.updatePayload, 'function');
-  const value = model.updatePayload(
+  expect(typeof model.updatePayload).toBe('function');
+  const value = updatePayload(
     {
       name: '新名称',
       uploadEnabled: false,
@@ -304,14 +333,13 @@ test('KEEP omits both credential fields and update payload cannot relocate exist
     config(),
     requestId,
   );
-  assert.equal(value.expectedVersion, 3);
-  assert.equal(value.credentialAction, 'KEEP');
-  assert.doesNotMatch(
-    JSON.stringify(value),
+  expect(value.expectedVersion).toBe(3);
+  expect(value.credentialAction).toBe('KEEP');
+  expect(JSON.stringify(value)).not.toMatch(
     /MUST_NOT_SEND|endpoint|bucket|region|platform/,
   );
-  assert.throws(() =>
-    model.updatePayload(
+  expect(() =>
+    updatePayload(
       {
         name: 'x',
         uploadEnabled: true,
@@ -321,7 +349,7 @@ test('KEEP omits both credential fields and update payload cannot relocate exist
       config(),
       requestId,
     ),
-  );
+  ).toThrow();
 });
 
 test('create payload follows provider capability, paired credentials and COS endpoint exception', () => {
@@ -334,19 +362,19 @@ test('create payload follows provider capability, paired credentials and COS end
     accessKeyId: 'synthetic-id',
     secretKey: 'synthetic-secret',
   };
-  const result = model.createPayload(values, capabilities(), requestId);
-  assert.equal(result.credentialAction, 'REPLACE');
-  assert.equal(result.secretKey, 'synthetic-secret');
+  const result = createPayload(values, capabilities(), requestId);
+  expect(result.credentialAction).toBe('REPLACE');
+  expect(result.secretKey).toBe('synthetic-secret');
   const unavailable = capabilities();
   unavailable.providers[0].availability = 'UNAVAILABLE';
-  assert.throws(() => model.createPayload(values, unavailable, requestId));
-  assert.throws(() =>
-    model.createPayload(
+  expect(() => createPayload(values, unavailable, requestId)).toThrow();
+  expect(() =>
+    createPayload(
       { ...values, endpoint: 'https://user:secret@example.invalid' },
       capabilities(),
       requestId,
     ),
-  );
+  ).toThrow();
   const cos = capabilities();
   cos.providers = [
     {
@@ -358,7 +386,7 @@ test('create payload follows provider capability, paired credentials and COS end
       reasonCode: null,
     },
   ];
-  const payload = model.createPayload(
+  const payload = createPayload(
     {
       ...values,
       provider: 'TENCENT_COS',
@@ -368,11 +396,11 @@ test('create payload follows provider capability, paired credentials and COS end
     cos,
     requestId,
   );
-  assert.equal(Object.hasOwn(payload, 'endpoint'), false);
+  expect(Object.hasOwn(payload, 'endpoint')).toBe(false);
 });
 
 test('policy uses seconds, exact version and never writes legacy path/private access fields', () => {
-  const value = model.settingsPayload(
+  const value = settingsPayload(
     {
       ...settings(),
       uploadTtlSeconds: 61,
@@ -385,21 +413,20 @@ test('policy uses seconds, exact version and never writes legacy path/private ac
     requestId,
     [],
   );
-  assert.equal(value.expectedSettingsVersion, 1);
-  assert.equal(value.uploadTtlSeconds, 61);
-  assert.doesNotMatch(
-    JSON.stringify(value),
+  expect(value.expectedSettingsVersion).toBe(1);
+  expect(value.uploadTtlSeconds).toBe(61);
+  expect(JSON.stringify(value)).not.toMatch(
     /MUST_NOT_SEND|privateOnly|baseDir|legacy/,
   );
-  assert.throws(() =>
-    model.settingsPayload(
+  expect(() =>
+    settingsPayload(
       { ...settings(), viewTtlSeconds: 3601 },
       settings(),
       capabilities(),
       requestId,
       [],
     ),
-  );
+  ).toThrow();
 });
 
 test('old revision success and unapplied configuration never display as current validated health', () => {
@@ -411,32 +438,32 @@ test('old revision success and unapplied configuration never display as current 
     finishedAt: null,
     cleanupStatus: 'SUCCEEDED',
   };
-  assert.equal(model.probeState(row).state, 'STALE');
+  expect(probeState(row).state).toBe('STALE');
   row.appliedRevision = 1;
-  assert.equal(model.runtimeState(row).state, 'PENDING');
+  expect(runtimeState(row).state).toBe('PENDING');
   row.lastProbe.checkedRevision = 2;
   row.lastProbe.cleanupStatus = 'FAILED';
-  assert.equal(model.probeState(row).state, 'FAILED');
+  expect(probeState(row).state).toBe('FAILED');
 });
 
 test('unknown write is looked up by the same key, blocks new writes and never repeats POST', async () => {
   let writes = 0;
   let lookups = 0;
-  const states = [];
+  const states: unknown[] = [];
   const store = pendingStore();
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
     store,
     requestId: () => requestId,
     read: async () => snapshot(),
-    lookup: async (key) => {
-      assert.equal(key, requestId);
+    lookup: async (key: string) => {
+      expect(key).toBe(requestId);
       lookups++;
       return operation('UNKNOWN');
     },
-    changed: (state) => states.push(state),
+    changed: (state: unknown) => states.push(state),
   });
   await controller.load();
   await controller.submit(
@@ -448,22 +475,23 @@ test('unknown write is looked up by the same key, blocks new writes and never re
     },
     true,
   );
-  assert.equal(writes, 1);
-  assert.equal(lookups, 1);
-  assert.equal(controller.canSubmit(), false);
+  expect(writes).toBe(1);
+  expect(lookups).toBe(1);
+  expect(controller.canSubmit()).toBe(false);
   await controller.lookup();
   await controller.submit(
     'UPDATE',
     'config-1',
     async () => {
       writes++;
+      return operation();
     },
     true,
   );
-  assert.equal(writes, 1);
-  assert.equal(lookups, 2);
-  assert.equal(store.load().requestId, requestId);
-  assert.doesNotMatch(JSON.stringify(states), /RAW_SECRET/);
+  expect(writes).toBe(1);
+  expect(lookups).toBe(2);
+  expect(store.load()?.requestId).toBe(requestId);
+  expect(JSON.stringify(states)).not.toMatch(/RAW_SECRET/);
 });
 
 test('restoring pending action performs only GET and terminal response permits a new explicit action', async () => {
@@ -471,7 +499,7 @@ test('restoring pending action performs only GET and terminal response permits a
   store.save({ requestId, action: 'UPDATE', configurationId: 'config-1' });
   let reads = 0;
   let lookups = 0;
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -488,16 +516,16 @@ test('restoring pending action performs only GET and terminal response permits a
     changed: () => {},
   });
   await controller.load();
-  assert.equal(lookups, 1);
-  assert.equal(reads, 1);
-  assert.equal(store.load(), undefined);
-  assert.equal(controller.canSubmit(), true);
+  expect(lookups).toBe(1);
+  expect(reads).toBe(1);
+  expect(store.load()).toBe(undefined);
+  expect(controller.canSubmit()).toBe(true);
 });
 
 test('operation not found and damaged persistence cannot create a new uncertain request', async () => {
   const store = pendingStore();
   store.save({ requestId, action: 'UPDATE', configurationId: 'config-1' });
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -510,9 +538,9 @@ test('operation not found and damaged persistence cannot create a new uncertain 
     changed: () => {},
   });
   await controller.load();
-  assert.equal(controller.canSubmit(), false);
-  assert.equal(store.load().requestId, requestId);
-  const broken = model.createStorageController({
+  expect(controller.canSubmit()).toBe(false);
+  expect(store.load()?.requestId).toBe(requestId);
+  const broken = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -529,15 +557,15 @@ test('operation not found and damaged persistence cannot create a new uncertain 
     changed: () => {},
   });
   await broken.load();
-  assert.equal(broken.canSubmit(), false);
+  expect(broken.canSubmit()).toBe(false);
 });
 
 test('permission loss and unmount prevent writes and late operation responses', async () => {
   let allowed = true;
-  let finish;
+  let finish: (value: unknown) => void = () => {};
   let calls = 0;
-  const states = [];
-  const controller = model.createStorageController({
+  const states: unknown[] = [];
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => allowed,
@@ -545,7 +573,7 @@ test('permission loss and unmount prevent writes and late operation responses', 
     requestId: () => requestId,
     read: async () => snapshot(),
     lookup: async () => operation(),
-    changed: (state) => states.push(state),
+    changed: (state: unknown) => states.push(state),
   });
   await controller.load();
   allowed = false;
@@ -554,10 +582,11 @@ test('permission loss and unmount prevent writes and late operation responses', 
     'config-1',
     async () => {
       calls++;
+      return operation();
     },
     true,
   );
-  assert.equal(calls, 0);
+  expect(calls).toBe(0);
   allowed = true;
   const pending = controller.submit(
     'UPDATE',
@@ -572,35 +601,31 @@ test('permission loss and unmount prevent writes and late operation responses', 
   const before = states.length;
   finish(operation());
   await pending;
-  assert.equal(states.length, before);
+  expect(states.length).toBe(before);
 });
 
 test('metadata projection strips credentials and pending session store is scope separated', () => {
   const source = snapshot();
   source.list.items[0].secretKey = 'MUST_NOT_KEEP';
-  const decoded = model.decodeStorageSnapshot(source);
-  assert.doesNotMatch(JSON.stringify(decoded), /MUST_NOT_KEEP|secretKey/);
-  const memory = new Map();
-  const storage = {
-    getItem: (key) => memory.get(key) ?? null,
-    setItem: (key, value) => memory.set(key, value),
-    removeItem: (key) => memory.delete(key),
-  };
-  const a = model.createStoragePendingStore(storage, 'user-a/tenant-a');
-  const b = model.createStoragePendingStore(storage, 'user-b/tenant-a');
-  a.save({
+  const decoded = decodeStorageSnapshot(source);
+  expect(JSON.stringify(decoded)).not.toMatch(/MUST_NOT_KEEP|secretKey/);
+  const memory = new Map<string, string>();
+  const storage = memoryStorage(memory);
+  const a = createStoragePendingStore(storage, 'user-a/tenant-a');
+  const b = createStoragePendingStore(storage, 'user-b/tenant-a');
+  (a.save as (value: unknown) => void)({
     requestId,
     action: 'PROBE',
     configurationId: 'config-1',
     secretKey: 'MUST_NOT_KEEP',
   });
-  assert.equal(b.load(), undefined);
-  assert.doesNotMatch([...memory.values()].join(), /MUST_NOT_KEEP/);
+  expect(b.load()).toBe(undefined);
+  expect([...memory.values()].join()).not.toMatch(/MUST_NOT_KEEP/);
   a.clear();
-  assert.equal(memory.size, 0);
+  expect(memory.size).toBe(0);
   source.list.items[0].endpoint =
     'https://storage.example.invalid?signature=MUST_NOT_RENDER';
-  assert.throws(() => model.decodeStorageSnapshot(source));
+  expect(() => decodeStorageSnapshot(source)).toThrow();
 });
 
 test('opaque request identities use cryptographic bytes without depending on secure-context randomUUID', () => {
@@ -608,17 +633,16 @@ test('opaque request identities use cryptographic bytes without depending on sec
     [0x1a, '1a1a1a1a-1a1a-4a1a-9a1a-1a1a1a1a1a1a'],
     [0, '00000000-0000-4000-8000-000000000000'],
     [255, 'ffffffff-ffff-4fff-bfff-ffffffffffff'],
-  ]) {
-    const key = model.createStorageRequestId({
-      getRandomValues: (bytes) => {
-        assert.equal(bytes.length, 16);
+  ] as Array<[number, string]>) {
+    const key = createStorageRequestId({
+      getRandomValues: (bytes: Uint8Array) => {
+        expect(bytes.length).toBe(16);
         bytes.fill(value);
         return bytes;
       },
     });
-    assert.equal(key, expected);
-    assert.match(
-      key,
+    expect(key).toBe(expected);
+    expect(key).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     );
   }
@@ -628,13 +652,13 @@ test('old opaque pending identities only GET and never become a new UUID or POST
   const legacy = '1a'.repeat(24);
   const store = pendingStore();
   let generated = 0;
-  let lookedUp;
+  let lookedUp: string | undefined;
   store.save({
     requestId: legacy,
     action: 'UPDATE',
     configurationId: 'config-1',
   });
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -644,16 +668,16 @@ test('old opaque pending identities only GET and never become a new UUID or POST
       return requestId;
     },
     read: async () => snapshot(),
-    lookup: async (key) => {
+    lookup: async (key: string) => {
       lookedUp = key;
       throw { response: { status: 400 } };
     },
     changed: () => {},
   });
   await controller.load();
-  assert.equal(lookedUp, legacy);
-  assert.equal(generated, 0);
-  assert.equal(store.load().requestId, legacy);
+  expect(lookedUp).toBe(legacy);
+  expect(generated).toBe(0);
+  expect(store.load()?.requestId).toBe(legacy);
   await controller.submit(
     'UPDATE',
     'config-1',
@@ -662,22 +686,22 @@ test('old opaque pending identities only GET and never become a new UUID or POST
     },
     true,
   );
-  assert.equal(generated, 0);
-  assert.equal(controller.canSubmit(), false);
+  expect(generated).toBe(0);
+  expect(controller.canSubmit()).toBe(false);
 });
 
 test('new mutations reject a noncanonical injected request identity before persistence or network', async () => {
   const legacy = '1a'.repeat(24);
   let calls = 0;
   const store = pendingStore();
-  assert.throws(() =>
-    model.updatePayload(
+  expect(() =>
+    updatePayload(
       { name: 'synthetic', uploadEnabled: true, credentialAction: 'KEEP' },
       config(),
       legacy,
     ),
-  );
-  const controller = model.createStorageController({
+  ).toThrow();
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -697,24 +721,27 @@ test('new mutations reject a noncanonical injected request identity before persi
     },
     true,
   );
-  assert.equal(calls, 0);
-  assert.equal(store.load(), undefined);
-  assert.equal(controller.state().phase, 'blocked');
+  expect(calls).toBe(0);
+  expect(store.load()).toBe(undefined);
+  expect(controller.state().phase).toBe('blocked');
 });
 
 test('pending cleanup refuses to delete a different operation that replaced this scope entry', () => {
-  const memory = new Map();
-  const storage = {
-    getItem: (key) => memory.get(key) ?? null,
-    setItem: (key, value) => memory.set(key, value),
-    removeItem: (key) => memory.delete(key),
-  };
-  const store = model.createStoragePendingStore(storage, 'synthetic-scope');
-  store.save({ requestId, action: 'UPDATE', configurationId: 'config-1' });
-  assert.throws(() => store.clear('another-request-id-0001'));
-  assert.equal(store.load().requestId, requestId);
-  store.clear(requestId);
-  assert.equal(store.load(), undefined);
+  const memory = new Map<string, string>();
+  const store = createStoragePendingStore(
+    memoryStorage(memory),
+    'synthetic-scope',
+  );
+  (store.save as (value: unknown) => void)({
+    requestId,
+    action: 'UPDATE',
+    configurationId: 'config-1',
+  });
+  const clear = store.clear as (requestId?: string) => void;
+  expect(() => clear('another-request-id-0001')).toThrow();
+  expect(store.load()?.requestId).toBe(requestId);
+  clear(requestId);
+  expect(store.load()).toBe(undefined);
 });
 
 test('failed pending persistence prevents network writes, and failed clearing keeps terminal operation blocked', async () => {
@@ -730,7 +757,7 @@ test('failed pending persistence prevents network writes, and failed clearing ke
     },
   };
   const build = () =>
-    model.createStorageController({
+    createStorageController({
       scope: 'a',
       liveScope: () => 'a',
       canManage: () => true,
@@ -751,8 +778,8 @@ test('failed pending persistence prevents network writes, and failed clearing ke
     },
     true,
   );
-  assert.equal(writes, 0);
-  assert.equal(controller.state().phase, 'blocked');
+  expect(writes).toBe(0);
+  expect(controller.state().phase).toBe('blocked');
   failSave = false;
   controller = build();
   await controller.load();
@@ -765,16 +792,16 @@ test('failed pending persistence prevents network writes, and failed clearing ke
     },
     true,
   );
-  assert.equal(writes, 1);
-  assert.equal(controller.state().phase, 'blocked');
-  assert.equal(controller.canSubmit(), false);
+  expect(writes).toBe(1);
+  expect(controller.state().phase).toBe('blocked');
+  expect(controller.canSubmit()).toBe(false);
 });
 
 test('CAS refusal refreshes metadata but key conflict retains pending identity and cannot repeat the write', async () => {
   let reads = 0;
   const store = pendingStore();
   let conflict = 'STORAGE_VERSION_CONFLICT';
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -797,21 +824,21 @@ test('CAS refusal refreshes metadata but key conflict retains pending identity a
   };
   await controller.load();
   await controller.submit('UPDATE', 'config-1', write, true);
-  assert.equal(reads, 2);
-  assert.equal(controller.canSubmit(), true);
-  assert.equal(store.load(), undefined);
-  assert.match(controller.state().error, /已被其他操作更新/);
-  assert.doesNotMatch(controller.state().error, /RAW_SECRET/);
+  expect(reads).toBe(2);
+  expect(controller.canSubmit()).toBe(true);
+  expect(store.load()).toBe(undefined);
+  expect(controller.state().error).toMatch(/已被其他操作更新/);
+  expect(controller.state().error).not.toMatch(/RAW_SECRET/);
   conflict = 'STORAGE_REQUEST_ID_REUSED';
   await controller.submit('UPDATE', 'config-1', write, true);
-  assert.equal(controller.canSubmit(), false);
-  assert.equal(store.load().requestId, requestId);
+  expect(controller.canSubmit()).toBe(false);
+  expect(store.load()?.requestId).toBe(requestId);
 });
 
 test('mismatched operation identity or action cannot clear the uncertain original request', async () => {
   const store = pendingStore();
   store.save({ requestId, action: 'UPDATE', configurationId: 'config-1' });
-  const controller = model.createStorageController({
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => 'a',
     canManage: () => true,
@@ -822,17 +849,17 @@ test('mismatched operation identity or action cannot clear the uncertain origina
     changed: () => {},
   });
   await controller.load();
-  assert.equal(controller.state().phase, 'uncertain');
-  assert.equal(store.load().requestId, requestId);
-  assert.equal(controller.canSubmit(), false);
+  expect(controller.state().phase).toBe('uncertain');
+  expect(store.load()?.requestId).toBe(requestId);
+  expect(controller.canSubmit()).toBe(false);
 });
 
 test('explicit confirmation and single flight are checked again immediately before network mutation', async () => {
-  let finish;
+  let finish: (value: unknown) => void = () => {};
   let writes = 0;
   let scope = 'a';
-  const states = [];
-  const controller = model.createStorageController({
+  const states: unknown[] = [];
+  const controller = createStorageController({
     scope: 'a',
     liveScope: () => scope,
     canManage: () => true,
@@ -840,7 +867,7 @@ test('explicit confirmation and single flight are checked again immediately befo
     requestId: () => requestId,
     read: async () => snapshot(),
     lookup: async () => operation(),
-    changed: (state) => states.push(state),
+    changed: (state: unknown) => states.push(state),
   });
   await controller.load();
   const write = async () => {
@@ -850,13 +877,13 @@ test('explicit confirmation and single flight are checked again immediately befo
     });
   };
   await controller.submit('UPDATE', 'config-1', write, false);
-  assert.equal(writes, 0);
+  expect(writes).toBe(0);
   const pending = controller.submit('UPDATE', 'config-1', write, true);
   await controller.submit('UPDATE', 'config-1', write, true);
-  assert.equal(writes, 1);
+  expect(writes).toBe(1);
   scope = 'b';
   const before = states.length;
   finish(operation());
   await pending;
-  assert.equal(states.length, before);
+  expect(states.length).toBe(before);
 });

@@ -1,24 +1,9 @@
-import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import test from 'node:test';
-import { createContext, runInContext } from 'node:vm';
-import ts from 'typescript';
+import * as model from '@/pages/Rag/Document/documentModel';
+import { expect, test } from 'vitest';
 
-function load(path) {
-  const file = new URL(path, import.meta.url);
-  if (!existsSync(file)) return {};
-  const module = { exports: {} };
-  const code = ts.transpileModule(readFileSync(file, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText;
-  runInContext(
-    code,
-    createContext({ exports: module.exports, AbortController }),
-  );
-  return module.exports;
-}
+type Row = Parameters<typeof model.filterDocuments>[0][number];
+type Retrieval = Parameters<typeof model.retrievalState>[0];
 
-const model = load('../../src/pages/Rag/Document/documentModel.ts');
 const documents = [
   {
     documentId: 'old',
@@ -50,10 +35,10 @@ const documents = [
     status: 'DELETED',
     ingestedAt: '2026-03-01T00:00:00Z',
   },
-];
+] as Row[];
 
 test('document search combines title/source/code and exact scope filters without changing original rows', () => {
-  assert.equal(typeof model.filterDocuments, 'function');
+  expect(typeof model.filterDocuments).toBe('function');
   const before = JSON.stringify(documents);
   const actual = model.filterDocuments(documents, {
     search: ' API_',
@@ -61,19 +46,13 @@ test('document search combines title/source/code and exact scope filters without
     status: 'ACTIVE',
     sourceType: 'pdf',
   });
-  assert.deepEqual(
-    Array.from(actual, (row) => row.documentId),
-    ['new'],
-  );
-  assert.equal(JSON.stringify(documents), before);
-  assert.equal(
-    model.filterDocuments(documents, { search: '不存在' }).length,
-    0,
-  );
+  expect(Array.from(actual, (row) => row.documentId)).toStrictEqual(['new']);
+  expect(JSON.stringify(documents)).toBe(before);
+  expect(model.filterDocuments(documents, { search: '不存在' }).length).toBe(0);
 });
 
 test('document sorting preserves invalid dates and unknown states instead of dropping them', () => {
-  assert.equal(typeof model.filterDocuments, 'function');
+  expect(typeof model.filterDocuments).toBe('function');
   const rows = [
     ...documents,
     {
@@ -81,79 +60,71 @@ test('document sorting preserves invalid dates and unknown states instead of dro
       documentId: 'unknown',
       ingestedAt: 'invalid',
       status: 'FUTURE_STATE',
-    },
+    } as Row,
   ];
-  assert.deepEqual(
+  expect(
     Array.from(model.filterDocuments(rows, {}), (row) => row.documentId),
-    ['other', 'new', 'old', 'unknown'],
-  );
-  assert.equal(
+  ).toStrictEqual(['other', 'new', 'old', 'unknown']);
+  expect(
     model.filterDocuments(rows, { status: 'FUTURE_STATE' })[0].documentId,
-    'unknown',
-  );
-  assert.equal(
+  ).toBe('unknown');
+  expect(
     model.filterDocuments(documents, { sourceType: 'image' })[0].documentId,
-    'other',
-  );
+  ).toBe('other');
 });
 
 test('unavailable retrieval and disabled service cannot become a successful empty answer', () => {
-  assert.equal(typeof model.retrievalState, 'function');
-  assert.equal(model.retrievalState(undefined), 'idle');
-  assert.equal(model.retrievalState({ enabled: false }), 'disabled');
-  assert.equal(
-    model.retrievalState({ message: 'missing availability' }),
-    'unavailable',
-  );
-  assert.equal(
-    model.retrievalState({
+  const state = (value: unknown) => model.retrievalState(value as Retrieval);
+  expect(typeof model.retrievalState).toBe('function');
+  expect(state(undefined)).toBe('idle');
+  expect(state({ enabled: false })).toBe('disabled');
+  expect(state({ message: 'missing availability' })).toBe('unavailable');
+  expect(
+    state({
       enabled: true,
       matched: false,
       chunks: [],
       message: 'RAG retrieval is temporarily unavailable',
     }),
-    'unavailable',
-  );
-  assert.equal(
-    model.retrievalState({
+  ).toBe('unavailable');
+  expect(
+    state({
       enabled: true,
       matched: false,
       chunks: [],
       message: 'no knowledge matched',
     }),
-    'empty',
-  );
-  assert.equal(
-    model.retrievalState({
+  ).toBe('empty');
+  expect(
+    state({
       enabled: true,
       matched: true,
       chunks: [{ content: '合成命中' }],
       message: 'ok',
     }),
-    'matched',
-  );
+  ).toBe('matched');
 });
 
 test('identity or KB scope change rejects a late response before the next request begins', () => {
-  assert.equal(typeof model.createDocumentRequestGate, 'function');
+  expect(typeof model.createDocumentRequestGate).toBe('function');
   const gate = model.createDocumentRequestGate();
   const old = gate.begin('tenant-a/kb-one');
-  assert.equal(old.isCurrent('tenant-a/kb-one'), true);
-  assert.equal(old.isCurrent('tenant-b/kb-one'), false);
+  expect(old.isCurrent('tenant-a/kb-one')).toBe(true);
+  expect(old.isCurrent('tenant-b/kb-one')).toBe(false);
   const current = gate.begin('tenant-b/kb-one');
-  assert.equal(old.signal.aborted, true);
-  assert.equal(old.isCurrent('tenant-a/kb-one'), false);
-  assert.equal(current.isCurrent('tenant-b/kb-one'), true);
+  expect(old.signal.aborted).toBe(true);
+  expect(old.isCurrent('tenant-a/kb-one')).toBe(false);
+  expect(current.isCurrent('tenant-b/kb-one')).toBe(true);
   gate.cancel();
-  assert.equal(current.signal.aborted, true);
-  assert.equal(current.isCurrent('tenant-b/kb-one'), false);
+  expect(current.signal.aborted).toBe(true);
+  expect(current.isCurrent('tenant-b/kb-one')).toBe(false);
 });
 
 test('a slow document write cannot trigger a toast or reload after its workbench unmounts', async () => {
   const gate = model.createDocumentRequestGate();
-  assert.equal(typeof gate.settle, 'function');
-  let complete;
-  const slowWrite = new Promise((resolve) => {
+  expect(typeof gate.settle).toBe('function');
+  let complete: (value: { data: boolean }) => void = () => {};
+  const slowWrite = new Promise<{ data: boolean }>((resolve) => {
     complete = resolve;
   });
   let applied = 0;
@@ -169,5 +140,5 @@ test('a slow document write cannot trigger a toast or reload after its workbench
   gate.cancel();
   complete({ data: true });
   await result;
-  assert.equal(applied, 0);
+  expect(applied).toBe(0);
 });
