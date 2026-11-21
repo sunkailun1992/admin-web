@@ -25,3 +25,6 @@
 
 ### Generated artifacts ###
 *.class
+
+# Playwright 浏览器测试的报告与截图
+/e2e-out

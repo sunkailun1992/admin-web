@@ -1,0 +1,56 @@
+{
+  "GET /message/messages/user-messages/current": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "records": [
+        {
+          "id": "synthetic-message",
+          "tenantId": "synthetic-tenant",
+          "title": "合成站内信",
+          "content": "合成内容",
+          "createTime": "2026-11-01 08:00:00"
+        }
+      ],
+      "total": 1,
+      "size": 20,
+      "current": 1,
+      "pages": 1
+    }
+  },
+  "GET /message/messages/user-messages/current?messageType=SYSTEM_NOTICE": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "records": [],
+      "total": 0,
+      "size": 1,
+      "current": 1,
+      "pages": 0
+    }
+  },
+  "GET /message/messages/user-messages/current/unread-count": {
+    "success": true,
+    "code": "00000",
+    "data": 1
+  },
+  "GET /message/messages/user-messages": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "records": [
+        {
+          "id": "synthetic-sent-message",
+          "tenantId": "synthetic-tenant",
+          "title": "合成已发送",
+          "content": "合成内容",
+          "createTime": "2026-11-01 08:00:00"
+        }
+      ],
+      "total": 1,
+      "size": 20,
+      "current": 1,
+      "pages": 1
+    }
+  }
+}

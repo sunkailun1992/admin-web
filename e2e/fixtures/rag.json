@@ -1,0 +1,71 @@
+{
+  "GET /api/rag/documents": {
+    "success": true,
+    "code": "00000",
+    "data": [
+      {
+        "documentId": "doc-1",
+        "knowledgeBase": "manual",
+        "documentCode": "synthetic-doc",
+        "title": "合成文档",
+        "sourceName": "synthetic.pdf",
+        "sourceType": "pdf",
+        "documentVersion": 1,
+        "status": "ACTIVE",
+        "chunkCount": 3,
+        "duplicateChunkCount": 0,
+        "fileFingerprint": "synthetic-fingerprint",
+        "ingestedAt": "2026-11-01T08:00:00Z"
+      }
+    ]
+  },
+  "GET /api/rag/graphs": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "knowledgeBase": "general-knowledge",
+      "viewMode": "OVERVIEW",
+      "nodeCount": 2,
+      "edgeCount": 1,
+      "truncated": false,
+      "nodeTypeCounts": {
+        "DOCUMENT": 1,
+        "ENTITY": 1
+      },
+      "relationTypeCounts": {
+        "MENTIONS": 1
+      },
+      "nodes": [
+        {
+          "id": "n-doc",
+          "type": "DOCUMENT",
+          "name": "合成文档",
+          "documentId": "doc-1"
+        },
+        {
+          "id": "n-entity",
+          "type": "ENTITY",
+          "name": "合成实体"
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-1",
+          "source": "n-doc",
+          "target": "n-entity",
+          "type": "MENTIONS"
+        }
+      ],
+      "backend": "neo4j",
+      "build": {
+        "buildId": "build-1",
+        "knowledgeBase": "general-knowledge",
+        "status": "SUCCEEDED",
+        "documentCount": 1,
+        "processedDocumentCount": 1,
+        "nodeCount": 2,
+        "edgeCount": 1
+      }
+    }
+  }
+}

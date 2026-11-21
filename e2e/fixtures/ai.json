@@ -1,0 +1,114 @@
+{
+  "GET /api/ai/model-selection": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "provider": "deepseek",
+      "model": "synthetic-model",
+      "supportedProviders": ["deepseek", "qwen"],
+      "updatedAt": "2026-11-10T12:00:00"
+    }
+  },
+  "GET /api/ai/model-control-plane": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "available": true,
+      "status": "AVAILABLE",
+      "platformVersion": "1.108.4",
+      "consoleBaseUrl": "https://gateway.example.invalid/prefix/ui/",
+      "checkedAt": "2026-11-11T00:00:00Z",
+      "modelCatalog": [
+        {
+          "id": "deployment-chat",
+          "modelName": "synthetic-chat",
+          "provider": "openai",
+          "model": "openai/synthetic-model",
+          "capabilities": ["CHAT"],
+          "contextWindow": 8192,
+          "verificationStatus": "NOT_CHECKED"
+        }
+      ],
+      "taskBindings": [
+        {
+          "taskCode": "synthetic-index",
+          "taskName": "合成索引绑定",
+          "capability": "EMBEDDING",
+          "modelName": "synthetic-embedding",
+          "status": "CONFIGURED",
+          "readOnly": true,
+          "reasonCode": "RAG_INDEX_BOUND"
+        }
+      ]
+    }
+  },
+  "GET /api/ai/storage-configurations": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "items": [
+        {
+          "id": "config-1",
+          "platform": "platform-1",
+          "name": "合成私有存储",
+          "provider": "MINIO",
+          "endpoint": "https://storage.example.invalid",
+          "bucket": "synthetic-bucket",
+          "region": null,
+          "uploadEnabled": true,
+          "isDefault": true,
+          "version": 3,
+          "configRevision": 2,
+          "appliedRevision": 2,
+          "runtimeStatus": "APPLIED",
+          "credentialsConfigured": true,
+          "credentialUpdatedAt": null,
+          "referenceCount": 1,
+          "lastProbe": null
+        }
+      ],
+      "page": 1,
+      "size": 20,
+      "total": 1
+    }
+  },
+  "GET /api/ai/storage-settings": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "version": 1,
+      "defaultPlatform": "platform-1",
+      "legacyNullPlatform": "legacy",
+      "baseDir": "files/",
+      "uploadTtlSeconds": 60,
+      "viewTtlSeconds": 1800,
+      "maxUploadBytes": 52428800,
+      "privateOnly": true
+    }
+  },
+  "GET /api/ai/storage-capabilities": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "providers": [
+        {
+          "code": "MINIO",
+          "label": "MinIO",
+          "availability": "AVAILABLE",
+          "endpointRequired": true,
+          "regionRequired": false,
+          "reasonCode": null
+        }
+      ],
+      "limits": {
+        "uploadTtlSeconds": { "min": 60, "max": 3600, "defaultValue": 60 },
+        "viewTtlSeconds": { "min": 60, "max": 3600, "defaultValue": 1800 },
+        "maxUploadBytes": {
+          "min": 1,
+          "max": 52428800,
+          "defaultValue": 52428800
+        }
+      }
+    }
+  }
+}
