@@ -186,7 +186,7 @@ importers:
         version: 5.1.1
       '@umijs/max':
         specifier: ^4.6.56
-        version: 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(debug@4.4.3(supports-color@8.1.1))(dva@2.5.0-beta.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lightningcss@1.22.1)(prettier@2.8.8)(rc-field-form@2.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))
+        version: 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(debug@4.4.3(supports-color@8.1.1))(dva@2.5.0-beta.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lightningcss@1.22.1)(prettier@3.10.1)(rc-field-form@2.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))
       antd:
         specifier: ^5.4.0
         version: 5.29.3(date-fns@2.30.0)(moment@2.30.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -210,14 +210,14 @@ importers:
         specifier: ^13.2.0
         version: 13.3.0(supports-color@8.1.1)
       prettier:
-        specifier: ^2.8.7
-        version: 2.8.8
+        specifier: ^3.10.1
+        version: 3.10.1
       prettier-plugin-organize-imports:
-        specifier: ^3.2.2
-        version: 3.2.4(prettier@2.8.8)(typescript@6.0.3)
+        specifier: ^4.3.0
+        version: 4.3.0(prettier@3.10.1)(typescript@6.0.3)
       prettier-plugin-packagejson:
-        specifier: ^2.4.3
-        version: 2.5.22(prettier@2.8.8)
+        specifier: ^3.1.0
+        version: 3.1.0(prettier@3.10.1)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -5119,10 +5119,6 @@ packages:
     resolution: {integrity: sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==}
     engines: {node: '>=8.6'}
 
-  picomatch@4.0.4:
-    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
-    engines: {node: '>=12'}
-
   picomatch@4.0.7:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
@@ -5445,6 +5441,16 @@ packages:
       '@volar/vue-typescript':
         optional: true
 
+  prettier-plugin-organize-imports@4.3.0:
+    resolution: {integrity: sha512-FxFz0qFhyBsGdIsb697f/EkvHzi5SZOhWAjxcx2dLt+Q532bAlhswcXGYB1yzjZ69kW8UoadFBw7TyNwlq96Iw==}
+    peerDependencies:
+      prettier: '>=2.0'
+      typescript: '>=2.9'
+      vue-tsc: ^2.1.0 || 3
+    peerDependenciesMeta:
+      vue-tsc:
+        optional: true
+
   prettier-plugin-packagejson@2.4.3:
     resolution: {integrity: sha512-kPeeviJiwy0BgOSk7No8NmzzXfW4R9FYWni6ziA5zc1kGVVrKnBzMZdu2TUhI+I7h8/5Htt3vARYOk7KKJTTNQ==}
     peerDependencies:
@@ -5453,17 +5459,18 @@ packages:
       prettier:
         optional: true
 
-  prettier-plugin-packagejson@2.5.22:
-    resolution: {integrity: sha512-G6WalmoUssKF8ZXkni0+n4324K+gG143KPysSQNW+FrR0XyNb3BdRxchGC/Q1FE/F702p7/6KU7r4mv0WSWbzA==}
+  prettier-plugin-packagejson@3.1.0:
+    resolution: {integrity: sha512-KxH8E68UGYVW4IDxZk7lLXKxVd8uY6g8ctfu+fNwA+bAKgCN66ZoRIcPtOHXDa1kDj/nLBZIgH8srP/1Yaz9iA==}
+    engines: {node: '>=22'}
     peerDependencies:
-      prettier: '>= 1.16.0'
+      prettier: ^3
     peerDependenciesMeta:
       prettier:
         optional: true
 
-  prettier@2.8.8:
-    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
-    engines: {node: '>=10.13.0'}
+  prettier@3.10.1:
+    resolution: {integrity: sha512-70vp3ZUYoPlFbF9uiTdXHUUCGEIp7d4+6p+8DYbkm2jP7x/3i/paXVF6dopSI3zd/CEitrZN1rc4i85xWmmXlg==}
+    engines: {node: '>=14'}
     hasBin: true
 
   pretty-error@4.0.0:
@@ -6476,9 +6483,9 @@ packages:
     resolution: {integrity: sha512-Nd3rgLBJcZ4iw7tpuOhwBupG6SvUDU0Fy1cZGAMorA2JmDUb+29Dg5phJK9gapa2Ak9d15w/RuMl/viwX+nKwQ==}
     hasBin: true
 
-  sort-package-json@3.6.0:
-    resolution: {integrity: sha512-fyJsPLhWvY7u2KsKPZn1PixbXp+1m7V8NWqU8CvgFRbMEX41Ffw1kD8n0CfJiGoaSfoAvbrqRRl/DcHO8omQOQ==}
-    engines: {node: '>=20'}
+  sort-package-json@4.1.0:
+    resolution: {integrity: sha512-CI7HgkV5rCE5dbYYJMuXkxgiSLc3uJczff9ic3kHuY5QRYKUbfsDSKN4DjTpvqejdJEkKLusQ64ykTte5ypr1A==}
+    engines: {node: '>=22'}
     hasBin: true
 
   source-map-js@1.2.1:
@@ -6825,10 +6832,6 @@ packages:
   tinyexec@1.3.1:
     resolution: {integrity: sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA==}
     engines: {node: '>=18'}
-
-  tinyglobby@0.2.16:
-    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
-    engines: {node: '>=12.0.0'}
 
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
@@ -9631,14 +9634,14 @@ snapshots:
       - typescript
       - webpack
 
-  '@umijs/max@4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(debug@4.4.3(supports-color@8.1.1))(dva@2.5.0-beta.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lightningcss@1.22.1)(prettier@2.8.8)(rc-field-form@2.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))':
+  '@umijs/max@4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(debug@4.4.3(supports-color@8.1.1))(dva@2.5.0-beta.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(lightningcss@1.22.1)(prettier@3.10.1)(rc-field-form@2.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))':
     dependencies:
       '@umijs/lint': 4.6.56(eslint@8.35.0(supports-color@8.1.1))(stylelint@14.8.2(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       '@umijs/plugins': 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@18.3.7(@types/react@18.3.29))(@types/react@18.3.29)(antd@4.24.16(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(debug@4.4.3(supports-color@8.1.1))(dva@2.5.0-beta.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(rc-field-form@2.7.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(supports-color@8.1.1)
       antd: 4.24.16(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       eslint: 8.35.0(supports-color@8.1.1)
       stylelint: 14.8.2(supports-color@8.1.1)
-      umi: 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react@18.3.29)(eslint@8.35.0(supports-color@8.1.1))(lightningcss@1.22.1)(prettier@2.8.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(stylelint@14.8.2(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))
+      umi: 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react@18.3.29)(eslint@8.35.0(supports-color@8.1.1))(lightningcss@1.22.1)(prettier@3.10.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(stylelint@14.8.2(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15))
     transitivePeerDependencies:
       - '@babel/core'
       - '@rspack/core'
@@ -11818,10 +11821,6 @@ snapshots:
     dependencies:
       bser: 2.1.1
 
-  fdir@6.5.0(picomatch@4.0.4):
-    optionalDependencies:
-      picomatch: 4.0.4
-
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
@@ -13376,8 +13375,6 @@ snapshots:
 
   picomatch@2.3.2: {}
 
-  picomatch@4.0.4: {}
-
   picomatch@4.0.7: {}
 
   pidtree@0.6.0: {}
@@ -13678,25 +13675,30 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-organize-imports@3.2.4(prettier@2.8.8)(typescript@6.0.3):
+  prettier-plugin-organize-imports@3.2.4(prettier@3.10.1)(typescript@6.0.3):
     dependencies:
-      prettier: 2.8.8
+      prettier: 3.10.1
       typescript: 6.0.3
 
-  prettier-plugin-packagejson@2.4.3(prettier@2.8.8):
+  prettier-plugin-organize-imports@4.3.0(prettier@3.10.1)(typescript@6.0.3):
+    dependencies:
+      prettier: 3.10.1
+      typescript: 6.0.3
+
+  prettier-plugin-packagejson@2.4.3(prettier@3.10.1):
     dependencies:
       sort-package-json: 2.4.1
       synckit: 0.8.5
     optionalDependencies:
-      prettier: 2.8.8
+      prettier: 3.10.1
 
-  prettier-plugin-packagejson@2.5.22(prettier@2.8.8):
+  prettier-plugin-packagejson@3.1.0(prettier@3.10.1):
     dependencies:
-      sort-package-json: 3.6.0
+      sort-package-json: 4.1.0
     optionalDependencies:
-      prettier: 2.8.8
+      prettier: 3.10.1
 
-  prettier@2.8.8: {}
+  prettier@3.10.1: {}
 
   pretty-error@4.0.0:
     dependencies:
@@ -14997,7 +14999,7 @@ snapshots:
       is-plain-obj: 4.1.0
       sort-object-keys: 1.1.3
 
-  sort-package-json@3.6.0:
+  sort-package-json@4.1.0:
     dependencies:
       detect-indent: 7.0.2
       detect-newline: 4.0.1
@@ -15005,7 +15007,7 @@ snapshots:
       is-plain-obj: 4.1.0
       semver: 7.8.1
       sort-object-keys: 2.1.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
 
   source-map-js@1.2.1: {}
 
@@ -15379,11 +15381,6 @@ snapshots:
 
   tinyexec@1.3.1: {}
 
-  tinyglobby@0.2.16:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
-
   tinyglobby@0.2.17:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.7)
@@ -15490,7 +15487,7 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  umi@4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react@18.3.29)(eslint@8.35.0(supports-color@8.1.1))(lightningcss@1.22.1)(prettier@2.8.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(stylelint@14.8.2(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15)):
+  umi@4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.6)(@types/react@18.3.29)(eslint@8.35.0(supports-color@8.1.1))(lightningcss@1.22.1)(prettier@3.10.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7(supports-color@8.1.1))(react@18.3.1))(stylelint@14.8.2(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.48.0)(type-fest@1.4.0)(typescript@6.0.3)(webpack@5.107.2(clean-css@5.3.3)(csso@4.2.0)(html-minifier-terser@6.1.0)(lightningcss@1.22.1)(postcss@8.5.15)):
     dependencies:
       '@babel/runtime': 7.23.6
       '@umijs/bundler-utils': 4.6.56(supports-color@8.1.1)
@@ -15502,8 +15499,8 @@ snapshots:
       '@umijs/server': 4.6.56(supports-color@8.1.1)
       '@umijs/test': 4.6.56(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@umijs/utils': 4.6.56
-      prettier-plugin-organize-imports: 3.2.4(prettier@2.8.8)(typescript@6.0.3)
-      prettier-plugin-packagejson: 2.4.3(prettier@2.8.8)
+      prettier-plugin-organize-imports: 3.2.4(prettier@3.10.1)(typescript@6.0.3)
+      prettier-plugin-packagejson: 2.4.3(prettier@3.10.1)
     transitivePeerDependencies:
       - '@babel/core'
       - '@rspack/core'
