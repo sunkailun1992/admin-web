@@ -3,6 +3,7 @@ import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import {
   Alert,
+  App,
   Button,
   Collapse,
   Descriptions,
@@ -11,7 +12,6 @@ import {
   Input,
   Space,
   Upload,
-  message,
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { uploadGraphNotice } from '../Graph/graphModel';
@@ -32,6 +32,7 @@ export default function UploadDocumentDrawer({
   onClose,
   onUploaded,
 }: Props) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);

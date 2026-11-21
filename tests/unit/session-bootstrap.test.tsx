@@ -153,7 +153,12 @@ async function runtime({
         push: (path: string) => effects.redirects.push(path),
       },
     },
-    antd: { message: { error: () => {} } },
+    // app.ts 在模块里给静态 message 配 holderRender；这里只需要它能调用。
+    antd: {
+      App: () => null,
+      ConfigProvider: { config: () => {} },
+      message: { error: () => {} },
+    },
   });
   const layout = (init: LayoutInit) =>
     (app.layout as unknown as (init: LayoutInit) => LayoutConfig)(init);

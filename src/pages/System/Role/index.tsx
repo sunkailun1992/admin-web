@@ -31,7 +31,7 @@ import {
   ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message } from 'antd';
+import { App, Button, Popconfirm, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 type RoleResourceForm = API.AuthRoleResourceSyncBO & {
@@ -47,6 +47,7 @@ type RoleDataScopeForm = API.AuthRoleDataScopeSyncBO & {
 };
 
 export default function RolePage() {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>();
   const formRef = useRef<ProFormInstance<API.AuthRoleBO>>();
   const grantFormRef = useRef<ProFormInstance<RoleResourceForm>>();

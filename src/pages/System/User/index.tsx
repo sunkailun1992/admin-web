@@ -24,7 +24,7 @@ import {
   ProFormTreeSelect,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message } from 'antd';
+import { App, Button, Popconfirm, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 type UserRoleForm = API.AuthUserRoleSyncBO & {
@@ -33,6 +33,7 @@ type UserRoleForm = API.AuthUserRoleSyncBO & {
 };
 
 export default function UserPage() {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>();
   const grantFormRef = useRef<ProFormInstance<UserRoleForm>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthUserVO>();

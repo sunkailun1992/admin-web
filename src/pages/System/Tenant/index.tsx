@@ -17,10 +17,11 @@ import {
   ProFormText,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message } from 'antd';
+import { App, Button, Popconfirm, Space } from 'antd';
 import { useRef, useState } from 'react';
 
 export default function TenantPage() {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>();
   const formRef = useRef<ProFormInstance<API.AuthTenantBO>>();
   const [editingRecord, setEditingRecord] = useState<API.AuthTenantVO>();

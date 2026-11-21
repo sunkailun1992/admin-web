@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import type { IElementEvent } from '@antv/g6';
 import { EdgeEvent, Graph, GraphEvent, NodeEvent } from '@antv/g6';
-import { Button, Empty, Space, Tooltip, message } from 'antd';
+import { App, Button, Empty, Space, Tooltip } from 'antd';
 import type { RefObject } from 'react';
 import {
   forwardRef,
@@ -40,6 +40,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
   { graph: data, selection, onSelect, fullscreenTarget, onFullscreenChange },
   ref,
 ) {
+  const { message } = App.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph>();
   const viewportRef = useRef<GraphViewport>();

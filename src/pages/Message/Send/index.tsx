@@ -13,7 +13,7 @@ import {
   ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import { App, Button } from 'antd';
 import { useRef, useState } from 'react';
 
 const MESSAGE_TYPE_VALUE_ENUM = {
@@ -32,6 +32,7 @@ const SEND_STATE_VALUE_ENUM = {
 } as const;
 
 export default function MessageSendPage() {
+  const { message } = App.useApp();
   const actionRef = useRef<ActionType>();
   const [formOpen, setFormOpen] = useState(false);
   const { currentTenantId, tenantValueEnum } = useTenantOptions();

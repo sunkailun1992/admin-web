@@ -304,12 +304,17 @@ test('actual canvas ignores G6 constructor transforms and wires denied native en
       },
       antd: {
         ...antd,
-        message: {
-          error: () => {
-            throw new Error(
-              'successful fallback must not report a failed view action',
-            );
-          },
+        // 画布经 App.useApp() 取 message；成功退回最大化时不该报“操作失败”。
+        App: {
+          useApp: () => ({
+            message: {
+              error: () => {
+                throw new Error(
+                  'successful fallback must not report a failed view action',
+                );
+              },
+            },
+          }),
         },
       },
     },

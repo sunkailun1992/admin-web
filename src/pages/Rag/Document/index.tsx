@@ -15,6 +15,7 @@ import { ProTable } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
 import {
   Alert,
+  App,
   Button,
   Descriptions,
   Empty,
@@ -25,7 +26,6 @@ import {
   Space,
   Tag,
   Typography,
-  message,
 } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DocumentChunksDrawer from './DocumentChunksDrawer';
@@ -42,6 +42,7 @@ type ChunkDocument = Pick<
 >;
 
 function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
+  const { message } = App.useApp();
   const access = useAccess();
   const [knowledgeBase, setKnowledgeBase] = useState<string>();
   const scope = JSON.stringify([identityScope, knowledgeBase || '*']);

@@ -13,6 +13,7 @@ import {
 import { useAccess, useModel } from '@umijs/max';
 import {
   Alert,
+  App,
   Button,
   Form,
   Input,
@@ -23,7 +24,6 @@ import {
   Spin,
   Tag,
   Typography,
-  message,
 } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DocumentChunksDrawer from '../Document/DocumentChunksDrawer';
@@ -51,6 +51,7 @@ import {
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
 
 export default function RagKnowledgeGraphPage() {
+  const { message } = App.useApp();
   const access = useAccess();
   const { initialState } = useModel('@@initialState');
   const userId = initialState?.currentUser?.userId;

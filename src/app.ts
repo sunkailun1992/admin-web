@@ -25,8 +25,14 @@ import type {
   RunTimeLayoutConfig,
 } from '@umijs/max';
 import { history } from '@umijs/max';
-import { message } from 'antd';
+import { App, ConfigProvider, message } from 'antd';
 import { createElement } from 'react';
+
+// 组件外（下面的请求错误处理）才用静态 message：按 antd 5.13 起的做法用 holderRender 给静态方法接上 App 上下文；
+// 组件里一律用 App.useApp()。
+ConfigProvider.config({
+  holderRender: (children) => createElement(App, null, children),
+});
 
 type MenuItemWithTooltip = {
   children?: MenuItemWithTooltip[];
