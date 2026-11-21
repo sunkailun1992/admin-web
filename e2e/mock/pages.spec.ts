@@ -7,6 +7,7 @@ import {
 } from '../support/console-allowlist';
 import { mockBackend } from '../support/mockApi';
 import { menuPagesFromRoutes } from '../support/pages';
+import { waitForPageContent } from '../support/waitForPage';
 
 assertAllowlistValid(consoleAllowlist);
 
@@ -15,11 +16,7 @@ for (const { path, name } of menuPagesFromRoutes(routes)) {
     const problems = watchConsole(page);
     const unmocked = await mockBackend(page);
     await page.goto(path);
-    const content = page.locator('main');
-    await expect(content).toBeVisible({ timeout: 15_000 });
-    await expect(content.locator('.ant-spin-spinning')).toHaveCount(0, {
-      timeout: 15_000,
-    });
+    await waitForPageContent(page, name);
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     expect(unmocked, '没有固定数据的接口').toStrictEqual([]);
     expect(

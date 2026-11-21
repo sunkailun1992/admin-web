@@ -17,6 +17,7 @@ import {
   consoleAllowlist,
 } from '../support/console-allowlist';
 import { menuPagesFromRoutes } from '../support/pages';
+import { waitForPageContent } from '../support/waitForPage';
 
 // 经真实网关与 Keycloak 的一组：只经 run_chain_verify.py --admin-web-e2e 运行，账号口令从环境变量来，不落盘、不打印。
 // 登录状态只留在这个浏览器上下文里，不写 storageState 文件。
@@ -41,14 +42,6 @@ async function describeServerError(response: Response) {
   const body = (await response.json().catch(() => undefined)) as
     { code?: unknown } | undefined;
   return typeof body?.code === 'string' ? `${summary} ${body.code}` : summary;
-}
-
-async function waitForContent(page: Page, label: string) {
-  const main = page.locator('main');
-  await expect(main, label).toBeVisible({ timeout: 15_000 });
-  await expect(main.locator('.ant-spin-spinning'), label).toHaveCount(0, {
-    timeout: 15_000,
-  });
 }
 
 /**
@@ -123,7 +116,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
         url.origin === ORIGIN && !url.pathname.startsWith('/login/oauth2'),
       { timeout: 30_000 },
     );
-    await waitForContent(page, '登录后首页');
+    await waitForPageContent(page, '工作台');
     // 只看本应用的页面：Keycloak 登录页自己的控制台消息不算。
     problems.length = 0;
   });
@@ -137,7 +130,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
   test('每个菜单页打开时没有错误、警告和服务端 5xx', async () => {
     for (const { path, name } of menuPagesFromRoutes(routes)) {
       await page.goto(path);
-      await waitForContent(page, name);
+      await waitForPageContent(page, name);
       await expect(page, name).toHaveURL(new RegExp(`${path}$`));
     }
     expect(await Promise.all(serverErrors), '服务端 5xx').toStrictEqual([]);
@@ -149,7 +142,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
 
   test('部门新建后能删除', async () => {
     await page.goto('/system/dept');
-    await waitForContent(page, '部门管理');
+    await waitForPageContent(page, '部门管理');
     await page.getByRole('button', { name: '新建部门' }).click();
     const dialog = page.getByRole('dialog', { name: '新建部门' });
     await fieldIn(dialog, '部门名称').fill(deptName);
@@ -193,7 +186,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
     });
     expect(current.status()).toBe(200);
     await page.goto('/dashboard');
-    await waitForContent(page, '工作台');
+    await waitForPageContent(page, '工作台');
     // 按可访问名称找账户按钮：按钮里显示名的 span 计算行高为 0、盒子高度为 0，Playwright 判它不可见。
     await page.getByRole('button', { name: '账户菜单' }).click();
     await page.getByRole('menuitem', { name: '退出登录' }).click();
