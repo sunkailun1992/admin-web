@@ -32,6 +32,15 @@ test('unauthorizedRedirectsToGatewayLogin', () => {
   assert.equal(sessionLogin.LOGIN_ENTRY, '/oauth2/authorization/keycloak');
 });
 
+test('loginFailurePageIsTheGatewayContract', () => {
+  // 网关登录回调失败时跳到 /login?error；这一页不检查会话、不自动跳登录。
+  assert.equal(sessionLogin.LOGIN_PAGE, '/login');
+  for (const path of ['/login', '/login/']) assert.equal(sessionLogin.isLoginPage(path), true, path);
+  for (const path of ['/login/oauth2/code/keycloak', '/dashboard', '/', '/logins']) {
+    assert.equal(sessionLogin.isLoginPage(path), false, path);
+  }
+});
+
 test('logoutPostsToLogoutWithCsrf', async () => {
   const calls = [];
   const auth = load('../../src/services/auth/index.ts', {

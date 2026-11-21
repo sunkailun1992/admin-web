@@ -12,7 +12,11 @@ import {
 import { applySessionHeaders } from '@/utils/requestAuth';
 import type { SessionBootstrapState } from '@/utils/sessionBootstrap';
 import { bootstrapSession } from '@/utils/sessionBootstrap';
-import { logoutAndLeave, redirectToLogin } from '@/utils/sessionLogin';
+import {
+  isLoginPage,
+  logoutAndLeave,
+  redirectToLogin,
+} from '@/utils/sessionLogin';
 import { getTrafficHeaders } from '@/utils/traffic';
 import type {
   AxiosError,
@@ -57,6 +61,8 @@ export async function getInitialState(
   signal?: AbortSignal,
 ): Promise<SessionBootstrapState> {
   clearLegacyTokens();
+  // 登录失败页不检查会话：读不到会话就会跳回登录，回调一直失败时形成整页循环。
+  if (isLoginPage(history.location.pathname)) return {};
   return bootstrapSession(
     {
       selectedTenant: getSelectedTenantId,
@@ -92,7 +98,8 @@ export const layout: RunTimeLayoutConfig = ({
     menuDataRender: disableMenuTooltip,
     unAccessible: recovery,
     onPageChange: () => {
-      // 没有当前用户也不在恢复页：网关会话不存在或已失效，整页跳网关登录。
+      // 没有当前用户也不在恢复页：网关会话不存在或已失效，整页跳网关登录（登录失败页除外，由用户手动重新登录）。
+      if (isLoginPage(history.location.pathname)) return;
       if (!initialState?.currentUser && !initialState?.sessionRecovery) {
         redirectToLogin();
       }

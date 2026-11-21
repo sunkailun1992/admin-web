@@ -90,6 +90,12 @@ export default defineConfig({
       redirect: '/dashboard',
     },
     {
+      // 登录失败页：网关登录回调失败时跳到 /login?error；不进布局、不检查会话。
+      path: '/login',
+      layout: false,
+      component: './Login',
+    },
+    {
       name: '工作台',
       path: '/dashboard',
       component: './Dashboard',

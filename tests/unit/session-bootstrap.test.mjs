@@ -35,6 +35,7 @@ function load(path, dependencies = {}) {
   return module.exports;
 }
 const bootstrap = load('../../src/utils/sessionBootstrap.ts');
+const sessionLogin = load('../../src/utils/sessionLogin.ts');
 const recovery = load('../../src/components/SessionRecovery/index.tsx', {
   react: React,
   antd: require('antd'),
@@ -58,6 +59,7 @@ function runtime({
   response,
   selected: initialSelected = 'synthetic-tenant',
   logoutFails = false,
+  pathname = '/rag-knowledge/graph',
 } = {}) {
   let selected = initialSelected;
   const failures = errors ? [...errors] : error ? [error] : [];
@@ -111,6 +113,7 @@ function runtime({
     },
     '@/utils/sessionBootstrap': bootstrap,
     '@/utils/sessionLogin': {
+      ...sessionLogin,
       redirectToLogin: () => effects.logins++,
       logoutAndLeave: async (logout) => {
         effects.leaves++;
@@ -130,7 +133,7 @@ function runtime({
     },
     '@umijs/max': {
       history: {
-        location: { pathname: '/rag-knowledge/graph' },
+        location: { pathname },
         push: (path) => effects.redirects.push(path),
       },
     },
@@ -183,6 +186,17 @@ test('401 and identity failure codes mean no gateway session: empty state, and t
     assert.equal(Object.keys(state).length, 0);
     f.app.layout({ initialState: state, setInitialState: async () => {} }).onPageChange();
     assert.equal(f.effects.logins, 1);
+  }
+});
+
+test('the login failure page neither bootstraps the session nor sends the browser back to login', async () => {
+  for (const pathname of ['/login', '/login/']) {
+    const f = runtime({ pathname });
+    const state = await f.app.getInitialState();
+    assert.equal(f.effects.reads, 0, pathname);
+    assert.equal(Object.keys(state).length, 0, pathname);
+    f.app.layout({ initialState: state, setInitialState: async () => {} }).onPageChange();
+    assert.equal(f.effects.logins, 0, pathname);
   }
 });
 

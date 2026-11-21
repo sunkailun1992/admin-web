@@ -91,7 +91,7 @@ AI 处理本项目任务时，优先读取：
 
 | 功能 | 前端页面 | 后端接口 |
 | --- | --- | --- |
-| 登录 | 网关 `/oauth2/authorization/keycloak` | Keycloak 登录页（前端没有登录页） |
+| 登录 | 网关 `/oauth2/authorization/keycloak` | Keycloak 登录页（前端只有登录失败页 `/login`，见下） |
 | 当前资源 | 运行时初始化 | `GET /auth/current/resources` |
 | 工作台 | `/dashboard` | 登录态与资源数据 |
 | 租户管理 | `/system/tenant` | `GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT/DELETE /auth/manage/tenants/{id}` |
@@ -286,7 +286,9 @@ kill -9 <PID>
 
 请求认证由 `src/utils/requestAuth.ts` 统一处理：前端不存也不发访问令牌（令牌只在网关会话里），每个请求去掉 `Authorization`、标成 XHR（`X-Requested-With`，未登录时网关回 401 JSON 而不是跳转），写请求带 `X-XSRF-TOKEN`，选中的租户放进 `X-Tenant-Id`。任何请求 401 都整页跳到网关登录入口；`getInitialState` 读 `/auth/current/resources` 判断是否已登录，选中的租户不再可用（403）时清掉选择、按归属租户重读一次。退出走 `src/utils/sessionLogin.ts`：`POST /logout`，网关回 202 与 Keycloak 注销地址后整页导航过去。启动时清掉旧版留在本地的令牌键。
 
-`pnpm test:request-auth` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.mjs` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.mjs` 覆盖会话检查、失效租户重读、恢复页与退出。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
+登录失败页（1.2.1 起）：网关登录回调失败时跳到 `/login?error`（与网关 1.3.4 的约定），页面说明登录没有完成，只给“重新登录”按钮。这一页不进布局、`getInitialState` 不读会话、换页也不自动跳登录：否则读不到会话就跳回 Keycloak，回调一直失败时会在网关与 Keycloak 之间整页循环。开发代理只转 `/login/oauth2`，`/login` 本身由单页应用处理；生产的反向代理也要让 `/login` 落到单页应用。
+
+`pnpm test:request-auth` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.mjs` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.mjs` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.mjs` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
 
 ## RAG 文档上传
 
