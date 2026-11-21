@@ -50,6 +50,21 @@ export function providerLabel(provider: string) {
     : provider;
 }
 
+/** 能否把全局默认路由改成 provider：只看已发布的状态，渲染与控制器共用这一套条件。 */
+export function canSelectProvider(
+  state: ModelSelectionState,
+  provider: AiAPI.ModelProvider | undefined,
+  canChange: boolean,
+): provider is AiAPI.ModelProvider {
+  return (
+    canChange &&
+    state.phase === 'ready' &&
+    !!provider &&
+    state.selection?.provider !== provider &&
+    !!state.selection?.supportedProviders?.includes(provider)
+  );
+}
+
 type Dependencies = {
   scope: string;
   liveScope: () => string;
@@ -87,11 +102,7 @@ export function createModelSelectionController(dependencies: Dependencies) {
   };
   const canSave = (provider?: AiAPI.ModelProvider) =>
     validScope() &&
-    dependencies.canChange() &&
-    current.phase === 'ready' &&
-    !!provider &&
-    current.selection?.provider !== provider &&
-    !!current.selection?.supportedProviders?.includes(provider);
+    canSelectProvider(current, provider, dependencies.canChange());
 
   const load = async () => {
     if (!validScope() || current.phase === 'saving') return;

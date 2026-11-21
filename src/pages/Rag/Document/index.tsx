@@ -1,5 +1,6 @@
 import PageContainer from '@/components/AppPageContainer';
 import { RAG_DOCUMENT_FORMATS, RAG_DOCUMENT_STATUS } from '@/constants/rag';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import {
   deactivateRagDocument,
   listRagDocuments,
@@ -41,13 +42,15 @@ type ChunkDocument = Pick<
   'documentId' | 'title' | 'sourceName'
 >;
 
+// 当前范围还没有列表时用同一个空数组，下面 useMemo 的依赖才不会每次渲染都变。
+const NO_DOCUMENTS: RagAPI.DocumentVO[] = [];
+
 function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
   const { message } = App.useApp();
   const access = useAccess();
   const [knowledgeBase, setKnowledgeBase] = useState<string>();
   const scope = JSON.stringify([identityScope, knowledgeBase || '*']);
-  const liveScope = useRef(scope);
-  liveScope.current = scope;
+  const liveScopeRef = useLatestRef(scope);
   const listGate = useRef(createDocumentRequestGate());
   const validationGate = useRef(createDocumentRequestGate());
   const deactivateGate = useRef(createDocumentRequestGate());
@@ -59,7 +62,8 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
     identity: string;
     values: string[];
   }>();
-  const [loading, setLoading] = useState(false);
+  // 挂载就按当前范围加载列表，加载中从第一次渲染开始。
+  const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>();
@@ -81,7 +85,21 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
     value: RagAPI.DocumentValidationVO;
   }>();
   const [evaluationOpen, setEvaluationOpen] = useState(false);
-  const documents = loaded?.scope === scope ? loaded.documents : [];
+  // 换知识库（范围变了）：回到第一页、关掉各个抽屉与弹窗、显示加载中（React 文档：属性变化时在渲染期按前值调整状态）。
+  const [shownScope, setShownScope] = useState(scope);
+  if (shownScope !== scope) {
+    setShownScope(scope);
+    setPage(1);
+    setUploadScope(undefined);
+    setRetrievalScope(undefined);
+    setChunkDocument(undefined);
+    setSource(undefined);
+    setValidation(undefined);
+    setEvaluationOpen(false);
+    setLoading(true);
+    setLoadFailed(false);
+  }
+  const documents = loaded?.scope === scope ? loaded.documents : NO_DOCUMENTS;
   const filtered = useMemo(
     () => filterDocuments(documents, { search, status, sourceType }),
     [documents, search, status, sourceType],
@@ -91,13 +109,11 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
     Math.max(1, Math.ceil(filtered.length / 10)),
   );
 
-  const loadDocuments = useCallback(async () => {
+  const fetchDocuments = useCallback(async () => {
     const request = listGate.current.begin(scope);
-    setLoading(true);
-    setLoadFailed(false);
     try {
       const response = await listRagDocuments(knowledgeBase, request.signal);
-      if (!request.isCurrent(liveScope.current)) return;
+      if (!request.isCurrent(liveScopeRef.current)) return;
       if (!Array.isArray(response.data))
         throw new Error('Invalid document list');
       setLoaded({ scope, documents: response.data });
@@ -112,27 +128,30 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         ].sort(),
       }));
     } catch {
-      if (request.isCurrent(liveScope.current)) setLoadFailed(true);
+      if (request.isCurrent(liveScopeRef.current)) setLoadFailed(true);
     } finally {
-      if (request.isCurrent(liveScope.current)) setLoading(false);
+      if (request.isCurrent(liveScopeRef.current)) setLoading(false);
     }
-  }, [scope, identityScope, knowledgeBase]);
+  }, [scope, identityScope, knowledgeBase, liveScopeRef]);
 
   useEffect(() => {
-    setPage(1);
-    setUploadScope(undefined);
-    setRetrievalScope(undefined);
-    setChunkDocument(undefined);
-    setSource(undefined);
-    setValidation(undefined);
-    setEvaluationOpen(false);
-    void loadDocuments();
+    const lists = listGate.current;
+    const validations = validationGate.current;
+    const deactivations = deactivateGate.current;
+    void fetchDocuments();
     return () => {
-      listGate.current.cancel();
-      validationGate.current.cancel();
-      deactivateGate.current.cancel();
+      lists.cancel();
+      validations.cancel();
+      deactivations.cancel();
     };
-  }, [loadDocuments]);
+  }, [fetchDocuments]);
+
+  // 用户刷新、上传或停用之后重新取：先显示加载中。
+  const loadDocuments = () => {
+    setLoading(true);
+    setLoadFailed(false);
+    return fetchDocuments();
+  };
 
   const openDocument = (document: ChunkDocument) =>
     setChunkDocument({ scope, document });
@@ -199,7 +218,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
               const request = validationGate.current.begin(scope);
               try {
                 const response = await validateRagDocument(record.documentId);
-                if (request.isCurrent(liveScope.current) && response.data)
+                if (request.isCurrent(liveScopeRef.current) && response.data)
                   setValidation({
                     scope,
                     title: record.title,
@@ -218,7 +237,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
               onConfirm={async () => {
                 const response = await deactivateGate.current.settle(
                   scope,
-                  () => liveScope.current,
+                  () => liveScopeRef.current,
                   () => deactivateRagDocument(record.documentId),
                 );
                 if (!response) return;

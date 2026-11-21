@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { getAiModelSelection, updateAiModelSelection } from '@/services/ai';
 import { ReloadOutlined, SwapOutlined } from '@ant-design/icons';
 import { ProForm, ProFormSelect } from '@ant-design/pro-components';
@@ -20,6 +21,7 @@ import styles from './index.less';
 import ModelRouteOverview from './ModelRouteOverview';
 import type { ModelSelectionState } from './modelSelectionModel';
 import {
+  canSelectProvider,
   createModelSelectionController,
   providerLabel,
 } from './modelSelectionModel';
@@ -70,10 +72,8 @@ export function ModelRouteWorkbench({
   canChange: boolean;
   embedded?: boolean;
 }) {
-  const liveScope = useRef(identityScope);
-  liveScope.current = identityScope;
-  const allowed = useRef(canChange);
-  allowed.current = canChange;
+  const liveScopeRef = useLatestRef(identityScope);
+  const allowedRef = useLatestRef(canChange);
   const controller = useRef<Controller>();
   const [state, setState] = useState<ModelSelectionState>({ phase: 'idle' });
   const [form] = Form.useForm<AiAPI.ModelSelectionUpdateBO>();
@@ -83,17 +83,13 @@ export function ModelRouteWorkbench({
   const selection = state.selection;
   const busy = ['idle', 'loading', 'saving', 'checking'].includes(state.phase);
   const canEdit = canChange && state.phase === 'ready';
-  const canSubmit =
-    canEdit &&
-    !!candidate &&
-    candidate !== selection?.provider &&
-    !!selection?.supportedProviders?.includes(candidate);
+  const canSubmit = canSelectProvider(state, candidate, canChange);
 
   useEffect(() => {
     const current = createModelSelectionController({
       scope: identityScope,
-      liveScope: () => liveScope.current,
-      canChange: () => allowed.current,
+      liveScope: () => liveScopeRef.current,
+      canChange: () => allowedRef.current,
       read: getAiModelSelection,
       write: updateAiModelSelection,
       changed: setState,
@@ -104,7 +100,7 @@ export function ModelRouteWorkbench({
       current.dispose();
       if (controller.current === current) controller.current = undefined;
     };
-  }, [identityScope]);
+  }, [identityScope, liveScopeRef, allowedRef]);
 
   useEffect(() => {
     if (canChange) form.resetFields();
@@ -261,10 +257,7 @@ export function ModelRouteWorkbench({
         okText="变更全局默认路由"
         cancelText="取消"
         okButtonProps={{
-          disabled:
-            !canEdit ||
-            !confirmProvider ||
-            !controller.current?.canSave(confirmProvider),
+          disabled: !canSelectProvider(state, confirmProvider, canChange),
         }}
         onCancel={() => setConfirmProvider(undefined)}
         onOk={() => {

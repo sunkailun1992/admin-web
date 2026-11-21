@@ -85,6 +85,10 @@ test('rejects path components and control characters in filenames', () => {
     '..\\manual.pdf',
     'scan\u0000.png',
     'scan\n.png',
+    'scan\u007f.png',
+    // C1 控制字符（U+0080–U+009F）同样拒绝，与后端 Character.isISOControl 一致。
+    'scan\u0085.png',
+    'scan\u009f.png',
     '',
   ]) {
     expect(validateRagUpload({ name, type: '', size: 1024 })).toBe(

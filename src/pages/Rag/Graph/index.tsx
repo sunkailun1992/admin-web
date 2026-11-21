@@ -1,4 +1,6 @@
 import PageContainer from '@/components/AppPageContainer';
+import { useEffectEvent } from '@/hooks/useEffectEvent';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import {
   getRagGraphBuild,
   getRagGraphSubmission,
@@ -50,15 +52,14 @@ import {
 
 const DEFAULT_KNOWLEDGE_BASE = 'general-knowledge';
 
-export default function RagKnowledgeGraphPage() {
+function KnowledgeGraphWorkbench() {
   const { message } = App.useApp();
   const access = useAccess();
   const { initialState } = useModel('@@initialState');
   const userId = initialState?.currentUser?.userId;
   const tenantId = initialState?.currentTenantId;
   const identityScope = JSON.stringify([userId, tenantId]);
-  const currentIdentity = useRef(identityScope);
-  currentIdentity.current = identityScope;
+  const currentIdentityRef = useLatestRef(identityScope);
   const persistSubmission =
     typeof userId === 'string' &&
     !!userId.trim() &&
@@ -71,6 +72,8 @@ export default function RagKnowledgeGraphPage() {
   const [selection, setSelection] = useState<GraphSelection>();
   const canvasRef = useRef<GraphCanvasHandle>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
+  // 全屏时分块抽屉挂进工作区：传函数，等抽屉挂载时再读 DOM，不在渲染期读 ref。
+  const workspaceContainer = () => workspaceRef.current ?? document.body;
   const [fullscreen, setFullscreen] = useState(false);
   const [chunkDocument, setChunkDocument] =
     useState<Pick<RagAPI.DocumentVO, 'documentId' | 'title' | 'sourceName'>>();
@@ -109,7 +112,7 @@ export default function RagKnowledgeGraphPage() {
     if (
       !mounted.current ||
       scope.current !== knowledgeBase ||
-      currentIdentity.current !== identityScope
+      currentIdentityRef.current !== identityScope
     )
       return;
     const request = graphGate.current.begin();
@@ -124,7 +127,7 @@ export default function RagKnowledgeGraphPage() {
         { ...params, knowledgeBase },
         request.signal,
       );
-      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+      if (!request.isCurrent() || currentIdentityRef.current !== identityScope)
         return;
       const data = response.data;
       if (
@@ -156,10 +159,10 @@ export default function RagKnowledgeGraphPage() {
           void watchBuild(currentBuild.buildId, knowledgeBase);
       }
     } catch {
-      if (request.isCurrent() && currentIdentity.current === identityScope)
+      if (request.isCurrent() && currentIdentityRef.current === identityScope)
         setGraphError(true);
     } finally {
-      if (request.isCurrent() && currentIdentity.current === identityScope)
+      if (request.isCurrent() && currentIdentityRef.current === identityScope)
         setLoading(false);
     }
   };
@@ -171,7 +174,7 @@ export default function RagKnowledgeGraphPage() {
     if (
       !mounted.current ||
       scope.current !== knowledgeBase ||
-      currentIdentity.current !== identityScope
+      currentIdentityRef.current !== identityScope
     )
       return;
     const request = buildGate.current.begin();
@@ -186,60 +189,27 @@ export default function RagKnowledgeGraphPage() {
         read: async (id, kb, signal) =>
           (await getRagGraphBuild(id, kb, signal)).data,
         onUpdate: (value) => {
-          if (request.isCurrent() && currentIdentity.current === identityScope)
+          if (
+            request.isCurrent() &&
+            currentIdentityRef.current === identityScope
+          )
             setBuild(value);
         },
       });
-      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+      if (!request.isCurrent() || currentIdentityRef.current !== identityScope)
         return;
       if (terminal.status === 'SUCCEEDED') {
         message.success('图谱构建完成');
         await loadGraph({ ...form.getFieldsValue(), knowledgeBase }, false);
       }
     } catch {
-      if (request.isCurrent() && currentIdentity.current === identityScope)
+      if (request.isCurrent() && currentIdentityRef.current === identityScope)
         setBuildError(true);
     } finally {
-      if (request.isCurrent() && currentIdentity.current === identityScope)
+      if (request.isCurrent() && currentIdentityRef.current === identityScope)
         setWatching(false);
     }
   };
-
-  useEffect(() => {
-    let cancelled = false;
-    mounted.current = true;
-    setGraph(undefined);
-    setBuild(undefined);
-    setTrackedBuild(undefined);
-    setSelection(undefined);
-    setChunkDocument(undefined);
-    setPendingSubmission(false);
-    setBuildError(false);
-    setGraphError(false);
-    setSyncing(false);
-    setWatching(false);
-    void loadGraph({
-      knowledgeBase: scope.current,
-      viewMode: 'OVERVIEW',
-      limit: 240,
-    }).then(() => {
-      if (cancelled) return;
-      try {
-        const identity = JSON.stringify([userId, tenantId, scope.current]);
-        if (submissions.current.peek(identity, persistSubmission))
-          void handleSync(false);
-      } catch {
-        setPendingSubmission(true);
-        setBuildError(true);
-        message.error('无法安全读取图谱提交身份，请恢复浏览器会话存储后查回');
-      }
-    });
-    return () => {
-      cancelled = true;
-      mounted.current = false;
-      cancelRequests();
-    };
-  }, [userId, tenantId]);
 
   const handleSync = async (allowSubmit = true) => {
     const values = await form.validateFields(['knowledgeBase']);
@@ -247,7 +217,7 @@ export default function RagKnowledgeGraphPage() {
     if (
       !mounted.current ||
       scope.current !== knowledgeBase ||
-      currentIdentity.current !== identityScope
+      currentIdentityRef.current !== identityScope
     )
       return;
     const request = syncGate.current.begin();
@@ -270,7 +240,7 @@ export default function RagKnowledgeGraphPage() {
         submit: async () => {
           if (
             !request.isCurrent() ||
-            currentIdentity.current !== identityScope
+            currentIdentityRef.current !== identityScope
           ) {
             throw new DOMException('Graph identity changed', 'AbortError');
           }
@@ -291,7 +261,7 @@ export default function RagKnowledgeGraphPage() {
             )
           ).data,
       });
-      if (!request.isCurrent() || currentIdentity.current !== identityScope)
+      if (!request.isCurrent() || currentIdentityRef.current !== identityScope)
         return;
       const outcome = readGraphSync(response, knowledgeBase);
       submissions.current.finish(
@@ -311,7 +281,7 @@ export default function RagKnowledgeGraphPage() {
         await loadGraph();
       }
     } catch (error) {
-      if (request.isCurrent() && currentIdentity.current === identityScope) {
+      if (request.isCurrent() && currentIdentityRef.current === identityScope) {
         setBuildError(true);
         if (
           error instanceof Error &&
@@ -321,10 +291,44 @@ export default function RagKnowledgeGraphPage() {
         }
       }
     } finally {
-      if (request.isCurrent() && currentIdentity.current === identityScope)
+      if (request.isCurrent() && currentIdentityRef.current === identityScope)
         setSyncing(false);
     }
   };
+
+  // 挂载时读一次概览，再接上本浏览器里还没查回的图谱提交；换用户或租户时整个工作台按 key 重新挂载，
+  // 状态本来就是初值，不在 effect 里逐个清空。
+  const loadOverview = useEffectEvent(() =>
+    loadGraph({
+      knowledgeBase: scope.current,
+      viewMode: 'OVERVIEW',
+      limit: 240,
+    }),
+  );
+  const resumeSubmission = useEffectEvent(() => {
+    try {
+      const identity = JSON.stringify([userId, tenantId, scope.current]);
+      if (submissions.current.peek(identity, persistSubmission))
+        void handleSync(false);
+    } catch {
+      setPendingSubmission(true);
+      setBuildError(true);
+      message.error('无法安全读取图谱提交身份，请恢复浏览器会话存储后查回');
+    }
+  });
+  useEffect(() => {
+    let cancelled = false;
+    const gates = [graphGate.current, syncGate.current, buildGate.current];
+    mounted.current = true;
+    void loadOverview().then(() => {
+      if (!cancelled) resumeSubmission();
+    });
+    return () => {
+      cancelled = true;
+      mounted.current = false;
+      for (const gate of gates) gate.cancel();
+    };
+  }, []);
 
   const legend = useMemo(
     () =>
@@ -572,9 +576,7 @@ export default function RagKnowledgeGraphPage() {
             <DocumentChunksDrawer
               key={chunkDocument.documentId}
               document={chunkDocument}
-              getContainer={
-                fullscreen ? workspaceRef.current || undefined : undefined
-              }
+              getContainer={fullscreen ? workspaceContainer : undefined}
               onClose={() => setChunkDocument(undefined)}
             />
           )}
@@ -582,4 +584,14 @@ export default function RagKnowledgeGraphPage() {
       </div>
     </PageContainer>
   );
+}
+
+/** 换用户或租户就重新挂载工作台：图谱、构建与提交状态回到初值（React 文档：用 key 重置状态）。 */
+export default function RagKnowledgeGraphPage() {
+  const { initialState } = useModel('@@initialState');
+  const identityScope = JSON.stringify([
+    initialState?.currentUser?.userId,
+    initialState?.currentTenantId,
+  ]);
+  return <KnowledgeGraphWorkbench key={identityScope} />;
 }

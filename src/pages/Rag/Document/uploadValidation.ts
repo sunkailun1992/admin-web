@@ -21,7 +21,7 @@ export const RAG_UPLOAD_ACCEPT = '.xlsx,.docx,.pdf,.png,.jpg,.jpeg';
 export function validateRagUpload(
   file: Pick<File, 'name' | 'size' | 'type'>,
 ): string | undefined {
-  if (!file.name || /[/\\\u0000-\u001f\u007f]/.test(file.name)) {
+  if (!file.name || /[/\\\p{Cc}]/u.test(file.name)) {
     return '文件名不合法，请使用不含路径的文件名';
   }
   const extension = file.name.split('.').pop()?.toLowerCase() || '';

@@ -1,3 +1,4 @@
+import { useLatestRef } from '@/hooks/useLatestRef';
 import type { SessionBootstrapState } from '@/utils/sessionBootstrap';
 import { createSessionRecoveryController } from '@/utils/sessionBootstrap';
 import { Button, Result, Space } from 'antd';
@@ -10,16 +11,15 @@ type Props = {
 };
 
 export default function SessionRecovery(props: Props) {
-  const live = useRef(props);
-  live.current = props;
+  const liveRef = useLatestRef(props);
   const controller =
     useRef<ReturnType<typeof createSessionRecoveryController>>();
   const [loading, setLoading] = useState(false);
   const [exiting, setExiting] = useState(false);
   useEffect(() => {
     const current = createSessionRecoveryController({
-      read: (signal) => live.current.read(signal),
-      apply: (state) => live.current.apply(state),
+      read: (signal) => liveRef.current.read(signal),
+      apply: (state) => liveRef.current.apply(state),
       loading: setLoading,
     });
     controller.current = current;
@@ -27,7 +27,7 @@ export default function SessionRecovery(props: Props) {
       current.dispose();
       if (controller.current === current) controller.current = undefined;
     };
-  }, []);
+  }, [liveRef]);
   return (
     <Result
       status="warning"
@@ -51,7 +51,7 @@ export default function SessionRecovery(props: Props) {
             onClick={() => {
               controller.current?.dispose();
               setExiting(true);
-              void live.current.onLogout();
+              void liveRef.current.onLogout();
             }}
           >
             退出登录

@@ -1,3 +1,4 @@
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 import {
   Alert,
   Button,
@@ -39,10 +40,17 @@ export default function StorageSettingsPanel({
   const maxUploadBytes = Form.useWatch('maxUploadBytes', form);
   const [dirty, setDirty] = useState(false);
   const [confirmation, setConfirmation] = useState<AiAPI.StorageSettingsVO>();
-  useEffect(() => {
-    form.setFieldsValue(settings);
+  // 服务端设置换了版本：清掉本地改动标记与待确认的提交（渲染期按前值调整），表单值经 effect 同步；
+  // 同一版本的设置对象重新传进来不重置用户正在改的内容。
+  const [shownVersion, setShownVersion] = useState(settings.version);
+  if (shownVersion !== settings.version) {
+    setShownVersion(settings.version);
     setDirty(false);
     setConfirmation(undefined);
+  }
+  const fillForm = useEffectEvent(() => form.setFieldsValue(settings));
+  useEffect(() => {
+    fillForm();
   }, [settings.version, form]);
   const options = defaultPlatforms.map((entry) => ({
     value: entry.platform,

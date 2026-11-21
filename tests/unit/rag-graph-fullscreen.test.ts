@@ -32,16 +32,24 @@ function fixture({
   const listeners = new Map<string, Listener>();
   let currentOverflow = overflow;
   let currentPriority = priority;
-  const style = {
-    getPropertyValue: (_name?: string) => currentOverflow,
-    getPropertyPriority: (_name?: string) => currentPriority,
-    setProperty: (_name: string, value: string, importance = '') => {
-      currentOverflow = value;
+  // 只实现 graphFullscreen 用到的四个方法，按 CSSStyleDeclaration 标注类型（调用时照常传属性名）。
+  const style: Pick<
+    CSSStyleDeclaration,
+    | 'getPropertyValue'
+    | 'getPropertyPriority'
+    | 'setProperty'
+    | 'removeProperty'
+  > = {
+    getPropertyValue: () => currentOverflow,
+    getPropertyPriority: () => currentPriority,
+    setProperty: (_name, value, importance = '') => {
+      currentOverflow = value ?? '';
       currentPriority = importance;
     },
     removeProperty: () => {
       currentOverflow = '';
       currentPriority = '';
+      return '';
     },
   };
   const states: boolean[] = [];

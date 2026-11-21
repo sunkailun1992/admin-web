@@ -107,7 +107,7 @@ function text(value: unknown, max = 256): value is string {
     typeof value === 'string' &&
     value.length > 0 &&
     value.length <= max &&
-    !/[\u0000-\u001f\u007f]/.test(value)
+    !/\p{Cc}/u.test(value)
   );
 }
 function errorCode(value: unknown): value is string {

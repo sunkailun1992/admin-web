@@ -25,7 +25,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { App, Button, Popconfirm, Space } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 type UserRoleForm = API.AuthUserRoleSyncBO & {
   tenantName?: string;
@@ -47,39 +47,37 @@ export default function UserPage() {
   const { currentTenantId, getTenantName, tenantValueEnum } =
     useTenantOptions();
 
-  useEffect(() => {
-    if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {
-      return;
-    }
+  // 弹窗里的数据在打开弹窗的点击里取（React 文档：用户操作引起的请求放事件处理，不放 Effect）；
+  // 连着打开两个用户时只认最后一次打开的结果，晚到的旧响应不填进当前弹窗。
+  const grantRequest = useRef(0);
+  const openGrant = async (record: API.AuthUserVO) => {
+    setGrantRecord(record);
+    setGrantOpen(true);
+    if (!record.id || !record.tenantId) return;
+    const request = ++grantRequest.current;
     setGrantLoading(true);
-    Promise.all([
-      listUserRoleIds({
-        tenantId: grantRecord.tenantId,
-        userId: grantRecord.id,
-      }),
-      listRoles({
-        tenantId: grantRecord.tenantId,
-        assignment: true,
-      }),
-    ])
-      .then(([roleIds, roles]) => {
-        setGrantRoleOptions(
-          roles.map((role) => ({
-            label: `${role.name || role.id}（${role.code || role.id}）`,
-            value: role.id,
-          })),
-        );
-        grantFormRef.current?.setFieldsValue({
-          tenantId: grantRecord.tenantId,
-          tenantName: getTenantName(grantRecord.tenantId),
-          userId: grantRecord.id,
-          roleIds,
-        });
-      })
-      .finally(() => {
-        setGrantLoading(false);
+    try {
+      const [roleIds, roles] = await Promise.all([
+        listUserRoleIds({ tenantId: record.tenantId, userId: record.id }),
+        listRoles({ tenantId: record.tenantId, assignment: true }),
+      ]);
+      if (request !== grantRequest.current) return;
+      setGrantRoleOptions(
+        roles.map((role) => ({
+          label: `${role.name || role.id}（${role.code || role.id}）`,
+          value: role.id,
+        })),
+      );
+      grantFormRef.current?.setFieldsValue({
+        tenantId: record.tenantId,
+        tenantName: getTenantName(record.tenantId),
+        userId: record.id,
+        roleIds,
       });
-  }, [grantOpen, grantRecord?.id, grantRecord?.tenantId]);
+    } finally {
+      if (request === grantRequest.current) setGrantLoading(false);
+    }
+  };
 
   const columns: ProColumns<API.AuthUserVO>[] = [
     {
@@ -146,14 +144,7 @@ export default function UserPage() {
           >
             编辑
           </a>
-          <a
-            onClick={() => {
-              setGrantRecord(record);
-              setGrantOpen(true);
-            }}
-          >
-            绑定角色
-          </a>
+          <a onClick={() => void openGrant(record)}>绑定角色</a>
           <Popconfirm
             title="删除用户"
             description="确认删除该用户吗？"

@@ -84,7 +84,12 @@ export default function LayoutRightContent({
   return (
     <>
       <div className="umi-plugin-layout-right anticon">
+        {/* 换用户或租户就重新挂载：消息状态回到初值，不会短暂显示上一个身份的未读数与通知。 */}
         <MessageCenter
+          key={JSON.stringify([
+            currentUser?.userId,
+            initialState?.currentTenantId,
+          ])}
           currentTenantId={initialState?.currentTenantId}
           currentUser={currentUser}
         />

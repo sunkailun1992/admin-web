@@ -1,4 +1,5 @@
 import * as model from '@/pages/Configuration/Storage/storageModel';
+import * as React from 'react';
 import { createElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
@@ -99,11 +100,13 @@ async function renderDrawer(values: Record<string, unknown>, disabled = false) {
         Switch: box,
         Typography: { Paragraph: box },
       },
+      // 以真实 React 为底，只换掉 effect（服务端渲染本来也不跑）与 useState：初值照常返回，setter 记下确认请求。
       react: {
+        ...React,
         useEffect() {},
-        useState: () => [
-          undefined,
-          (value: unknown) => confirmations.push(value),
+        useState: (value?: unknown) => [
+          value,
+          (next: unknown) => confirmations.push(next),
         ],
       },
     },
@@ -253,6 +256,7 @@ test('real settings panel explains current bytes and MiB without changing the in
         Typography: { Text: box },
       },
       react: {
+        ...React,
         useEffect() {},
         useState: (value: unknown) => [value, () => {}],
       },

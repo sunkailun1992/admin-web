@@ -1,3 +1,4 @@
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { retrieveRagKnowledge } from '@/services/rag';
 import { SearchOutlined } from '@ant-design/icons';
 import {
@@ -34,8 +35,7 @@ export default function RetrievalDrawer({
   const [searching, setSearching] = useState(false);
   const [failed, setFailed] = useState(false);
   const gate = useRef(createDocumentRequestGate());
-  const liveScope = useRef(identityScope);
-  liveScope.current = identityScope;
+  const liveScopeRef = useLatestRef(identityScope);
   useEffect(() => () => gate.current.cancel(), []);
   const state = retrievalState(result);
 
@@ -65,11 +65,12 @@ export default function RetrievalDrawer({
               request.signal,
             );
             if (!response.data) throw new Error('Missing retrieval result');
-            if (request.isCurrent(liveScope.current)) setResult(response.data);
+            if (request.isCurrent(liveScopeRef.current))
+              setResult(response.data);
           } catch {
-            if (request.isCurrent(liveScope.current)) setFailed(true);
+            if (request.isCurrent(liveScopeRef.current)) setFailed(true);
           } finally {
-            if (request.isCurrent(liveScope.current)) setSearching(false);
+            if (request.isCurrent(liveScopeRef.current)) setSearching(false);
           }
         }}
       >

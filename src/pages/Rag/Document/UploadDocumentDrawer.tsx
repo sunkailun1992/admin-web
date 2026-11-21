@@ -1,3 +1,4 @@
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { uploadRagDocument } from '@/services/rag';
 import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
@@ -39,8 +40,7 @@ export default function UploadDocumentDrawer({
   const [result, setResult] = useState<RagAPI.DocumentIngestionVO>();
   const [failed, setFailed] = useState(false);
   const gate = useRef(createDocumentRequestGate());
-  const liveScope = useRef(identityScope);
-  liveScope.current = identityScope;
+  const liveScopeRef = useLatestRef(identityScope);
   useEffect(() => () => gate.current.cancel(), []);
 
   const submit = async (values: {
@@ -63,7 +63,7 @@ export default function UploadDocumentDrawer({
     setFailed(false);
     try {
       const response = await uploadRagDocument(body, request.signal);
-      if (!request.isCurrent(liveScope.current)) return;
+      if (!request.isCurrent(liveScopeRef.current)) return;
       if (
         !response.data?.document?.documentId ||
         !response.data.validation?.valid
@@ -73,9 +73,9 @@ export default function UploadDocumentDrawer({
       setResult(response.data);
       onUploaded();
     } catch {
-      if (request.isCurrent(liveScope.current)) setFailed(true);
+      if (request.isCurrent(liveScopeRef.current)) setFailed(true);
     } finally {
-      if (request.isCurrent(liveScope.current)) setUploading(false);
+      if (request.isCurrent(liveScopeRef.current)) setUploading(false);
     }
   };
   const notice = result ? uploadGraphNotice(result) : undefined;

@@ -114,7 +114,7 @@ function text(value: unknown) {
     typeof value === 'string' &&
     value.length > 0 &&
     value.length <= 256 &&
-    !/[\u0000-\u001f\u007f]/.test(value)
+    !/\p{Cc}/u.test(value)
   );
 }
 

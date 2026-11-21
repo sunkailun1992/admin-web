@@ -36,6 +36,14 @@ test('rejects raw prediction, unknown fields and unsupported versions', () => {
   expect(() => parse(report)).toThrow();
 });
 
+test('rejects control characters in report text, C1 controls included', () => {
+  for (const id of ['q\u0000', 'q\u0007', 'q\u007f', 'q\u0085', 'q\u009f']) {
+    const report = sample();
+    report.details[0].id = id;
+    expect(() => parse(report), JSON.stringify(id)).toThrow();
+  }
+});
+
 test('rejects malformed or oversized JSON without echoing its contents', () => {
   expect(() => parseEvaluationReport('{"sensitive":"not closed')).toThrow(
     /不是有效 JSON/,

@@ -34,7 +34,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { App, Button, Popconfirm, Space } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 type RoleResourceForm = API.AuthRoleResourceSyncBO & {
   roleName?: string;
@@ -72,65 +72,63 @@ export default function RolePage() {
   const { currentTenantId, getTenantName, tenantValueEnum } =
     useTenantOptions();
 
-  useEffect(() => {
-    if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {
-      return;
-    }
-    setGrantResourceLoading(true);
-    Promise.all([
-      listRoleResourceIds({
-        tenantId: grantRecord.tenantId,
-        roleId: grantRecord.id,
-      }),
-      listResources({
-        tenantId: grantRecord.tenantId,
-        assignment: true,
-      }),
-    ])
-      .then(([resourceIds, resources]) => {
-        setGrantResourceTree(toResourceSelectTree(resources));
-        grantFormRef.current?.setFieldsValue({
-          tenantId: grantRecord.tenantId,
-          tenantName: getTenantName(grantRecord.tenantId),
-          roleId: grantRecord.id,
-          roleName: `${grantRecord.name || grantRecord.id}（${grantRecord.code || grantRecord.id}）`,
-          resourceIds,
-        });
-      })
-      .finally(() => {
-        setGrantResourceLoading(false);
-      });
-  }, [grantOpen, grantRecord?.id, grantRecord?.tenantId]);
+  // 弹窗里的数据在打开弹窗的点击里取（React 文档：用户操作引起的请求放事件处理，不放 Effect）；
+  // 连着打开两个角色时只认最后一次打开的结果，晚到的旧响应不填进当前弹窗。
+  const grantRequest = useRef(0);
+  const dataScopeRequest = useRef(0);
 
-  useEffect(() => {
-    if (!dataScopeOpen || !dataScopeRecord?.id || !dataScopeRecord.tenantId) {
-      return;
-    }
-    setDataScopeLoading(true);
-    Promise.all([
-      listRoleDataScopeDeptIds({
-        tenantId: dataScopeRecord.tenantId,
-        roleId: dataScopeRecord.id,
-      }),
-      listDepts({
-        tenantId: dataScopeRecord.tenantId,
-        assignment: true,
-      }),
-    ])
-      .then(([deptIds, depts]) => {
-        setDataScopeDeptTree(toDeptSelectTree(depts));
-        dataScopeFormRef.current?.setFieldsValue({
-          tenantId: dataScopeRecord.tenantId,
-          tenantName: getTenantName(dataScopeRecord.tenantId),
-          roleId: dataScopeRecord.id,
-          roleName: `${dataScopeRecord.name || dataScopeRecord.id}（${dataScopeRecord.code || dataScopeRecord.id}）`,
-          deptIds,
-        });
-      })
-      .finally(() => {
-        setDataScopeLoading(false);
+  const openGrant = async (record: API.AuthRoleVO) => {
+    setGrantRecord(record);
+    setGrantOpen(true);
+    if (!record.id || !record.tenantId) return;
+    const request = ++grantRequest.current;
+    setGrantResourceLoading(true);
+    try {
+      const [resourceIds, resources] = await Promise.all([
+        listRoleResourceIds({ tenantId: record.tenantId, roleId: record.id }),
+        listResources({ tenantId: record.tenantId, assignment: true }),
+      ]);
+      if (request !== grantRequest.current) return;
+      setGrantResourceTree(toResourceSelectTree(resources));
+      grantFormRef.current?.setFieldsValue({
+        tenantId: record.tenantId,
+        tenantName: getTenantName(record.tenantId),
+        roleId: record.id,
+        roleName: `${record.name || record.id}（${record.code || record.id}）`,
+        resourceIds,
       });
-  }, [dataScopeOpen, dataScopeRecord?.id, dataScopeRecord?.tenantId]);
+    } finally {
+      if (request === grantRequest.current) setGrantResourceLoading(false);
+    }
+  };
+
+  const openDataScope = async (record: API.AuthRoleVO) => {
+    setDataScopeRecord(record);
+    setDataScopeOpen(true);
+    if (!record.id || !record.tenantId) return;
+    const request = ++dataScopeRequest.current;
+    setDataScopeLoading(true);
+    try {
+      const [deptIds, depts] = await Promise.all([
+        listRoleDataScopeDeptIds({
+          tenantId: record.tenantId,
+          roleId: record.id,
+        }),
+        listDepts({ tenantId: record.tenantId, assignment: true }),
+      ]);
+      if (request !== dataScopeRequest.current) return;
+      setDataScopeDeptTree(toDeptSelectTree(depts));
+      dataScopeFormRef.current?.setFieldsValue({
+        tenantId: record.tenantId,
+        tenantName: getTenantName(record.tenantId),
+        roleId: record.id,
+        roleName: `${record.name || record.id}（${record.code || record.id}）`,
+        deptIds,
+      });
+    } finally {
+      if (request === dataScopeRequest.current) setDataScopeLoading(false);
+    }
+  };
 
   const handleGenerateCode = async () => {
     setCodeLoading(true);
@@ -194,22 +192,8 @@ export default function RolePage() {
           >
             编辑
           </a>
-          <a
-            onClick={() => {
-              setGrantRecord(record);
-              setGrantOpen(true);
-            }}
-          >
-            绑定资源
-          </a>
-          <a
-            onClick={() => {
-              setDataScopeRecord(record);
-              setDataScopeOpen(true);
-            }}
-          >
-            数据范围
-          </a>
+          <a onClick={() => void openGrant(record)}>绑定资源</a>
+          <a onClick={() => void openDataScope(record)}>数据范围</a>
           <Popconfirm
             title="删除角色"
             description="确认删除该角色吗？"

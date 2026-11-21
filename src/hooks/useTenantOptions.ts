@@ -2,9 +2,12 @@ import { DEFAULT_TENANT_ID } from '@/constants/auth';
 import { useModel } from '@umijs/max';
 import { useMemo } from 'react';
 
+// 没有可用租户时用同一个空数组，下面 useMemo 的依赖才不会每次渲染都变。
+const NO_TENANTS: API.AuthTenantVO[] = [];
+
 export function useTenantOptions() {
   const { initialState } = useModel('@@initialState');
-  const tenants = initialState?.availableTenants || [];
+  const tenants = initialState?.availableTenants ?? NO_TENANTS;
   const currentTenantId =
     initialState?.currentTenantId ||
     initialState?.currentUser?.tenantId ||

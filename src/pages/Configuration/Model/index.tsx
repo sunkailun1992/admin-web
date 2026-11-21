@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { ModelRouteWorkbench } from '@/pages/Ai/Model';
 import { getAiModelControlPlane } from '@/services/ai/controlPlane';
 import { ReloadOutlined } from '@ant-design/icons';
@@ -11,8 +12,7 @@ import styles from './index.less';
 import ModelControlPlaneView from './ModelControlPlaneView';
 
 function ModelConfigurationWorkbench({ scope }: { scope: string }) {
-  const liveScope = useRef(scope);
-  liveScope.current = scope;
+  const liveScopeRef = useLatestRef(scope);
   const controller = useRef<ReturnType<typeof createControlPlaneController>>();
   const [state, setState] = useState<ControlPlaneState>({ phase: 'idle' });
   const [query, setQuery] = useState('');
@@ -20,7 +20,7 @@ function ModelConfigurationWorkbench({ scope }: { scope: string }) {
   useEffect(() => {
     const current = createControlPlaneController({
       scope,
-      liveScope: () => liveScope.current,
+      liveScope: () => liveScopeRef.current,
       read: getAiModelControlPlane,
       changed: setState,
     });
@@ -30,7 +30,7 @@ function ModelConfigurationWorkbench({ scope }: { scope: string }) {
       current.dispose();
       if (controller.current === current) controller.current = undefined;
     };
-  }, [scope]);
+  }, [scope, liveScopeRef]);
   const loading = state.phase === 'loading' || state.phase === 'idle';
   return (
     <PageContainer

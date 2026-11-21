@@ -1,3 +1,4 @@
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 import { listRagDocumentChunks } from '@/services/rag';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { DrawerProps } from 'antd';
@@ -42,8 +43,19 @@ export default function DocumentChunksDrawer({
   const [page, setPage] = useState<RagAPI.DocumentChunkPageVO>();
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedId, setSelectedId] = useState<string>();
-  const [loading, setLoading] = useState(false);
+  // 挂载就加载第一页，加载中从第一次渲染开始。
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // 父组件按文档给本组件设了 key；没设 key 而换了文档时，在渲染期回到第一页的初始状态（React 文档：属性变化时按前值调整状态）。
+  const [shownDocumentId, setShownDocumentId] = useState(document.documentId);
+  if (shownDocumentId !== document.documentId) {
+    setShownDocumentId(document.documentId);
+    setPage(undefined);
+    setSelectedId(undefined);
+    setPageNumber(1);
+    setLoading(true);
+    setError(false);
+  }
   const selected =
     page?.items.find((item) => item.chunkId === selectedId) || page?.items[0];
   const source = selected ? readSourceDetails(selected) : undefined;
@@ -62,8 +74,6 @@ export default function DocumentChunksDrawer({
     request.current = controller;
     retryCursor.current = cursor;
     const pending = cache.current.begin(cursor);
-    setLoading(true);
-    setError(false);
     try {
       const response = await listRagDocumentChunks(
         document.documentId,
@@ -80,15 +90,21 @@ export default function DocumentChunksDrawer({
     }
   };
 
+  // 翻页与重试由用户触发：先显示加载中再取。
+  const loadFrom = (cursor?: string) => {
+    setLoading(true);
+    setError(false);
+    void load(cursor);
+  };
+
+  const loadFirstPage = useEffectEvent(() => load());
   useEffect(() => {
-    cache.current.reset(document.documentId);
-    setPage(undefined);
-    setSelectedId(undefined);
-    setPageNumber(1);
-    void load();
+    const chunkCache = cache.current;
+    chunkCache.reset(document.documentId);
+    void loadFirstPage();
     return () => {
       request.current?.abort();
-      cache.current.reset();
+      chunkCache.reset();
     };
   }, [document.documentId]);
 
@@ -133,7 +149,7 @@ export default function DocumentChunksDrawer({
             disabled={loading || !page?.nextCursor}
             onClick={() => {
               if (cache.current.nextCached()) displayCachedPage();
-              else if (page?.nextCursor) void load(page.nextCursor);
+              else if (page?.nextCursor) loadFrom(page.nextCursor);
             }}
           />
         </Space>
@@ -145,7 +161,7 @@ export default function DocumentChunksDrawer({
           className={styles.inlineChunkAlert}
           message="切片读取失败，已读内容保持不变。"
           action={
-            <Button size="small" onClick={() => void load(retryCursor.current)}>
+            <Button size="small" onClick={() => loadFrom(retryCursor.current)}>
               重试读取
             </Button>
           }

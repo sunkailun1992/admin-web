@@ -236,3 +236,33 @@ test('identity changes and unmount reject delayed reads and writes before any vi
   expect(b.updates.length).toBe(count);
   expect(b.controller.state().selection?.provider).toBe('deepseek');
 });
+
+test('canSelectProvider allows only a ready, permitted, supported change to another provider', () => {
+  const ready: model.ModelSelectionState = {
+    phase: 'ready',
+    selection: {
+      provider: 'deepseek',
+      model: 'synthetic-model',
+      supportedProviders: ['deepseek', 'qwen'],
+    },
+  };
+  expect(model.canSelectProvider(ready, 'qwen', true)).toBe(true);
+  // 没有管理权限、不是就绪状态、没选、选了当前值、选了服务不支持的，都不能改。
+  expect(model.canSelectProvider(ready, 'qwen', false)).toBe(false);
+  for (const phase of [
+    'idle',
+    'loading',
+    'saving',
+    'checking',
+    'uncertain',
+    'load-error',
+  ] as const)
+    expect(
+      model.canSelectProvider({ ...ready, phase }, 'qwen', true),
+      phase,
+    ).toBe(false);
+  expect(model.canSelectProvider(ready, undefined, true)).toBe(false);
+  expect(model.canSelectProvider(ready, 'deepseek', true)).toBe(false);
+  expect(model.canSelectProvider(ready, 'google', true)).toBe(false);
+  expect(model.canSelectProvider({ phase: 'ready' }, 'qwen', true)).toBe(false);
+});

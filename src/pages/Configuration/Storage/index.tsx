@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import {
   createStorageConfiguration,
   deleteStorageConfiguration,
@@ -23,7 +24,7 @@ import {
   Space,
   Typography,
 } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './index.less';
 import type { StorageFormValues } from './StorageConfigurationDrawer';
 import StorageConfigurationDrawer from './StorageConfigurationDrawer';
@@ -101,10 +102,14 @@ function StorageWorkbench({
       current.dispose();
       if (controller.current === current) controller.current = undefined;
     };
-  }, [scope]);
-  useEffect(() => {
-    if (state.pending) setOperationOpen(true);
-  }, [state.pending?.requestId]);
+  }, [scope, liveScope, canManage]);
+  // 出现新的待查回操作（requestId 变了）就打开操作抽屉；用户关掉后，同一个操作不再自动打开。
+  const pendingRequestId = state.pending?.requestId;
+  const [seenPendingId, setSeenPendingId] = useState(pendingRequestId);
+  if (seenPendingId !== pendingRequestId) {
+    setSeenPendingId(pendingRequestId);
+    if (pendingRequestId) setOperationOpen(true);
+  }
   const snapshot = state.snapshot;
   const busy = ['idle', 'loading', 'submitting', 'checking'].includes(
     state.phase,
@@ -488,10 +493,14 @@ export default function StorageConfigurationPage() {
   const allowed =
     access.canManageConfiguration === true && !!userId && !!tenantId;
   const scope = allowed ? JSON.stringify([userId, tenantId, true]) : '';
-  const liveScope = useRef(scope);
-  liveScope.current = scope;
-  const permission = useRef(allowed);
-  permission.current = allowed;
+  const liveScopeRef = useLatestRef(scope);
+  const permissionRef = useLatestRef(allowed);
+  // 给工作台的读取函数要稳定，它的 effect 才能把它们列进依赖、又不会每次渲染都重建控制器。
+  const readScope = useCallback(() => liveScopeRef.current, [liveScopeRef]);
+  const readPermission = useCallback(
+    () => permissionRef.current,
+    [permissionRef],
+  );
   if (!allowed)
     return (
       <PageContainer title="文件存储">
@@ -506,8 +515,8 @@ export default function StorageConfigurationPage() {
     <StorageWorkbench
       key={scope}
       scope={scope}
-      liveScope={() => liveScope.current}
-      canManage={() => permission.current}
+      liveScope={readScope}
+      canManage={readPermission}
     />
   );
 }

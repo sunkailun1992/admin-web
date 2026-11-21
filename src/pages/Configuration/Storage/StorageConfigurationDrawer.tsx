@@ -1,3 +1,4 @@
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 import {
   Alert,
   Button,
@@ -56,9 +57,17 @@ export default function StorageConfigurationDrawer({
     (entry) => entry.code === (current?.provider || providerCode),
   );
   const [confirmedValues, setConfirmedValues] = useState<StorageFormValues>();
-  useEffect(() => {
-    form.resetFields();
+  // 打开、换记录或记录版本变化时清掉待确认的提交（React 文档：属性变化时在渲染期按前值调整状态）。
+  const formKey = JSON.stringify([open, current?.id, current?.version]);
+  const [shownFormKey, setShownFormKey] = useState(formKey);
+  if (shownFormKey !== formKey) {
+    setShownFormKey(formKey);
     setConfirmedValues(undefined);
+  }
+  // 表单实例在 React 之外，按同样的时机经 effect 同步；记录与可选平台读最新一次渲染的值，
+  // 它们的引用变化（父组件重新渲染）不重置用户已填的内容。
+  const fillForm = useEffectEvent(() => {
+    form.resetFields();
     if (open)
       form.setFieldsValue(
         current
@@ -76,6 +85,9 @@ export default function StorageConfigurationDrawer({
               credentialAction: 'REPLACE',
             },
       );
+  });
+  useEffect(() => {
+    fillForm();
     return () => {
       form.resetFields();
     };

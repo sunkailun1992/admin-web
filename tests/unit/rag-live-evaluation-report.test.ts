@@ -104,6 +104,14 @@ test('rejects hidden body, credential, and unknown fields at every report layer'
   }
 });
 
+test('rejects control characters in report text, C1 controls included', () => {
+  for (const control of ['\u0000', '\u0007', '\u007f', '\u0085', '\u009f']) {
+    const report = sample();
+    report.limitations[0] = `Synthetic fixture${control}only`;
+    expect(() => parse(report), JSON.stringify(control)).toThrow();
+  }
+});
+
 test('rejects unsupported versions, partial reports, malformed JSON and oversized files', () => {
   const unsupported = sample();
   unsupported.schemaVersion = 2;
