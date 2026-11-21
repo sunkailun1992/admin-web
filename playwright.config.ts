@@ -10,10 +10,10 @@ const port = live ? 8000 : 8001;
 export default defineConfig({
   testDir: live ? 'e2e/live' : 'e2e/mock',
   outputDir: 'e2e-out/test-results',
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'e2e-out/report', open: 'never' }],
-  ],
+  // 真实网关一组只在终端输出：trace、截图与 HTML 报告会把填进去的口令和真实数据写到磁盘。
+  reporter: live
+    ? [['list']]
+    : [['list'], ['html', { outputFolder: 'e2e-out/report', open: 'never' }]],
   retries: 0,
   forbidOnly: ci,
   fullyParallel: !live,
@@ -25,8 +25,11 @@ export default defineConfig({
     ...(ci ? {} : { channel: 'chrome' }),
     launchOptions: { args: ['--no-proxy-server'] },
     baseURL: `http://localhost:${port}`,
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    // 单个动作与导航各有上限：卡住时报出是哪一步、在等什么，而不是只剩一句整条用例超时。
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
+    trace: live ? 'off' : 'retain-on-failure',
+    screenshot: live ? 'off' : 'only-on-failure',
   },
   webServer: {
     command: live ? 'pnpm dev:test' : `PORT=${port} pnpm dev`,

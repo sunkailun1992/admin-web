@@ -17,6 +17,19 @@ export const consoleAllowlist: AllowlistEntry[] = [
       '@ant-design/pro-components 2.8.10 的 ProTable 工具栏：ListToolBar 里的 Tooltip 经 rc-resize-observer 调 findDOMNode，React 18.3 打弃用提示',
     until: 'part2',
   },
+  {
+    pattern:
+      /^Warning: \[antd: TreeSelect\] `onDropdownVisibleChange` is deprecated\./,
+    source:
+      '@ant-design/pro-components 2.8.10 带的 @ant-design/pro-field 3.1.0：FieldTreeSelect（es/components/TreeSelect/index.js 第 133、210 行）总给 antd TreeSelect 传 onDropdownVisibleChange，antd 5.29 打弃用提示；本项目代码不传',
+    until: 'part2',
+  },
+  {
+    pattern: /^Warning: \[antd: TreeSelect\] `bordered` is deprecated\./,
+    source:
+      '@ant-design/pro-components 2.8.10 带的 @ant-design/pro-field 3.1.0：FieldTreeSelect（同一文件第 156、212 行）总给 antd TreeSelect 传 bordered，antd 5.29 打弃用提示；本项目代码不传',
+    until: 'part2',
+  },
 ];
 
 export function assertAllowlistValid(entries: readonly AllowlistEntry[]): void {
