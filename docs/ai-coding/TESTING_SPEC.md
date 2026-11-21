@@ -23,7 +23,7 @@
 
 ## 当前门禁
 
-单元测试用 Vitest（Node 环境，配置见 `vitest.config.ts`）：组件用 `react-dom/server` 渲染后断言，Service 测试在 `request()` 调用边界核对路径、方法与选项；同一文件里不同用例要不同替身时用 `tests/support/loadWithMocks.ts`（`vi.doMock` 加动态 import）。表中推荐的 Testing Library 与 MSW 尚未引入。任何功能改动至少执行：
+单元测试用 Vitest（Node 环境，配置见 `vitest.config.mts`）：组件用 `react-dom/server` 渲染后断言，Service 测试在 `request()` 调用边界核对路径、方法与选项；同一文件里不同用例要不同替身时用 `tests/support/loadWithMocks.ts`（`vi.doMock` 加动态 import）。表中推荐的 Testing Library 与 MSW 尚未引入。任何功能改动至少执行：
 
 ```bash
 pnpm typecheck
