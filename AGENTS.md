@@ -18,6 +18,7 @@
 - 项目名称：`admin-web`
 - 项目类型：用户中心后台管理前端
 - 技术栈：Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5、ProComponents
+- 工具链（1.2.2 起）：Node 26、pnpm 12.21.0、TypeScript 6.0（`tsc --noEmit` 只做类型检查）、ESLint 10 扁平配置与 Prettier 3、Vitest、Playwright（固定数据与真实网关两组）、husky 与 lint-staged
 - 包管理器：`pnpm`
 - 网关项目：同级仓库 `../gateway`
 - 用户服务项目：同级仓库 `../user`
@@ -176,7 +177,7 @@ menu:resource
 - 业务编码必须调用后端编码生成接口，不允许浏览器随机生成业务编码。
 - 更新接口必须携带 `version`，保证后端 MyBatis-Plus 乐观锁生效。
 - 测试分层按 `docs/ai-coding/TESTING_SPEC.md` 执行；普通单元、组件和 service 测试默认不访问真实后端，E2E 只允许连接 test 环境。
-- 功能变更后至少执行 `pnpm build` 和 `bash scripts/check-secrets.sh`；引入测试栈后按 `TESTING_SPEC.md` 执行 `pnpm check` 和必要的 E2E。
+- 功能变更后执行 `pnpm check`（格式、lint、类型、单元测试、`build:dev`、固定数据一组浏览器测试）和 `bash scripts/check-secrets.sh`；改登录、会话、路由、请求拦截或核心管理页时，再按 `TESTING_SPEC.md` 跑真实网关一组。
 
 ## 禁止提交
 
@@ -185,6 +186,7 @@ menu:resource
 ```text
 node_modules/
 dist/
+e2e-out/
 .turbopack/
 src/.umi/
 src/.umi-production/

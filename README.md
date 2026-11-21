@@ -35,7 +35,9 @@ project:
   framework: Ant Design Pro + Umi Max
   language: TypeScript
   ui: Ant Design 5 + ProComponents
-  packageManager: pnpm
+  runtime: Node 26
+  packageManager: pnpm 12.21.0
+  tests: Vitest + Playwright
 backend:
   gatewayPath: ../gateway
   gatewayBaseUrl: http://localhost:7100
@@ -86,6 +88,8 @@ AI 处理本项目任务时，优先读取：
 - Ant Design 5
 - Ant Design ProComponents
 - pnpm
+
+工具链见下文「工具链与门禁」。
 
 ## 业务范围
 
@@ -253,13 +257,30 @@ http://localhost:8000
 ## 常用命令
 
 ```bash
-pnpm dev        # 使用 .env.dev 启动开发服务
-pnpm dev:test   # 使用 .env.test 启动开发服务
-pnpm build:test # 使用 .env.test 构建
-pnpm build      # 使用 .env.prod 构建
-pnpm format     # 格式化
+pnpm dev            # 使用 .env.dev 启动开发服务
+pnpm dev:test       # 使用 .env.test 启动开发服务
+pnpm build:test     # 使用 .env.test 构建
+pnpm build          # 使用 .env.prod 构建
+pnpm check          # 全套门禁：format:check、lint、typecheck、test、build:dev、固定数据一组浏览器测试
+pnpm format         # 格式化
+pnpm format:check   # 只检查格式
+pnpm lint           # ESLint，警告也算失败
+pnpm typecheck      # 类型检查
+pnpm test           # Vitest 单元测试
+pnpm test:e2e       # 浏览器测试：固定数据一组（端口 8001，浏览器里拦截接口）
 bash scripts/check-secrets.sh
 ```
+
+真实网关一组浏览器测试（`pnpm test:e2e:test`）只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行：脚本把测试账号口令放进环境变量，后端 9 个服务要先起好；8000 端口没有开发服务时 Playwright 自己起 `pnpm dev:test`。
+
+## 工具链与门禁（1.2.2 起）
+
+- 本机需要 Node 26（`package.json` 的 `engines`）与 pnpm 12.21.0（`packageManager`）。pnpm 12 是原生二进制，用 npm 11 全局安装时要放行它的安装脚本：`npm install -g --allow-scripts=pnpm pnpm@12.21.0`。依赖的构建脚本按 `pnpm-workspace.yaml` 的 `allowBuilds` 逐个列明，新依赖带构建脚本时安装会失败，要先在那里写明允许或不允许。
+- TypeScript 6.0 只做类型检查（`pnpm typecheck`，即 `tsc --noEmit`），构建由 Umi 负责。
+- 代码检查用 ESLint 10 扁平配置（`eslint.config.mjs`：`@eslint/js`、typescript-eslint、eslint-plugin-react-hooks 的官方 recommended 预设，最后接 eslint-config-prettier，不自定义规则），格式用 Prettier 3（`.prettierrc`、`.prettierignore`）。全仓格式化的提交记在 `.git-blame-ignore-revs`，`git blame` 时跳过。
+- 单元测试用 Vitest（`vitest.config.mts`），浏览器测试用 Playwright（`playwright.config.ts`，固定数据与真实网关两组、不重试），规则见 [TESTING_SPEC.md](docs/ai-coding/TESTING_SPEC.md)。
+- 提交钩子：`pnpm install` 时 `prepare` 装好 husky，pre-commit 对暂存文件跑 `eslint --fix` 与 `prettier --write`（`.lintstagedrc`）。
+- CI（`.github/workflows/ci.yml`，Node 26，action 固定到完整提交 SHA）依次跑安装、`format:check`、`lint`、`typecheck`、`test`、`build:dev`、安装 Chromium、固定数据一组浏览器测试（失败时上传 `e2e-out/` 报告）与密钥扫描。
 
 如果开发服务异常退出后端口未释放：
 
@@ -278,7 +299,7 @@ kill -9 <PID>
 - 租户内资源提交必须携带 `tenantId`。
 - 展示层尽量显示租户名称，避免直接暴露租户 ID。
 - 编码字段使用后端生成接口，禁止前端自行生成。
-- 不提交 `node_modules/`、`dist/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
+- 不提交 `node_modules/`、`dist/`、`e2e-out/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
 
 更完整的 AI 编码规范见 [docs/ai-coding/AI_CODING_GUIDE.md](docs/ai-coding/AI_CODING_GUIDE.md)。
 
@@ -288,7 +309,7 @@ kill -9 <PID>
 
 登录失败页（1.2.1 起）：网关登录回调失败时跳到 `/login?error`（与网关 1.3.4 的约定），页面说明登录没有完成，只给“重新登录”按钮。这一页不进布局、`getInitialState` 不读会话、换页也不自动跳登录：否则读不到会话就跳回 Keycloak，回调一直失败时会在网关与 Keycloak 之间整页循环。开发代理只转 `/login/oauth2`，`/login` 本身由单页应用处理；生产的反向代理也要让 `/login` 落到单页应用。
 
-`request-auth.test.ts` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.ts` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.tsx` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.tsx` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test:services` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
+`request-auth.test.ts` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.ts` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.tsx` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.tsx` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
 
 ## RAG 文档上传
 

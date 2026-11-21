@@ -1,6 +1,6 @@
 {
   "name": "admin-web",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "User center admin frontend built with Ant Design Pro and Umi Max.",
   "author": "",
@@ -8,6 +8,7 @@
     "build": "ADMIN_WEB_ENV=prod max build",
     "build:dev": "ADMIN_WEB_ENV=dev max build",
     "build:test": "ADMIN_WEB_ENV=test max build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build:dev && pnpm test:e2e",
     "dev": "ADMIN_WEB_ENV=dev max dev",
     "dev:prod": "ADMIN_WEB_ENV=prod max dev",
     "dev:test": "ADMIN_WEB_ENV=test max dev",

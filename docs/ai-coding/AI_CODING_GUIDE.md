@@ -1,6 +1,6 @@
 # AI 代码编写指导规范
 
-本文档用于约束 AI 在本项目中生成、修改和审查前端代码。项目基线为 Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5 和 ProComponents。
+本文档用于约束 AI 在本项目中生成、修改和审查前端代码。项目基线为 Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5 和 ProComponents；工具链与门禁见 README「工具链与门禁」。
 
 ## 基本原则
 
@@ -28,7 +28,7 @@
 - 大项目学习时，可以让多个 explorer 分别阅读前端页面、后端接口、权限资源、Nacos/Gateway 配置和构建脚本；这类读多写少任务冲突小，收益高。
 - 问题排查时，可以让多个 explorer 分别检查前端请求、后端接口、配置权限、数据库和日志；主智能体必须最后汇总证据并判断根因。
 - 代码 Review 可以按安全风险、逻辑 bug、测试缺口、性能问题和可维护性拆分给多个 reviewer；结论必须由主智能体统一收口。
-- 测试回归和日志分析可以并行：一个 agent 跑 `pnpm build`，一个 agent 分析失败日志，一个 agent 查最近改动；最终修复仍由主智能体或一个明确 worker 收口。
+- 测试回归和日志分析可以并行：一个 agent 跑 `pnpm check`，一个 agent 分析失败日志，一个 agent 查最近改动；最终修复仍由主智能体或一个明确 worker 收口。
 - 大功能可以拆给多个 worker 独立实现，但必须先划清写入边界，例如 worker A 只改前端页面、worker B 只改后端 API、worker C 只补测试。
 - 如果多个 worker 需要修改同一个核心页面、同一个 service 文件、同一个路由文件或同一份权限判断，不允许并行写入，必须改为主智能体串行处理。
 - 子智能体输出应包含读取范围、关键发现、风险点和建议，不应直接给出未经主智能体验证的最终结论。
@@ -175,10 +175,10 @@ menu:resource
 
 ## 交付规范
 
-- 每次功能变更后至少执行：
+- 每次功能变更后至少执行（`pnpm check` 与 CI 同一套门禁）：
 
 ```bash
-pnpm build
+pnpm check
 bash scripts/check-secrets.sh
 ```
 
