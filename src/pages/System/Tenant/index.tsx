@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import GeneratedCodeInput from '@/components/GeneratedCodeInput';
 import { STATE_VALUE_ENUM } from '@/constants/auth';
 import {
   createTenant,
@@ -12,6 +13,7 @@ import {
   ActionType,
   ModalForm,
   ProColumns,
+  ProForm,
   ProFormInstance,
   ProFormSelect,
   ProFormText,
@@ -145,19 +147,17 @@ export default function TenantPage() {
         title={editingRecord ? '编辑租户' : '新建租户'}
         width={520}
       >
-        <ProFormText
-          disabled={!!editingRecord}
-          fieldProps={{
-            addonAfter: editingRecord ? undefined : (
-              <Button loading={codeLoading} onClick={handleGenerateCode}>
-                生成
-              </Button>
-            ),
-          }}
+        <ProForm.Item
           label="租户编码"
           name="code"
           rules={[{ required: true, message: '请输入租户编码' }]}
-        />
+        >
+          <GeneratedCodeInput
+            disabled={!!editingRecord}
+            generating={codeLoading}
+            onGenerate={editingRecord ? undefined : handleGenerateCode}
+          />
+        </ProForm.Item>
         <ProFormText
           label="租户名称"
           name="name"

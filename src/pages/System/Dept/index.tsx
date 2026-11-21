@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import GeneratedCodeInput from '@/components/GeneratedCodeInput';
 import TenantSelect from '@/components/TenantSelect';
 import { STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
@@ -19,6 +20,7 @@ import {
   ActionType,
   ModalForm,
   ProColumns,
+  ProForm,
   ProFormDigit,
   ProFormInstance,
   ProFormSelect,
@@ -187,19 +189,17 @@ export default function DeptPage() {
         width={560}
       >
         <TenantSelect disabled={!!editingRecord} />
-        <ProFormText
-          disabled={!!editingRecord}
-          fieldProps={{
-            addonAfter: editingRecord ? undefined : (
-              <Button loading={codeLoading} onClick={handleGenerateCode}>
-                生成
-              </Button>
-            ),
-          }}
+        <ProForm.Item
           label="部门编码"
           name="code"
           rules={[{ required: true, message: '请输入部门编码' }]}
-        />
+        >
+          <GeneratedCodeInput
+            disabled={!!editingRecord}
+            generating={codeLoading}
+            onGenerate={editingRecord ? undefined : handleGenerateCode}
+          />
+        </ProForm.Item>
         <ProFormText
           label="部门名称"
           name="name"

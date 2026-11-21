@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import GeneratedCodeInput from '@/components/GeneratedCodeInput';
 import TenantSelect from '@/components/TenantSelect';
 import {
   HTTP_METHOD_VALUE_ENUM,
@@ -23,6 +24,7 @@ import {
   ActionType,
   ModalForm,
   ProColumns,
+  ProForm,
   ProFormDigit,
   ProFormInstance,
   ProFormSelect,
@@ -218,19 +220,17 @@ export default function ResourcePage() {
         width={640}
       >
         <TenantSelect disabled={!!editingRecord} />
-        <ProFormText
-          disabled={!!editingRecord}
-          fieldProps={{
-            addonAfter: editingRecord ? undefined : (
-              <Button loading={codeLoading} onClick={handleGenerateCode}>
-                生成
-              </Button>
-            ),
-          }}
+        <ProForm.Item
           label="资源编码"
           name="code"
           rules={[{ required: true, message: '请输入资源编码' }]}
-        />
+        >
+          <GeneratedCodeInput
+            disabled={!!editingRecord}
+            generating={codeLoading}
+            onGenerate={editingRecord ? undefined : handleGenerateCode}
+          />
+        </ProForm.Item>
         <ProFormText
           label="资源名称"
           name="name"

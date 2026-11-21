@@ -1,4 +1,5 @@
 import PageContainer from '@/components/AppPageContainer';
+import GeneratedCodeInput from '@/components/GeneratedCodeInput';
 import TenantSelect from '@/components/TenantSelect';
 import { DATA_SCOPE_VALUE_ENUM, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
@@ -25,6 +26,7 @@ import {
   ActionType,
   ModalForm,
   ProColumns,
+  ProForm,
   ProFormInstance,
   ProFormSelect,
   ProFormText,
@@ -292,19 +294,17 @@ export default function RolePage() {
         width={560}
       >
         <TenantSelect disabled={!!editingRecord} />
-        <ProFormText
-          disabled={!!editingRecord}
-          fieldProps={{
-            addonAfter: editingRecord ? undefined : (
-              <Button loading={codeLoading} onClick={handleGenerateCode}>
-                生成
-              </Button>
-            ),
-          }}
+        <ProForm.Item
           label="角色编码"
           name="code"
           rules={[{ required: true, message: '请输入角色编码' }]}
-        />
+        >
+          <GeneratedCodeInput
+            disabled={!!editingRecord}
+            generating={codeLoading}
+            onGenerate={editingRecord ? undefined : handleGenerateCode}
+          />
+        </ProForm.Item>
         <ProFormText
           label="角色名称"
           name="name"
