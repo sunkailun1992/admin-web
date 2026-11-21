@@ -19,16 +19,19 @@
     "postinstall": "max setup",
     "setup": "max setup",
     "start": "npm run dev",
-    "test:request-auth": "node --test tests/unit/request-auth.test.mjs",
     "test:services": "node --test tests/unit/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
     "@ant-design/pro-components": "^2.4.4",
     "@antv/g6": "5.1.1",
     "@umijs/max": "^4.6.56",
-    "antd": "^5.4.0"
+    "antd": "^5.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
@@ -38,6 +41,7 @@
     "prettier": "^2.8.7",
     "prettier-plugin-organize-imports": "^3.2.2",
     "prettier-plugin-packagejson": "^2.4.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.1"
   }
 }
