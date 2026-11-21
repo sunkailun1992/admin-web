@@ -1,17 +1,14 @@
 import PageContainer from '@/components/AppPageContainer';
 import TenantSelect from '@/components/TenantSelect';
-import {
-  DATA_SCOPE_VALUE_ENUM,
-  STATE_VALUE_ENUM,
-} from '@/constants/auth';
+import { DATA_SCOPE_VALUE_ENUM, STATE_VALUE_ENUM } from '@/constants/auth';
 import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createRole,
   generateCode,
   listDepts,
+  listResources,
   listRoleDataScopeDeptIds,
   listRoleResourceIds,
-  listResources,
   queryRoles,
   removeRole,
   syncRoleDataScopes,
@@ -69,7 +66,8 @@ export default function RolePage() {
   const [dataScopeDeptTree, setDataScopeDeptTree] = useState<
     DeptSelectTreeNode[]
   >([]);
-  const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, getTenantName, tenantValueEnum } =
+    useTenantOptions();
 
   useEffect(() => {
     if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {

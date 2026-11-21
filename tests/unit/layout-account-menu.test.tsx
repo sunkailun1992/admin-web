@@ -1,5 +1,5 @@
-import * as antd from 'antd';
 import type { DropdownProps } from 'antd';
+import * as antd from 'antd';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
@@ -109,7 +109,9 @@ for (const rejectLogout of [false, true]) {
       initialState: identity,
       rejectLogout,
     });
-    await dropdown?.menu.items.find((item) => item.key === 'logout')?.onClick?.();
+    await dropdown?.menu.items
+      .find((item) => item.key === 'logout')
+      ?.onClick?.();
     expect(effects).toStrictEqual([
       ['clearTenant'],
       ['logout'],

@@ -35,7 +35,8 @@ export async function logoutAndLeave(
   let location: string | undefined;
   try {
     const result = await logout();
-    if (result.response?.status === 202) location = result.response.headers?.location;
+    if (result.response?.status === 202)
+      location = result.response.headers?.location;
   } catch {
     location = undefined;
   }

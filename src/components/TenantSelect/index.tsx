@@ -23,9 +23,7 @@ export default function TenantSelect({
         label: tenant.name || tenant.code || tenant.id,
         value: tenant.id,
       }))}
-      rules={
-        required ? [{ required: true, message: '请选择租户' }] : undefined
-      }
+      rules={required ? [{ required: true, message: '请选择租户' }] : undefined}
       showSearch
       width="md"
     />

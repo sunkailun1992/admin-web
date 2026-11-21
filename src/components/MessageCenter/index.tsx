@@ -4,7 +4,16 @@ import {
   readCurrentUserMessage,
 } from '@/services/message';
 import { BellOutlined } from '@ant-design/icons';
-import { Badge, Button, Empty, List, Modal, Popover, Space, Typography } from 'antd';
+import {
+  Badge,
+  Button,
+  Empty,
+  List,
+  Modal,
+  Popover,
+  Space,
+  Typography,
+} from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MessageCenterProps {
@@ -18,9 +27,9 @@ export default function MessageCenter({
 }: MessageCenterProps) {
   const loadingRef = useRef(false);
   const [normalUnreadCount, setNormalUnreadCount] = useState(0);
-  const [normalMessages, setNormalMessages] = useState<MessageAPI.UserMessageVO[]>(
-    [],
-  );
+  const [normalMessages, setNormalMessages] = useState<
+    MessageAPI.UserMessageVO[]
+  >([]);
   const [systemNotice, setSystemNotice] = useState<MessageAPI.UserMessageVO>();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -30,17 +39,21 @@ export default function MessageCenter({
       setNormalMessages([]);
       return;
     }
-    try { // 当前用户消息属于顶部后台轮询，失败时不应打断主页面操作。
-      const [count, page] = await Promise.all([ // 并发查询未读数量和未读列表，减少顶部消息入口刷新延迟。
+    try {
+      // 当前用户消息属于顶部后台轮询，失败时不应打断主页面操作。
+      const [count, page] = await Promise.all([
+        // 并发查询未读数量和未读列表，减少顶部消息入口刷新延迟。
         countCurrentUnreadMessages(
-          { // 未读数量查询只统计当前租户的普通消息。
+          {
+            // 未读数量查询只统计当前租户的普通消息。
             tenantId: currentTenantId, // 使用当前登录租户，避免跨租户统计消息。
             messageType: 'NORMAL_MESSAGE', // 铃铛只展示普通消息，系统通知由弹窗单独处理。
           }, // 结束未读数量查询参数。
           { skipErrorHandler: true }, // 轮询失败由组件内部静默兜底，避免全局 message 反复提示 403。
         ),
         queryCurrentUserMessages(
-          { // 查询铃铛下拉展示的普通未读消息。
+          {
+            // 查询铃铛下拉展示的普通未读消息。
             tenantId: currentTenantId, // 使用当前登录租户，保持与后端租户隔离一致。
             current: 1, // 顶部入口只取第一页作为快速提醒。
             size: 5, // 下拉区域最多展示 5 条，避免撑开顶部菜单。
@@ -53,7 +66,8 @@ export default function MessageCenter({
       ]);
       setNormalUnreadCount(count); // 请求成功时刷新铃铛角标数量。
       setNormalMessages(page.data || []); // 请求成功时刷新铃铛下拉消息列表。
-    } catch { // 消息服务未启动或认证失败时进入静默兜底。
+    } catch {
+      // 消息服务未启动或认证失败时进入静默兜底。
       setNormalUnreadCount(0); // 清空角标，避免展示过期未读数量。
       setNormalMessages([]); // 清空列表，避免展示过期未读消息。
     }
@@ -65,8 +79,10 @@ export default function MessageCenter({
     }
     loadingRef.current = true;
     try {
-      const page = await queryCurrentUserMessages( // 查询当前用户最新一条未读系统通知。
-        { // 系统通知查询参数。
+      const page = await queryCurrentUserMessages(
+        // 查询当前用户最新一条未读系统通知。
+        {
+          // 系统通知查询参数。
           tenantId: currentTenantId, // 使用当前登录租户，避免跨租户弹窗。
           current: 1, // 系统弹窗一次只展示一条，关闭后再加载下一条。
           size: 1, // 保持弹窗提醒单条处理，避免多条同时打扰用户。
@@ -77,7 +93,8 @@ export default function MessageCenter({
         { skipErrorHandler: true }, // 轮询失败由组件内部静默兜底，避免全局 message 反复提示 403。
       );
       setSystemNotice(page.data?.[0]); // 存在未读系统通知时打开弹窗。
-    } catch { // 消息服务未启动或认证失败时进入静默兜底。
+    } catch {
+      // 消息服务未启动或认证失败时进入静默兜底。
       setSystemNotice(undefined); // 清空系统弹窗，避免未处理异常残留到页面。
     } finally {
       loadingRef.current = false;
@@ -156,7 +173,10 @@ export default function MessageCenter({
           size="small"
         />
       ) : (
-        <Empty description="暂无未读消息" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty
+          description="暂无未读消息"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
       )}
     </div>
   );

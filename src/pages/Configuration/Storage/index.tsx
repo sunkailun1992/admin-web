@@ -443,12 +443,12 @@ function StorageWorkbench({
           intent?.action === 'DELETE'
             ? '删除存储配置？'
             : intent?.action === 'PROBE'
-            ? '执行一次读写探测？'
-            : intent?.action === 'DEFAULT'
-            ? '切换全局默认存储？'
-            : intent?.row.uploadEnabled
-            ? '停用新上传？'
-            : '启用新上传？'
+              ? '执行一次读写探测？'
+              : intent?.action === 'DEFAULT'
+                ? '切换全局默认存储？'
+                : intent?.row.uploadEnabled
+                  ? '停用新上传？'
+                  : '启用新上传？'
         }
         open={!!intent}
         okText="确认操作"
@@ -470,8 +470,8 @@ function StorageWorkbench({
             intent?.action === 'PROBE'
               ? '将写入、读取并清理本轮合成探测对象，可能产生存储请求费用。'
               : intent?.action === 'DELETE'
-              ? '只删除无引用、非默认配置的管理元数据，不删除桶或历史文件。'
-              : '影响后续新上传，历史文件仍按原平台读取，不搬移对象。'
+                ? '只删除无引用、非默认配置的管理元数据，不删除桶或历史文件。'
+                : '影响后续新上传，历史文件仍按原平台读取，不搬移对象。'
           }
         />
       </Modal>

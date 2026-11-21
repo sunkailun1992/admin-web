@@ -7,8 +7,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { loadWithMocks } from '../support/loadWithMocks';
 
-type ModelViewModule = typeof import('@/pages/Configuration/Model/ModelControlPlaneView');
-type StorageTableModule = typeof import('@/pages/Configuration/Storage/StorageConfigurationTable');
+type ModelViewModule =
+  typeof import('@/pages/Configuration/Model/ModelControlPlaneView');
+type StorageTableModule =
+  typeof import('@/pages/Configuration/Storage/StorageConfigurationTable');
 type ModelViewProps = ComponentProps<typeof ModelControlPlaneView>;
 type TableProps = ComponentProps<typeof antd.Table>;
 // 截取到的表格属性只按用例要读的几项看。
@@ -17,7 +19,10 @@ type CapturedTable = {
   rowKey: (row: unknown) => string;
   columns: Array<{
     key?: string;
-    render: (value: unknown, row: unknown) => ReactElement<{
+    render: (
+      value: unknown,
+      row: unknown,
+    ) => ReactElement<{
       children: Array<ReactElement<{ children: string; disabled?: boolean }>>;
     }>;
   }>;

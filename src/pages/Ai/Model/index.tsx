@@ -78,8 +78,7 @@ export function ModelRouteWorkbench({
   const [state, setState] = useState<ModelSelectionState>({ phase: 'idle' });
   const [form] = Form.useForm<AiAPI.ModelSelectionUpdateBO>();
   const candidate = Form.useWatch('provider', form) as
-    | AiAPI.ModelProvider
-    | undefined;
+    AiAPI.ModelProvider | undefined;
   const [confirmProvider, setConfirmProvider] = useState<AiAPI.ModelProvider>();
   const selection = state.selection;
   const busy = ['idle', 'loading', 'saving', 'checking'].includes(state.phase);
@@ -147,8 +146,8 @@ export function ModelRouteWorkbench({
               state.phase === 'load-error'
                 ? '路由加载失败'
                 : state.phase === 'uncertain'
-                ? '提交结果尚未确认'
-                : '路由操作未完成'
+                  ? '提交结果尚未确认'
+                  : '路由操作未完成'
             }
             description={state.error}
             action={

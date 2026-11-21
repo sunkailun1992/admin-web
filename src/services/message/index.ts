@@ -2,7 +2,9 @@ import { MESSAGE_SERVICE_PREFIX } from '@/constants/auth';
 import type { AxiosRequestConfig } from '@umijs/max';
 import { request } from '@umijs/max';
 
-type MessageRequestOptions = AxiosRequestConfig & { skipErrorHandler?: boolean }; // 扩展 Umi request 的错误处理开关，供消息轮询静默处理后台失败。
+type MessageRequestOptions = AxiosRequestConfig & {
+  skipErrorHandler?: boolean;
+}; // 扩展 Umi request 的错误处理开关，供消息轮询静默处理后台失败。
 
 function messageRequest<T>(
   url: string,

@@ -41,12 +41,12 @@ backend:
   gatewayBaseUrl: http://localhost:7100
   localPath: ../user
   serviceName: user
-  devProxyTarget: http://localhost:7100   # ADMIN_WEB_GATEWAY_URL，只给开发服务器
+  devProxyTarget: http://localhost:7100 # ADMIN_WEB_GATEWAY_URL，只给开发服务器
   userDirectUrl: http://localhost:7500
   requestMode: same-origin（baseURL 为空，开发时 Umi 代理转给网关）
 auth:
-  login: GET /oauth2/authorization/keycloak   # 网关 BFF，跳 Keycloak 登录（授权码加 PKCE）
-  logout: POST /logout                        # 网关回 202 与 Keycloak 注销地址
+  login: GET /oauth2/authorization/keycloak # 网关 BFF，跳 Keycloak 登录（授权码加 PKCE）
+  logout: POST /logout # 网关回 202 与 Keycloak 注销地址
   currentResources: GET /auth/current/resources
   session: 网关会话 Cookie __Host-SESSION（前端不存令牌）
   csrf: 写请求带 X-XSRF-TOKEN（值取自 XSRF-TOKEN Cookie）

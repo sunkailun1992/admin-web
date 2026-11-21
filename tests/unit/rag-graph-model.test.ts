@@ -21,10 +21,11 @@ const readBuild = (value: unknown, knowledgeBase: string, buildId: string) =>
     knowledgeBase,
     buildId,
   );
-const poll = (options: unknown) =>
-  model.pollGraphBuild(options as PollOptions);
+const poll = (options: unknown) => model.pollGraphBuild(options as PollOptions);
 const notice = (value: unknown) =>
-  model.uploadGraphNotice(value as Parameters<typeof model.uploadGraphNotice>[0]);
+  model.uploadGraphNotice(
+    value as Parameters<typeof model.uploadGraphNotice>[0],
+  );
 const build = (status: string, extra: Record<string, unknown> = {}) => ({
   buildId: 'build-1',
   knowledgeBase: 'fixture-kb',

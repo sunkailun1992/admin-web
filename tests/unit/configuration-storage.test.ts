@@ -267,9 +267,7 @@ test('switching to a global choice outside the table reads back the authoritativ
   expect(tableReads).toStrictEqual([query, query]);
   expect(control.state().phase).toBe('ready');
   expect(control.state().snapshot?.settings.version).toBe(2);
-  expect(control.state().snapshot?.settings.defaultPlatform).toBe(
-    cos.platform,
-  );
+  expect(control.state().snapshot?.settings.defaultPlatform).toBe(cos.platform);
 });
 
 test('a changing global default catalogue refuses a partially read option set', async () => {

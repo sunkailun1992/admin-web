@@ -44,7 +44,9 @@ export const buildDeptTree = (depts: API.AuthDeptVO[]): DeptTreeNode[] => {
   return roots;
 };
 
-export const toDeptSelectTree = (depts: API.AuthDeptVO[]): DeptSelectTreeNode[] =>
+export const toDeptSelectTree = (
+  depts: API.AuthDeptVO[],
+): DeptSelectTreeNode[] =>
   buildDeptTree(depts).map((node) => ({
     title: getDeptTitle(node),
     value: node.id,

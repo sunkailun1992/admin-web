@@ -29,19 +29,19 @@
 
 当前前端源码目录职责：
 
-| 目录 | 职责 |
-| --- | --- |
-| `src/app.ts` | Umi 运行时配置、登录态、请求拦截和全局错误处理。 |
-| `src/access.ts` | 前端权限判断。 |
-| `src/assets` | 图片、静态资源和样式素材。 |
-| `src/components` | 可复用业务组件。 |
-| `src/constants` | 常量、枚举映射、权限码、存储 key 和固定选项。 |
-| `src/hooks` | 可复用 React Hook。 |
-| `src/models` | Umi model 和跨页面状态。 |
-| `src/pages` | 路由页面，按业务域组织。 |
-| `src/services` | API 请求、请求适配器和接口类型。 |
-| `src/utils` | 无业务状态的纯工具函数。 |
-| `mock` | 本地开发 Mock，不作为后端契约来源。 |
+| 目录             | 职责                                             |
+| ---------------- | ------------------------------------------------ |
+| `src/app.ts`     | Umi 运行时配置、登录态、请求拦截和全局错误处理。 |
+| `src/access.ts`  | 前端权限判断。                                   |
+| `src/assets`     | 图片、静态资源和样式素材。                       |
+| `src/components` | 可复用业务组件。                                 |
+| `src/constants`  | 常量、枚举映射、权限码、存储 key 和固定选项。    |
+| `src/hooks`      | 可复用 React Hook。                              |
+| `src/models`     | Umi model 和跨页面状态。                         |
+| `src/pages`      | 路由页面，按业务域组织。                         |
+| `src/services`   | API 请求、请求适配器和接口类型。                 |
+| `src/utils`      | 无业务状态的纯工具函数。                         |
+| `mock`           | 本地开发 Mock，不作为后端契约来源。              |
 
 ## 目录规则
 

@@ -119,7 +119,10 @@ export default function ResourcePage() {
             title="删除资源"
             description="确认删除该资源吗？"
             onConfirm={async () => {
-              await removeResource({ id: record.id, tenantId: record.tenantId });
+              await removeResource({
+                id: record.id,
+                tenantId: record.tenantId,
+              });
               message.success('删除成功');
               actionRef.current?.reload();
             }}
@@ -144,7 +147,9 @@ export default function ResourcePage() {
             toPageQuery({
               tenantId: currentTenantId,
               ...params,
-            } as API.AuthResourceQuery & { pageSize?: number }) as API.AuthResourceQuery,
+            } as API.AuthResourceQuery & {
+              pageSize?: number;
+            }) as API.AuthResourceQuery,
           );
           return {
             data: buildResourceTree(resources),

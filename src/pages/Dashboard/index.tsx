@@ -12,7 +12,10 @@ export default function DashboardPage() {
     (tenant) => tenant.id === initialState.currentTenantId,
   );
   const tenantName =
-    currentTenant?.name || currentTenant?.code || initialState?.currentTenantId || '-';
+    currentTenant?.name ||
+    currentTenant?.code ||
+    initialState?.currentTenantId ||
+    '-';
 
   return (
     <PageContainer title="工作台">

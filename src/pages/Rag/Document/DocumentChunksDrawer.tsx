@@ -260,8 +260,8 @@ export default function DocumentChunksDrawer({
               loading
                 ? '正在读取切片'
                 : error
-                ? '暂未取得切片'
-                : '没有可查看的切片'
+                  ? '暂未取得切片'
+                  : '没有可查看的切片'
             }
           />
         )}

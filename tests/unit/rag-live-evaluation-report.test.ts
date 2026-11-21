@@ -115,9 +115,7 @@ test('rejects unsupported versions, partial reports, malformed JSON and oversize
   expect(() => readEvaluationReport('{"private":"unclosed')).toThrow(
     /不是有效 JSON/,
   );
-  expect(() =>
-    readEvaluationReport(' '.repeat(2 * 1024 * 1024 + 1)),
-  ).toThrow();
+  expect(() => readEvaluationReport(' '.repeat(2 * 1024 * 1024 + 1))).toThrow();
 });
 
 test('rejects non-finite numbers, inconsistent deltas, counts, and raw prediction mismatches', () => {

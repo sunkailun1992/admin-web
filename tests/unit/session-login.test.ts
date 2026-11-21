@@ -44,7 +44,8 @@ test('logoutPostsToLogoutWithCsrf', async () => {
           response: {
             status: 202,
             headers: {
-              location: 'https://keycloak.example.invalid/logout?id_token_hint=x',
+              location:
+                'https://keycloak.example.invalid/logout?id_token_hint=x',
             },
           },
         };

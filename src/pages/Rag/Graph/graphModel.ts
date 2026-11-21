@@ -95,8 +95,8 @@ export function readGraphSources(
   const candidates = Array.isArray(raw)
     ? raw
     : raw === undefined && legacy?.documentId
-    ? [{ ...(properties as Record<string, unknown>), ...legacy }]
-    : [];
+      ? [{ ...(properties as Record<string, unknown>), ...legacy }]
+      : [];
   const items: GraphSourceView[] = [];
   let available = 0;
   for (const source of candidates) {

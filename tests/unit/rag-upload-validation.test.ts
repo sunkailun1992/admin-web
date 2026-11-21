@@ -16,9 +16,7 @@ test('allows Office formats and the new PDF and image formats', () => {
     ['scan.jpg', 'image/jpeg'],
     ['scan.jpeg', 'image/jpeg'],
   ]) {
-    expect(validateRagUpload({ name, type, size: 1024 }), name).toBe(
-      undefined,
-    );
+    expect(validateRagUpload({ name, type, size: 1024 }), name).toBe(undefined);
   }
 });
 

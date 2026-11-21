@@ -87,7 +87,12 @@ export async function bootstrapSession(
     try {
       response = await dependencies.read(signal);
     } catch (error) {
-      if (signal?.aborted || !tenantDenied(error) || !dependencies.selectedTenant()) throw error;
+      if (
+        signal?.aborted ||
+        !tenantDenied(error) ||
+        !dependencies.selectedTenant()
+      )
+        throw error;
       dependencies.clearTenant();
       response = await dependencies.read(signal);
     }

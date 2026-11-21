@@ -5,8 +5,8 @@ import { useTenantOptions } from '@/hooks/useTenantOptions';
 import {
   createUser,
   listDepts,
-  listUserRoleIds,
   listRoles,
+  listUserRoleIds,
   queryUsers,
   removeUser,
   syncUserRoles,
@@ -43,7 +43,8 @@ export default function UserPage() {
   const [grantRoleOptions, setGrantRoleOptions] = useState<
     { label: string; value: string }[]
   >([]);
-  const { currentTenantId, getTenantName, tenantValueEnum } = useTenantOptions();
+  const { currentTenantId, getTenantName, tenantValueEnum } =
+    useTenantOptions();
 
   useEffect(() => {
     if (!grantOpen || !grantRecord?.id || !grantRecord.tenantId) {

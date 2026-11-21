@@ -122,7 +122,9 @@ export default function DeptPage() {
             toPageQuery({
               tenantId: currentTenantId,
               ...params,
-            } as API.AuthDeptQuery & { pageSize?: number }) as API.AuthDeptQuery,
+            } as API.AuthDeptQuery & {
+              pageSize?: number;
+            }) as API.AuthDeptQuery,
           );
           return {
             data: buildDeptTree(depts),

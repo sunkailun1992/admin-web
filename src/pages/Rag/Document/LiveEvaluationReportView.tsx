@@ -106,8 +106,8 @@ export default function LiveEvaluationReportView({
             {report.cleanup.verifiedAbsent
               ? '已读回确认不存在'
               : report.cleanup.required
-              ? '未确认完成'
-              : '无需清理'}
+                ? '未确认完成'
+                : '无需清理'}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="已尝试清理">

@@ -115,8 +115,8 @@ export default function EvaluationReportModal({
                   {report.provenance.mode === 'offline'
                     ? '离线预测'
                     : report.provenance.mode === 'http-java'
-                    ? 'Java 接口采集'
-                    : 'Engine 接口采集'}
+                      ? 'Java 接口采集'
+                      : 'Engine 接口采集'}
                 </Descriptions.Item>
                 <Descriptions.Item label="生成时间">
                   {report.provenance.evaluatedAt}

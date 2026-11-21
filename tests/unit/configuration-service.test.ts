@@ -36,9 +36,11 @@ test('configuration services use real API paths, envelope data, exact methods an
   const signal = new AbortController().signal;
   const options = { signal };
   expect(
-    ((await model.getAiModelControlPlane(options)) as unknown as {
-      marker: boolean;
-    }).marker,
+    (
+      (await model.getAiModelControlPlane(options)) as unknown as {
+        marker: boolean;
+      }
+    ).marker,
   ).toBe(true);
   await storage.listStorageConfigurations(
     { page: 2, size: 20, uploadEnabled: false },
@@ -79,20 +81,18 @@ test('configuration services use real API paths, envelope data, exact methods an
     options,
   );
   await storage.getStorageOperation('opaque/key', options);
-  expect(calls.map(({ url, options }) => [url, options.method])).toStrictEqual(
-    [
-      ['/api/ai/model-control-plane', 'GET'],
-      ['/api/ai/storage-configurations', 'GET'],
-      ['/api/ai/storage-capabilities', 'GET'],
-      ['/api/ai/storage-settings', 'GET'],
-      ['/api/ai/storage-configurations', 'POST'],
-      ['/api/ai/storage-configurations/id%2Fencoded', 'PUT'],
-      ['/api/ai/storage-configurations/id%2Fencoded', 'DELETE'],
-      ['/api/ai/storage-settings', 'PUT'],
-      ['/api/ai/storage-configurations/id%2Fencoded/probes', 'POST'],
-      ['/api/ai/storage-operations/opaque%2Fkey', 'GET'],
-    ],
-  );
+  expect(calls.map(({ url, options }) => [url, options.method])).toStrictEqual([
+    ['/api/ai/model-control-plane', 'GET'],
+    ['/api/ai/storage-configurations', 'GET'],
+    ['/api/ai/storage-capabilities', 'GET'],
+    ['/api/ai/storage-settings', 'GET'],
+    ['/api/ai/storage-configurations', 'POST'],
+    ['/api/ai/storage-configurations/id%2Fencoded', 'PUT'],
+    ['/api/ai/storage-configurations/id%2Fencoded', 'DELETE'],
+    ['/api/ai/storage-settings', 'PUT'],
+    ['/api/ai/storage-configurations/id%2Fencoded/probes', 'POST'],
+    ['/api/ai/storage-operations/opaque%2Fkey', 'GET'],
+  ]);
   for (const call of calls) {
     expect(call.options.signal).toBe(signal);
     expect(call.options.headers).toBe(undefined);

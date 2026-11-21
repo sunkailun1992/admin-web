@@ -183,9 +183,7 @@ export default function RagKnowledgeGraphPage() {
         knowledgeBase,
         signal: request.signal,
         read: async (id, kb, signal) =>
-          (
-            await getRagGraphBuild(id, kb, signal)
-          ).data,
+          (await getRagGraphBuild(id, kb, signal)).data,
         onUpdate: (value) => {
           if (request.isCurrent() && currentIdentity.current === identityScope)
             setBuild(value);

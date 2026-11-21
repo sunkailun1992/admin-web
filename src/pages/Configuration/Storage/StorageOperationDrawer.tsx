@@ -40,10 +40,10 @@ const color = (value: string) =>
   value === 'SUCCEEDED'
     ? 'success'
     : value === 'FAILED'
-    ? 'error'
-    : value === 'UNKNOWN'
-    ? 'warning'
-    : 'default';
+      ? 'error'
+      : value === 'UNKNOWN'
+        ? 'warning'
+        : 'default';
 export default function StorageOperationDrawer({
   open,
   state,
@@ -96,8 +96,8 @@ export default function StorageOperationDrawer({
           {operation
             ? actionLabels[operation.action]
             : state.pending
-            ? actionLabels[state.pending.action]
-            : '尚无操作'}
+              ? actionLabels[state.pending.action]
+              : '尚无操作'}
         </Descriptions.Item>
         <Descriptions.Item label="请求标识">
           <Typography.Text className={styles.longValue} code>

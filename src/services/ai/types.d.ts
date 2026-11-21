@@ -41,10 +41,7 @@ declare namespace AiAPI {
     status: 'CONFIGURED' | 'NOT_CONFIGURED' | 'NOT_INTEGRATED';
     readOnly: boolean;
     reasonCode:
-      | 'RAG_INDEX_BOUND'
-      | 'BUSINESS_MANAGED'
-      | 'NOT_INTEGRATED'
-      | null;
+      'RAG_INDEX_BOUND' | 'BUSINESS_MANAGED' | 'NOT_INTEGRATED' | null;
   }
   interface ModelControlPlaneVO {
     available: boolean;
@@ -57,28 +54,13 @@ declare namespace AiAPI {
   }
 
   type StorageProvider =
-    | 'MINIO'
-    | 'ALIYUN_OSS'
-    | 'TENCENT_COS'
-    | 'S3_COMPATIBLE';
+    'MINIO' | 'ALIYUN_OSS' | 'TENCENT_COS' | 'S3_COMPATIBLE';
   type StorageOperationStatus =
-    | 'PENDING'
-    | 'RUNNING'
-    | 'SUCCEEDED'
-    | 'FAILED'
-    | 'UNKNOWN';
+    'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'UNKNOWN';
   type StorageCleanupStatus =
-    | 'NOT_NEEDED'
-    | 'PENDING'
-    | 'SUCCEEDED'
-    | 'FAILED'
-    | 'UNKNOWN';
+    'NOT_NEEDED' | 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'UNKNOWN';
   type StorageAction =
-    | 'CREATE'
-    | 'UPDATE'
-    | 'DELETE'
-    | 'UPDATE_SETTINGS'
-    | 'PROBE';
+    'CREATE' | 'UPDATE' | 'DELETE' | 'UPDATE_SETTINGS' | 'PROBE';
   interface StorageProbeSummary {
     requestId: string;
     checkedRevision: number;

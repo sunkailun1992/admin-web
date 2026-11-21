@@ -55,8 +55,8 @@ export default function ModelControlPlaneView({
           data.available
             ? '模型管理目录已读回'
             : data.status === 'NOT_CONFIGURED'
-            ? '尚未配置模型控制台连接'
-            : '暂时无法读取模型管理目录'
+              ? '尚未配置模型控制台连接'
+              : '暂时无法读取模型管理目录'
         }
         description="目录可读不代表模型健康。模型部署、供应商凭据、虚拟密钥与额度统一在 LiteLLM 原生控制台管理；本页不自动调用模型。"
       />
@@ -149,8 +149,8 @@ export default function ModelControlPlaneView({
                   !data.available
                     ? '目录尚不可读，不能判断是否存在模型'
                     : data.modelCatalog.length
-                    ? '没有符合筛选条件的部署'
-                    : '本环境尚无已配置模型部署'
+                      ? '没有符合筛选条件的部署'
+                      : '本环境尚无已配置模型部署'
                 }
               />
             ),
@@ -255,8 +255,8 @@ export default function ModelControlPlaneView({
                   {row.status === 'CONFIGURED'
                     ? '已有配置'
                     : row.status === 'NOT_CONFIGURED'
-                    ? '未配置'
-                    : '业务未接入'}
+                      ? '未配置'
+                      : '业务未接入'}
                   {row.reasonCode === 'RAG_INDEX_BOUND' ? (
                     <div>
                       <Typography.Text type="secondary">

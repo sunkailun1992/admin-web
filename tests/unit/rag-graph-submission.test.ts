@@ -92,9 +92,7 @@ test('authenticated pending identities survive a new tracker while corrupt or un
   expect(restored.begin('user-a|tenant-b|kb-a', true).key).not.toBe(first.key);
   expect(restored.begin('user-a|tenant-a|kb-b', true).key).not.toBe(first.key);
   restored.finish('user-a|tenant-a|kb-a', first.key, true);
-  expect(factory().begin('user-a|tenant-a|kb-a', true).key).not.toBe(
-    first.key,
-  );
+  expect(factory().begin('user-a|tenant-a|kb-a', true).key).not.toBe(first.key);
   const storedKey = [...values.keys()].find((key) =>
     key.endsWith('user-a|tenant-a|kb-a'),
   );
@@ -108,9 +106,7 @@ test('authenticated pending identities survive a new tracker while corrupt or un
       throw new Error('synthetic storage unavailable');
     },
   );
-  expect(() => blocked.begin('user-a|tenant-a|kb-a', true)).toThrow(
-    /无法安全/,
-  );
+  expect(() => blocked.begin('user-a|tenant-a|kb-a', true)).toThrow(/无法安全/);
   expect(blocked.begin('unknown-identity', false).reused).toBe(false);
 });
 

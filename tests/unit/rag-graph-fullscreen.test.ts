@@ -279,7 +279,11 @@ test('actual canvas ignores G6 constructor transforms and wires denied native en
   const { default: GraphCanvas } = await loadWithMocks<CanvasModule>(
     '@/pages/Rag/Graph/GraphCanvas',
     {
-      'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'Fragment' },
+      'react/jsx-runtime': {
+        jsx: element,
+        jsxs: element,
+        Fragment: 'Fragment',
+      },
       'react/jsx-dev-runtime': { jsxDEV: element, Fragment: 'Fragment' },
       react: {
         forwardRef: (render: unknown) => render,

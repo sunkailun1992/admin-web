@@ -121,10 +121,10 @@ export function decodeControlPlane(value: unknown): AiAPI.ModelControlPlaneVO {
           row.verificationStatus === 'VERIFIED' && !timestamp(row.verifiedAt)
             ? 'UNKNOWN'
             : ['NOT_CHECKED', 'VERIFIED', 'FAILED', 'UNKNOWN'].includes(
-                String(row.verificationStatus),
-              )
-            ? (row.verificationStatus as AiAPI.ModelVerification)
-            : 'UNKNOWN',
+                  String(row.verificationStatus),
+                )
+              ? (row.verificationStatus as AiAPI.ModelVerification)
+              : 'UNKNOWN',
         verifiedAt: timestamp(row.verifiedAt),
       };
     },

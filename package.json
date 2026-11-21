@@ -1,28 +1,24 @@
 {
   "name": "admin-web",
   "version": "1.2.1",
-  "description": "User center admin frontend built with Ant Design Pro and Umi Max.",
   "private": true,
-  "packageManager": "pnpm@12.21.0",
-  "engines": {
-    "node": ">=26"
-  },
+  "description": "User center admin frontend built with Ant Design Pro and Umi Max.",
   "author": "",
   "scripts": {
-    "dev": "ADMIN_WEB_ENV=dev max dev",
-    "dev:test": "ADMIN_WEB_ENV=test max dev",
-    "dev:prod": "ADMIN_WEB_ENV=prod max dev",
     "build": "ADMIN_WEB_ENV=prod max build",
     "build:dev": "ADMIN_WEB_ENV=dev max build",
     "build:test": "ADMIN_WEB_ENV=test max build",
+    "dev": "ADMIN_WEB_ENV=dev max dev",
+    "dev:prod": "ADMIN_WEB_ENV=prod max dev",
+    "dev:test": "ADMIN_WEB_ENV=test max dev",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "postinstall": "max setup",
     "setup": "max setup",
     "start": "npm run dev",
-    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format:check": "prettier --check ."
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
@@ -43,5 +39,9 @@
     "prettier-plugin-packagejson": "^3.1.0",
     "typescript": "^6.0.3",
     "vitest": "^5.1.1"
+  },
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=26"
   }
 }

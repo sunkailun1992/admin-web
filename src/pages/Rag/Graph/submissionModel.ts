@@ -8,8 +8,8 @@ export function createGraphSubmissionTracker(
     ).join('');
   },
   storage: () =>
-    | Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
-    | undefined = () => globalThis.sessionStorage,
+    Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | undefined = () =>
+    globalThis.sessionStorage,
 ) {
   const pending = new Map<string, string>();
   const storageKey = (scope: string) => `admin_web_graph_submission:${scope}`;

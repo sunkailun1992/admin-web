@@ -5,7 +5,9 @@ import { expect, test } from 'vitest';
 type Raw = Parameters<typeof model.decodeControlPlane>[0];
 type CatalogRow = Parameters<typeof model.catalogRowKey>[0];
 type FilterRows = Parameters<typeof model.filterCatalog>[0];
-type ControllerOptions = Parameters<typeof model.createControlPlaneController>[0];
+type ControllerOptions = Parameters<
+  typeof model.createControlPlaneController
+>[0];
 type ControllerState = Parameters<ControllerOptions['changed']>[0];
 // 接口返回的原始数据按未知结构交给解码器，与线上一样不先信任它的形状。
 const decode = (value: unknown) => model.decodeControlPlane(value as Raw);

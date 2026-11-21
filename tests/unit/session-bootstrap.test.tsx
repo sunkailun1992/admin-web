@@ -1,6 +1,6 @@
 import SessionRecovery from '@/components/SessionRecovery';
-import * as bootstrap from '@/utils/sessionBootstrap';
 import type { SessionBootstrapState } from '@/utils/sessionBootstrap';
+import * as bootstrap from '@/utils/sessionBootstrap';
 import * as sessionLogin from '@/utils/sessionLogin';
 import { createElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

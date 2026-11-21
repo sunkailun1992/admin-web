@@ -28,7 +28,10 @@ export async function logout() {
     getResponse: true,
     skipErrorHandler: true,
   }) as unknown as Promise<{
-    response?: { status?: number; headers?: Record<string, string | undefined> };
+    response?: {
+      status?: number;
+      headers?: Record<string, string | undefined>;
+    };
   }>;
 }
 

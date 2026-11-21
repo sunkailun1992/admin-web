@@ -116,9 +116,7 @@
           "id": "q001",
           "failed": false,
           "scopeLeak": false,
-          "retrievedSourceIds": [
-            "cache-v1"
-          ],
+          "retrievedSourceIds": ["cache-v1"],
           "latencyMs": 100,
           "recall": 1.0,
           "reciprocalRank": 1.0,
@@ -281,9 +279,7 @@
           "id": "q001",
           "failed": false,
           "scopeLeak": false,
-          "retrievedSourceIds": [
-            "cache-v1"
-          ],
+          "retrievedSourceIds": ["cache-v1"],
           "latencyMs": 100,
           "recall": 1.0,
           "reciprocalRank": 1.0,

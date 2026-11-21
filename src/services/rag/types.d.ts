@@ -1,13 +1,6 @@
 declare namespace RagAPI {
   type SourceType =
-    | 'xlsx'
-    | 'docx'
-    | 'pdf'
-    | 'png'
-    | 'jpg'
-    | 'jpeg'
-    | 'txt'
-    | (string & {});
+    'xlsx' | 'docx' | 'pdf' | 'png' | 'jpg' | 'jpeg' | 'txt' | (string & {});
 
   type OcrCapabilities = {
     textRecognition?: boolean;
@@ -101,10 +94,7 @@ declare namespace RagAPI {
   type GraphNodeType = 'DOCUMENT' | 'SECTION' | 'RECORD' | 'CONCEPT' | 'ENTITY';
 
   type GraphRelationType =
-    | 'CONTAINS'
-    | 'HAS_ATTRIBUTE'
-    | 'MENTIONS'
-    | 'RELATED_TO';
+    'CONTAINS' | 'HAS_ATTRIBUTE' | 'MENTIONS' | 'RELATED_TO';
 
   type GraphViewMode = 'OVERVIEW' | 'DETAIL';
 
@@ -185,11 +175,7 @@ declare namespace RagAPI {
   };
 
   type GraphBuildStatus =
-    | 'QUEUED'
-    | 'RUNNING'
-    | 'SUCCEEDED'
-    | 'FAILED'
-    | 'CANCELLED';
+    'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 
   type GraphBuild = {
     buildId: string;

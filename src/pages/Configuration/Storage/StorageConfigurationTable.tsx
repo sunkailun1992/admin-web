@@ -193,8 +193,8 @@ export default function StorageConfigurationTable({
                   row.isDefault
                     ? '当前默认配置不能删除'
                     : row.referenceCount > 0
-                    ? '存在历史引用，不能删除'
-                    : undefined
+                      ? '存在历史引用，不能删除'
+                      : undefined
                 }
                 onClick={() => onIntent({ action: 'DELETE', row })}
               >

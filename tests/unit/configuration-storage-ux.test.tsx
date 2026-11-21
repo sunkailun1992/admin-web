@@ -4,9 +4,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { loadWithMocks } from '../support/loadWithMocks';
 
-type DrawerModule = typeof import('@/pages/Configuration/Storage/StorageConfigurationDrawer');
-type TimestampModule = typeof import('@/pages/Configuration/Storage/StorageTimestamp');
-type SettingsModule = typeof import('@/pages/Configuration/Storage/StorageSettingsPanel');
+type DrawerModule =
+  typeof import('@/pages/Configuration/Storage/StorageConfigurationDrawer');
+type TimestampModule =
+  typeof import('@/pages/Configuration/Storage/StorageTimestamp');
+type SettingsModule =
+  typeof import('@/pages/Configuration/Storage/StorageSettingsPanel');
 type BoxProps = { children?: ReactNode };
 type ButtonProps = BoxProps & { disabled?: boolean };
 type FormProps = BoxProps & { onFinish: (values: unknown) => void };
@@ -98,7 +101,10 @@ async function renderDrawer(values: Record<string, unknown>, disabled = false) {
       },
       react: {
         useEffect() {},
-        useState: () => [undefined, (value: unknown) => confirmations.push(value)],
+        useState: () => [
+          undefined,
+          (value: unknown) => confirmations.push(value),
+        ],
       },
     },
   );
@@ -128,16 +134,14 @@ test('real edit drawer disables pristine save and cannot open confirmation via a
     (await renderDrawer({ ...unchanged, name: '新名称' })).save?.disabled,
   ).toBe(false);
   expect(
-    (await renderDrawer({ ...unchanged, uploadEnabled: false })).save
-      ?.disabled,
+    (await renderDrawer({ ...unchanged, uploadEnabled: false })).save?.disabled,
   ).toBe(false);
   expect(
     (await renderDrawer({ ...unchanged, credentialAction: 'REPLACE' })).save
       ?.disabled,
   ).toBe(false);
   expect(
-    (await renderDrawer({ ...unchanged, name: '新名称' }, true)).save
-      ?.disabled,
+    (await renderDrawer({ ...unchanged, name: '新名称' }, true)).save?.disabled,
   ).toBe(true);
 });
 
@@ -219,7 +223,13 @@ test('real settings panel explains current bytes and MiB without changing the in
   const Form = Object.assign((props: BoxProps) => box(props), {
     Item: (props: FieldProps) => {
       if (props.name === 'maxUploadBytes') sizeField = props;
-      return createElement('div', null, props.label, props.extra, props.children);
+      return createElement(
+        'div',
+        null,
+        props.label,
+        props.extra,
+        props.children,
+      );
     },
     useForm: () => [{ setFieldsValue() {} }],
     useWatch: () => 20 * 1024 * 1024,
@@ -278,7 +288,7 @@ test('real settings panel explains current bytes and MiB without changing the in
     { value: 'global-cos', disabled: false },
   ]);
   expect(sizeField?.label).toBe('最大文件大小（字节）');
-  expect(
-    (sizeField?.children as ReactElement<{ max: number }>).props.max,
-  ).toBe(52428800);
+  expect((sizeField?.children as ReactElement<{ max: number }>).props.max).toBe(
+    52428800,
+  );
 });
