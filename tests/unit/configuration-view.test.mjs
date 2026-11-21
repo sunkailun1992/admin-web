@@ -39,7 +39,7 @@ const modelView = load(
     antd,
     '@ant-design/icons': require('@ant-design/icons'),
     './controlPlaneModel': control,
-    './index.less': { default: {} },
+    './index.less': { __esModule: true, default: {} },
     'react/jsx-runtime': ui('react/jsx-runtime'),
   },
 ).default;
@@ -123,7 +123,7 @@ test('real model table renders native aliases with stable distinct composite row
       },
       '@ant-design/icons': require('@ant-design/icons'),
       './controlPlaneModel': control,
-      './index.less': { default: {} },
+      './index.less': { __esModule: true, default: {} },
       'react/jsx-runtime': ui('react/jsx-runtime'),
     },
   ).default;
@@ -169,8 +169,8 @@ test('real storage table disables referenced/default delete, renders revision di
         },
       },
       './storageModel': storageModel,
-      './StorageTimestamp': { default: timestamp },
-      './index.less': { default: {} },
+      './StorageTimestamp': { __esModule: true, default: timestamp },
+      './index.less': { __esModule: true, default: {} },
       'react/jsx-runtime': ui('react/jsx-runtime'),
     },
   ).default;

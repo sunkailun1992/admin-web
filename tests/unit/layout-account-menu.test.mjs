@@ -21,7 +21,7 @@ function renderAccount({ initialState, rejectLogout = false } = {}) {
   const module = { exports: {} };
   const dependencies = {
     '@/constants/auth': { ADMIN_TYPE_VALUE_ENUM: {} },
-    '@/components/MessageCenter': { default: () => null },
+    '@/components/MessageCenter': { __esModule: true, default: () => null },
     '@/services/auth': {
       logout: async () => {
         effects.push(['logout']);

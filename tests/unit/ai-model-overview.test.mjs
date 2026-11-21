@@ -38,11 +38,12 @@ const view = load('../../src/pages/Ai/Model/ModelRouteOverview.tsx', {
   antd: require('antd'),
   'react/jsx-runtime': ui('react/jsx-runtime'),
   './modelSelectionModel': model,
-  './index.less': { default: {} },
+  './index.less': { __esModule: true, default: {} },
 }).default;
 
 const page = load('../../src/pages/Ai/Model/index.tsx', {
   '@/components/AppPageContainer': {
+    __esModule: true,
     default: ({ children }) => React.createElement('main', null, children),
   },
   '@/services/ai': {},
@@ -59,9 +60,9 @@ const page = load('../../src/pages/Ai/Model/index.tsx', {
   antd: require('antd'),
   react: React,
   'react/jsx-runtime': ui('react/jsx-runtime'),
-  './ModelRouteOverview': { default: view },
+  './ModelRouteOverview': { __esModule: true, default: view },
   './modelSelectionModel': model,
-  './index.less': { default: {} },
+  './index.less': { __esModule: true, default: {} },
 }).default;
 
 test('model overview renders actual route and only declared support, escaping model text', () => {

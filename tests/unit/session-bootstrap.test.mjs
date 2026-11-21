@@ -79,11 +79,12 @@ function runtime({
   };
   const dependencies = {
     '@/constants/auth': { BACKEND_BASE_URL: '' },
-    '@/components/LayoutRightContent': { default: () => null },
+    '@/components/LayoutRightContent': { __esModule: true, default: () => null },
     '@/components/TenantSwitcher': {
+      __esModule: true,
       default: () => React.createElement('div', null, 'TENANT_SWITCHER'),
     },
-    '@/components/SessionRecovery': { default: recovery },
+    '@/components/SessionRecovery': { __esModule: true, default: recovery },
     '@/services/auth': {
       currentResources: async (options) => {
         effects.reads++;
