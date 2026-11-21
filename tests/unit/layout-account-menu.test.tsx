@@ -1,3 +1,4 @@
+import { logoutAndLeave } from '@/utils/sessionLogin';
 import type { DropdownProps } from 'antd';
 import * as antd from 'antd';
 import { createElement } from 'react';
@@ -15,7 +16,6 @@ type CapturedDropdown = {
   open?: boolean;
   menu: { items: MenuItem[] };
 };
-type LogoutResult = { response?: { headers?: { location?: string } } };
 
 async function renderAccount({
   initialState,
@@ -33,10 +33,8 @@ async function renderAccount({
           effects.push(['logout']);
           if (rejectLogout) throw new Error('Synthetic logout failure');
           return {
-            response: {
-              status: 202,
-              headers: { location: 'https://keycloak.example.invalid/logout' },
-            },
+            status: 202,
+            headers: { location: 'https://keycloak.example.invalid/logout' },
           };
         },
       },
@@ -44,15 +42,11 @@ async function renderAccount({
         clearSelectedTenantId: () => effects.push(['clearTenant']),
       },
       '@/utils/sessionLogin': {
-        logoutAndLeave: async (logout: () => Promise<LogoutResult>) => {
-          let location: string | undefined;
-          try {
-            location = (await logout()).response?.headers?.location;
-          } catch {
-            location = undefined;
-          }
-          effects.push(['navigate', location || '/']);
-        },
+        // 用真实的 logoutAndLeave，只把整页导航换成记录。
+        logoutAndLeave: (logout: Parameters<typeof logoutAndLeave>[0]) =>
+          logoutAndLeave(logout, {
+            assign: (url: string) => effects.push(['navigate', url]),
+          }),
       },
       antd: {
         ...antd,

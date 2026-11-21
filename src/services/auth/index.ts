@@ -21,18 +21,16 @@ function unwrapPage<T>(response: API.ApiResponse<API.Page<T>>) {
   };
 }
 
-/** 注销网关会话（请求拦截器加 CSRF 头与 XHR 标记）；网关回 202 与 Keycloak 注销地址。 */
+/**
+ * 注销网关会话（请求拦截器加 CSRF 头与 XHR 标记）；网关回 202 与 Keycloak 注销地址。
+ * getResponse 让 Umi 的 request 返回 axios 响应本身（status、headers 在顶层），不是业务响应体。
+ */
 export async function logout() {
-  return request('/logout', {
+  return request<unknown>('/logout', {
     method: 'POST',
     getResponse: true,
     skipErrorHandler: true,
-  }) as unknown as Promise<{
-    response?: {
-      status?: number;
-      headers?: Record<string, string | undefined>;
-    };
-  }>;
+  });
 }
 
 export async function currentResources(

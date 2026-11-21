@@ -1,3 +1,5 @@
+import type { AxiosResponse } from '@umijs/max';
+
 /** 网关的 Keycloak 登录入口（授权码加 PKCE，登录后回到 /）。 */
 export const LOGIN_ENTRY = '/oauth2/authorization/keycloak';
 
@@ -14,9 +16,8 @@ export function isLoginPage(pathname: string) {
 
 type Navigation = Pick<Location, 'assign'>;
 
-type LogoutResponse = {
-  response?: { status?: number; headers?: Record<string, string | undefined> };
-};
+/** 注销接口的 axios 响应：只读状态码和 Location 头。 */
+type LogoutResponse = Pick<AxiosResponse, 'status' | 'headers'>;
 
 /** 未登录或网关会话失效：整页跳到网关登录入口。 */
 export function redirectToLogin(navigation: Navigation = window.location) {
@@ -34,9 +35,9 @@ export async function logoutAndLeave(
 ) {
   let location: string | undefined;
   try {
-    const result = await logout();
-    if (result.response?.status === 202)
-      location = result.response.headers?.location;
+    const { status, headers } = await logout();
+    const target: unknown = headers.location;
+    if (status === 202 && typeof target === 'string') location = target;
   } catch {
     location = undefined;
   }

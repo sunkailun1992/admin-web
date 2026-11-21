@@ -38,16 +38,16 @@ test('logoutPostsToLogoutWithCsrf', async () => {
   const auth = await loadWithMocks<AuthService>('@/services/auth', {
     '@/constants/auth': { USER_SERVICE_PREFIX: '' },
     '@umijs/max': {
+      // getResponse: true 时 Umi 4 的 request 直接返回 axios 响应：status 与 headers 在顶层。
       request: async (url: string, options: RequestCall[1]) => {
         calls.push([url, options]);
         return {
-          response: {
-            status: 202,
-            headers: {
-              location:
-                'https://keycloak.example.invalid/logout?id_token_hint=x',
-            },
+          status: 202,
+          statusText: 'Accepted',
+          headers: {
+            location: 'https://keycloak.example.invalid/logout?id_token_hint=x',
           },
+          data: '',
         };
       },
     },
@@ -73,7 +73,14 @@ test('logoutPostsToLogoutWithCsrf', async () => {
 
 test('logout falls back to the app root when the gateway gives no location', async () => {
   for (const outcome of [
-    async () => ({ response: { status: 403, headers: {} } }),
+    async () => ({ status: 200, headers: {} }),
+    async () => ({ status: 202, headers: {} }),
+    // 非 2xx（会话已失效、CSRF 不对）时 Umi 的 request 抛 axios 错误，响应挂在 error.response 上。
+    async () => {
+      throw Object.assign(new Error('Request failed with status code 403'), {
+        response: { status: 403, headers: {} },
+      });
+    },
     async () => {
       throw new Error('offline');
     },
