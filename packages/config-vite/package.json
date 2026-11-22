@@ -1,0 +1,29 @@
+{
+  "name": "@admin-web/config-vite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@module-federation/vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "yaml": "catalog:"
+  },
+  "devDependencies": {
+    "@admin-web/config-typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "^8.0.0"
+  }
+}
