@@ -17,7 +17,7 @@ export type BaseQuery = {
   assignment?: boolean;
 };
 
-export type Page<T> = { records: T[]; total: number };
+export type { Page } from '@admin-web/api';
 
 export type AuthTenantQuery = BaseQuery & {
   id?: string;

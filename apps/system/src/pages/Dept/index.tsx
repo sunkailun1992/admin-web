@@ -1,13 +1,17 @@
-import { cleanPayload } from '@admin-web/api';
-import { AUTH_STATE, AUTH_STATES } from '@admin-web/auth';
+import { cleanPayload, useInvalidate, useOptionList } from '@admin-web/api';
+import { AUTH_STATE, AUTH_STATES, useTenants } from '@admin-web/auth';
 import {
   Button,
+  CodeField,
   createDataTableColumns,
   DataTable,
   FormDialog,
   PageContainer,
   QueryFilter,
+  SelectField,
   StatusBadge,
+  TextField,
+  TreeSelectField,
 } from '@admin-web/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -15,12 +19,6 @@ import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import {
-  CodeField,
-  SelectField,
-  TextField,
-  TreeSelectField,
-} from '../../components/fields.tsx';
 import { RowActions } from '../../components/RowActions.tsx';
 import { TenantField } from '../../components/TenantField.tsx';
 import { TreeNameCell } from '../../components/TreeNameCell.tsx';
@@ -32,8 +30,6 @@ import {
   toTreeNodes,
   type TreeOf,
 } from '../../lib/trees.ts';
-import { useInvalidate, useOptionList } from '../../lib/usePagedList.ts';
-import { useTenants } from '../../lib/useTenants.ts';
 import { generateCode } from '../../services/code.ts';
 import {
   createDept,
@@ -44,6 +40,7 @@ import {
 import type { AuthDeptVO } from '../../services/types.ts';
 
 type Row = { row: TreeOf<AuthDeptVO>; depth: number };
+const KEY = ['system', 'depts'] as const;
 const helper = createDataTableColumns<Row>();
 
 /** 上级部门：选中租户的部门树，去掉正在编辑的部门自己与它的下级。 */
@@ -204,11 +201,11 @@ export default function DeptPage() {
   const stateBadges = useBadgeOptions('state');
   const { currentTenantId, tenantName } = useTenants();
   const list = useOptionList(
-    'depts',
+    KEY,
     (query) => listDepts(query as Parameters<typeof listDepts>[0]),
     { tenantId: currentTenantId },
   );
-  const invalidate = useInvalidate('depts');
+  const invalidate = useInvalidate(KEY);
   const [editing, setEditing] = useState<AuthDeptVO | 'new'>();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
     () => new Set(),

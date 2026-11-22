@@ -9,3 +9,4 @@ export * from './StandaloneShell.tsx';
 export * from './tenant.ts';
 export * from './types.ts';
 export * from './unauthorized.ts';
+export * from './useTenants.ts';

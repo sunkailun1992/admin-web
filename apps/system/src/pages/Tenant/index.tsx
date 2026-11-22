@@ -1,22 +1,23 @@
-import { cleanPayload } from '@admin-web/api';
+import { cleanPayload, useInvalidate, usePagedList } from '@admin-web/api';
 import { AUTH_STATE, AUTH_STATES } from '@admin-web/auth';
 import {
   Button,
+  CodeField,
   createDataTableColumns,
   DataTable,
   FormDialog,
   PageContainer,
   QueryFilter,
+  SelectField,
   StatusBadge,
+  TextField,
 } from '@admin-web/ui';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { CodeField, SelectField, TextField } from '../../components/fields.tsx';
 import { RowActions } from '../../components/RowActions.tsx';
 import { useBadgeOptions, useOptions } from '../../lib/options.ts';
-import { useInvalidate, usePagedList } from '../../lib/usePagedList.ts';
 import { generateCode } from '../../services/code.ts';
 import {
   createTenant,
@@ -26,6 +27,7 @@ import {
 } from '../../services/tenant.ts';
 import type { AuthTenantVO } from '../../services/types.ts';
 
+const KEY = ['system', 'tenants'] as const;
 const helper = createDataTableColumns<AuthTenantVO>();
 
 function TenantForm({
@@ -117,8 +119,8 @@ export default function TenantPage() {
   const { t: tc } = useTranslation('common');
   const states = useOptions('state');
   const stateBadges = useBadgeOptions('state');
-  const list = usePagedList('tenants', queryTenants);
-  const invalidate = useInvalidate('tenants');
+  const list = usePagedList(KEY, queryTenants);
+  const invalidate = useInvalidate(KEY);
   const [editing, setEditing] = useState<AuthTenantVO | 'new'>();
 
   const columns = useMemo(

@@ -13,7 +13,6 @@
     "state": "Status",
     "sort": "Order",
     "version": "Version",
-    "defaultTenant": "Default tenant",
     "expand": "Expand",
     "collapse": "Collapse"
   },

@@ -1,25 +1,26 @@
-import { toPageQuery } from '@admin-web/api';
-import type { QueryFilterValues } from '@admin-web/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
-import type { Page } from '../services/types.ts';
+import type { Page } from './service.ts';
+import { toPageQuery } from './table.ts';
 
-/** 同一类数据的查询缓存都在 ['system', 名称] 下：增删改后整类重新取。 */
-export function useInvalidate(key: string) {
+export type ListFilters = Record<string, string>;
+
+/** 同一类数据的查询缓存都在同一个键下：增删改后整类重新取。 */
+export function useInvalidate(key: QueryKey) {
   const queryClient = useQueryClient();
   return useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ['system', key] }),
+    () => queryClient.invalidateQueries({ queryKey: key }),
     [queryClient, key],
   );
 }
 
-/** 服务端分页的列表：查询条件、页码与每页条数（照 1.2.4 的 toPageQuery 组参数），换条件回到第 1 页。 */
+/** 服务端分页的列表（照 1.2.4 的 toPageQuery 组参数）：查询条件、页码与每页条数，换条件回到第 1 页。 */
 export function usePagedList<T>(
-  key: string,
+  key: QueryKey,
   fetcher: (query: Record<string, unknown>) => Promise<Page<T>>,
   base: object = {},
 ) {
-  const [filters, setFilters] = useState<QueryFilterValues>({});
+  const [filters, setFilters] = useState<ListFilters>({});
   const [paging, setPaging] = useState({ page: 1, size: 10 });
   const query = toPageQuery({
     ...base,
@@ -28,10 +29,10 @@ export function usePagedList<T>(
     pageSize: paging.size,
   });
   const result = useQuery({
-    queryKey: ['system', key, query],
+    queryKey: [...key, query],
     queryFn: () => fetcher(query),
   });
-  const search = useCallback((values: QueryFilterValues) => {
+  const search = useCallback((values: ListFilters) => {
     setFilters(values);
     setPaging((current) => ({ ...current, page: 1 }));
   }, []);
@@ -48,16 +49,16 @@ export function usePagedList<T>(
   };
 }
 
-/** 不分页的列表（部门、资源按树显示全部）。 */
+/** 不分页的列表（如按树显示的部门、资源），取 options 接口的全部数据。 */
 export function useOptionList<T>(
-  key: string,
+  key: QueryKey,
   fetcher: (query: Record<string, unknown>) => Promise<T[]>,
   base: object,
 ) {
-  const [filters, setFilters] = useState<QueryFilterValues>({});
+  const [filters, setFilters] = useState<ListFilters>({});
   const query = { ...base, ...filters, assignment: true };
   const result = useQuery({
-    queryKey: ['system', key, query],
+    queryKey: [...key, query],
     queryFn: () => fetcher(query),
   });
   return {

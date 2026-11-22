@@ -1,13 +1,22 @@
-import { cleanPayload } from '@admin-web/api';
-import { AUTH_STATE, AUTH_STATES, type AuthResourceVO } from '@admin-web/auth';
+import { cleanPayload, useInvalidate, useOptionList } from '@admin-web/api';
+import {
+  AUTH_STATE,
+  AUTH_STATES,
+  useTenants,
+  type AuthResourceVO,
+} from '@admin-web/auth';
 import {
   Button,
+  CodeField,
   createDataTableColumns,
   DataTable,
   FormDialog,
   PageContainer,
   QueryFilter,
+  SelectField,
   StatusBadge,
+  TextField,
+  TreeSelectField,
 } from '@admin-web/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -15,12 +24,6 @@ import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import {
-  CodeField,
-  SelectField,
-  TextField,
-  TreeSelectField,
-} from '../../components/fields.tsx';
 import { RowActions } from '../../components/RowActions.tsx';
 import { TenantField } from '../../components/TenantField.tsx';
 import { TreeNameCell } from '../../components/TreeNameCell.tsx';
@@ -32,8 +35,6 @@ import {
   toTreeNodes,
   type TreeOf,
 } from '../../lib/trees.ts';
-import { useInvalidate, useOptionList } from '../../lib/usePagedList.ts';
-import { useTenants } from '../../lib/useTenants.ts';
 import { generateCode } from '../../services/code.ts';
 import {
   createResource,
@@ -43,6 +44,7 @@ import {
 } from '../../services/resource.ts';
 
 type Row = { row: TreeOf<AuthResourceVO>; depth: number };
+const KEY = ['system', 'resources'] as const;
 const helper = createDataTableColumns<Row>();
 
 function ParentField({
@@ -243,13 +245,13 @@ export default function ResourcePage() {
   const categoryBadges = useBadgeOptions('category');
   const { currentTenantId, tenantName } = useTenants();
   const list = useOptionList(
-    'resources',
+    KEY,
     (query) => listResources(query as Parameters<typeof listResources>[0]),
     {
       tenantId: currentTenantId,
     },
   );
-  const invalidate = useInvalidate('resources');
+  const invalidate = useInvalidate(KEY);
   const [editing, setEditing] = useState<AuthResourceVO | 'new'>();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
     () => new Set(),

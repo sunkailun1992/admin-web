@@ -72,5 +72,8 @@
   },
   "filter": {
     "all": "全部"
+  },
+  "tenant": {
+    "defaultName": "默认租户"
   }
 }

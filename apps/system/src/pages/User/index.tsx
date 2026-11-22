@@ -1,5 +1,5 @@
-import { cleanPayload } from '@admin-web/api';
-import { AUTH_STATE, AUTH_STATES } from '@admin-web/auth';
+import { cleanPayload, useInvalidate, usePagedList } from '@admin-web/api';
+import { AUTH_STATE, AUTH_STATES, useTenants } from '@admin-web/auth';
 import {
   Badge,
   Button,
@@ -8,7 +8,11 @@ import {
   FormDialog,
   PageContainer,
   QueryFilter,
+  SelectField,
   StatusBadge,
+  SyncFieldValue,
+  TextField,
+  TreeSelectField,
 } from '@admin-web/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -16,18 +20,10 @@ import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import {
-  SelectField,
-  TextField,
-  TreeSelectField,
-} from '../../components/fields.tsx';
 import { RowAction, RowActions } from '../../components/RowActions.tsx';
-import { SyncValue } from '../../components/SyncValue.tsx';
 import { TenantField } from '../../components/TenantField.tsx';
 import { OPTIONS, useBadgeOptions, useOptions } from '../../lib/options.ts';
 import { toTreeNodes } from '../../lib/trees.ts';
-import { useInvalidate, usePagedList } from '../../lib/usePagedList.ts';
-import { useTenants } from '../../lib/useTenants.ts';
 import { listDepts } from '../../services/dept.ts';
 import { listRoles } from '../../services/role.ts';
 import type { AuthUserVO } from '../../services/types.ts';
@@ -40,6 +36,7 @@ import {
   updateUser,
 } from '../../services/user.ts';
 
+const KEY = ['system', 'users'] as const;
 const helper = createDataTableColumns<AuthUserVO>();
 const CONTROL = (control: unknown) =>
   control as Control<FieldValues, unknown, FieldValues>;
@@ -272,7 +269,7 @@ function UserRolesDialog({
         const control = CONTROL(form.control);
         return (
           <>
-            <SyncValue
+            <SyncFieldValue
               setValue={form.setValue}
               name="roleIds"
               value={bound.data}
@@ -315,11 +312,11 @@ export default function UserPage() {
   const adminTypeBadges = useBadgeOptions('adminType');
   const { currentTenantId, tenantName } = useTenants();
   const list = usePagedList(
-    'users',
+    KEY,
     (query) => queryUsers(query as Parameters<typeof queryUsers>[0]),
     { tenantId: currentTenantId },
   );
-  const invalidate = useInvalidate('users');
+  const invalidate = useInvalidate(KEY);
   const [editing, setEditing] = useState<AuthUserVO | 'new'>();
   const [binding, setBinding] = useState<AuthUserVO>();
 

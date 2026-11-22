@@ -18,10 +18,14 @@
   },
   "devDependencies": {
     "@admin-web/config-typescript": "workspace:*",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "jsdom": "catalog:",
     "msw": "catalog:",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

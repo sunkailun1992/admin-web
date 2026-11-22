@@ -72,5 +72,8 @@
   },
   "filter": {
     "all": "All"
+  },
+  "tenant": {
+    "defaultName": "Default tenant"
   }
 }

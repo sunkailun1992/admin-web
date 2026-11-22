@@ -1,13 +1,16 @@
-import { useSession } from '@admin-web/auth';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSession } from './SessionProvider.tsx';
 
 /** 平台的默认租户编号（1.2.4 的 DEFAULT_TENANT_ID）。 */
-const DEFAULT_TENANT_ID = '100';
+export const DEFAULT_TENANT_ID = '100';
 
-/** 当前租户与可用租户（照 1.2.4 的 useTenantOptions）：展示时用租户名称，tenantId 只作接口字段。 */
+/**
+ * 当前租户与可用租户（照 1.2.4 的 useTenantOptions）：展示时用租户名称，tenantId 只作接口字段；
+ * 当前租户依次取选中的、用户所属的、平台默认的。
+ */
 export function useTenants() {
-  const { t } = useTranslation('system');
+  const { t } = useTranslation('common');
   const session = useSession();
   const tenants = useMemo(
     () => session.availableTenants ?? [],
@@ -23,7 +26,7 @@ export function useTenants() {
       const tenant = tenants.find((item) => item.id === tenantId);
       if (tenant?.name) return tenant.name;
       return tenantId === DEFAULT_TENANT_ID
-        ? t('common.defaultTenant')
+        ? t('tenant.defaultName')
         : tenantId;
     },
     [tenants, t],

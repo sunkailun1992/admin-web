@@ -1,13 +1,18 @@
-import { cleanPayload } from '@admin-web/api';
-import { AUTH_STATE, AUTH_STATES } from '@admin-web/auth';
+import { cleanPayload, useInvalidate, usePagedList } from '@admin-web/api';
+import { AUTH_STATE, AUTH_STATES, useTenants } from '@admin-web/auth';
 import {
   Button,
+  CodeField,
   createDataTableColumns,
   DataTable,
   FormDialog,
   PageContainer,
   QueryFilter,
+  SelectField,
   StatusBadge,
+  SyncFieldValue,
+  TextField,
+  TreeSelectField,
 } from '@admin-web/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -15,19 +20,10 @@ import type { Control, FieldValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import {
-  CodeField,
-  SelectField,
-  TextField,
-  TreeSelectField,
-} from '../../components/fields.tsx';
 import { RowAction, RowActions } from '../../components/RowActions.tsx';
-import { SyncValue } from '../../components/SyncValue.tsx';
 import { TenantField } from '../../components/TenantField.tsx';
 import { OPTIONS, useBadgeOptions, useOptions } from '../../lib/options.ts';
 import { toTreeNodes } from '../../lib/trees.ts';
-import { useInvalidate, usePagedList } from '../../lib/usePagedList.ts';
-import { useTenants } from '../../lib/useTenants.ts';
 import { generateCode } from '../../services/code.ts';
 import { listDepts } from '../../services/dept.ts';
 import { listResources } from '../../services/resource.ts';
@@ -43,6 +39,7 @@ import {
 } from '../../services/role.ts';
 import type { AuthRoleVO } from '../../services/types.ts';
 
+const KEY = ['system', 'roles'] as const;
 const helper = createDataTableColumns<AuthRoleVO>();
 const CONTROL = (control: unknown) =>
   control as Control<FieldValues, unknown, FieldValues>;
@@ -233,7 +230,11 @@ function RoleBindingDialog({
         const control = CONTROL(form.control);
         return (
           <>
-            <SyncValue setValue={form.setValue} name="ids" value={bound.data} />
+            <SyncFieldValue
+              setValue={form.setValue}
+              name="ids"
+              value={bound.data}
+            />
             <TextField
               control={control}
               name="roleName"
@@ -273,11 +274,11 @@ export default function RolePage() {
   const dataScopeBadges = useBadgeOptions('dataScope');
   const { currentTenantId, tenantName } = useTenants();
   const list = usePagedList(
-    'roles',
+    KEY,
     (query) => queryRoles(query as Parameters<typeof queryRoles>[0]),
     { tenantId: currentTenantId },
   );
-  const invalidate = useInvalidate('roles');
+  const invalidate = useInvalidate(KEY);
   const [editing, setEditing] = useState<AuthRoleVO | 'new'>();
   const [binding, setBinding] = useState<{
     kind: BindingKind;

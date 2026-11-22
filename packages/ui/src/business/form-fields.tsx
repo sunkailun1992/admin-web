@@ -1,28 +1,30 @@
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  GeneratedCodeInput,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  TreeSelect,
-  type TreeNode,
-} from '@admin-web/ui';
-import { useId, type ComponentProps } from 'react';
+import { useEffect, useId, type ComponentProps } from 'react';
 import {
   Controller,
   type Control,
   type FieldPath,
   type FieldValues,
+  type Path,
+  type PathValue,
+  type UseFormSetValue,
 } from 'react-hook-form';
+import { Field, FieldError, FieldLabel } from '../components/field.tsx';
+import { Input } from '../components/input.tsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/select.tsx';
+import { Textarea } from '../components/textarea.tsx';
+import { GeneratedCodeInput } from './generated-code-input.tsx';
+import { TreeSelect } from './tree-select.tsx';
+import type { TreeNode } from './tree.ts';
 
-// 表单字段（shadcn 的 Field 写法：Controller 接 react-hook-form，标签、控件、错误信息成组）。
+// 表单字段（shadcn 的 Field 写法：Controller 接 react-hook-form，标签、控件、错误信息成组），配合 FormDialog 用。
 
-type Base<T extends FieldValues> = {
+export type FormFieldProps<T extends FieldValues> = {
   control: Control<T, unknown, FieldValues>;
   name: FieldPath<T>;
   label: string;
@@ -35,7 +37,7 @@ export function TextField<T extends FieldValues>({
   label,
   disabled,
   ...input
-}: Base<T> & Omit<ComponentProps<'input'>, 'name' | 'disabled'>) {
+}: FormFieldProps<T> & Omit<ComponentProps<'input'>, 'name' | 'disabled'>) {
   const id = useId();
   return (
     <Controller
@@ -76,7 +78,7 @@ export function SelectField<T extends FieldValues>({
   label,
   disabled,
   options,
-}: Base<T> & { options: Array<{ value: string; label: string }> }) {
+}: FormFieldProps<T> & { options: Array<{ value: string; label: string }> }) {
   const id = useId();
   return (
     <Controller
@@ -123,7 +125,7 @@ export function TreeSelectField<T extends FieldValues>({
   multiple,
   loading,
   placeholder,
-}: Base<T> & {
+}: FormFieldProps<T> & {
   nodes: TreeNode[];
   multiple?: boolean;
   loading?: boolean;
@@ -179,7 +181,7 @@ export function CodeField<T extends FieldValues>({
   label,
   disabled,
   generate,
-}: Base<T> & { generate?: () => Promise<string> }) {
+}: FormFieldProps<T> & { generate?: () => Promise<string> }) {
   const id = useId();
   return (
     <Controller
@@ -204,4 +206,52 @@ export function CodeField<T extends FieldValues>({
       )}
     />
   );
+}
+
+export function TextareaField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  disabled,
+  ...textarea
+}: FormFieldProps<T> & Omit<ComponentProps<'textarea'>, 'name' | 'disabled'>) {
+  const id = useId();
+  return (
+    <Controller
+      control={control}
+      name={name}
+      disabled={disabled}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Textarea
+            id={id}
+            aria-invalid={fieldState.invalid}
+            {...textarea}
+            {...field}
+            value={(field.value as string | undefined) ?? ''}
+          />
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+/** 弹窗打开后才取到的取值（如已绑定的角色）到了就填进表单。 */
+export function SyncFieldValue<T extends FieldValues, N extends Path<T>>({
+  setValue,
+  name,
+  value,
+}: {
+  setValue: UseFormSetValue<T>;
+  name: N;
+  value: PathValue<T, N> | undefined;
+}) {
+  useEffect(() => {
+    if (value !== undefined) setValue(name, value);
+  }, [setValue, name, value]);
+  return null;
 }
