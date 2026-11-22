@@ -35,7 +35,7 @@ export default function MessageCenter({
 
   // 两个加载函数的 setState 都放在 Promise 回调里：轮询 effect 只发请求，结果回来再更新（不在 effect 里同步 setState）。
   const loadNormalMessages = useCallback((): Promise<void> => {
-    // 换用户或租户时 LayoutRightContent 按身份给本组件换 key，状态回到初值，这里不用再清空。
+    // 换用户或租户时布局（app.ts 的 actionsRender）按身份给本组件换 key，状态回到初值，这里不用再清空。
     if (!currentTenantId || !currentUser) return Promise.resolve();
     // 当前用户消息属于顶部后台轮询，失败时不应打断主页面操作。
     return Promise.all([

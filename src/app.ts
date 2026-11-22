@@ -1,4 +1,6 @@
-import LayoutRightContent from '@/components/LayoutRightContent';
+import AvatarDropdown from '@/components/AvatarDropdown';
+import { accountName } from '@/components/AvatarDropdown/accountName';
+import MessageCenter from '@/components/MessageCenter';
 import SessionRecovery from '@/components/SessionRecovery';
 import TenantSwitcher from '@/components/TenantSwitcher';
 import { BACKEND_BASE_URL } from '@/constants/auth';
@@ -57,6 +59,10 @@ const sessionRequestInterceptor = (config: AxiosRequestConfig) =>
     getSelectedTenantId(),
   );
 
+/** 没有用户头像时用的默认头像（沿用原页头的图）。 */
+const DEFAULT_AVATAR =
+  'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png';
+
 /** 退出：网关作废会话后导航到 Keycloak 的注销地址；选中的租户一并清掉。 */
 const leave = async () => {
   clearSelectedTenantId();
@@ -110,11 +116,33 @@ export const layout: RunTimeLayoutConfig = ({
         redirectToLogin();
       }
     },
-    logout: leave,
-    rightRender: (state) =>
-      createElement(LayoutRightContent, {
-        initialState: state,
-      }),
+    // ProLayout v3 的页头：头像与名称放 avatarProps，账户菜单经 render 包成下拉；其他按钮（消息中心）放 actionsRender。
+    avatarProps: initialState?.currentUser
+      ? {
+          src: DEFAULT_AVATAR,
+          size: 'small',
+          title: accountName(initialState),
+          render: (_props, avatarDom) =>
+            createElement(AvatarDropdown, {
+              initialState,
+              children: avatarDom,
+            }),
+        }
+      : undefined,
+    actionsRender: () =>
+      initialState?.currentUser
+        ? [
+            // 换用户或租户就重新挂载：消息状态回到初值，不会短暂显示上一个身份的未读数与通知。
+            createElement(MessageCenter, {
+              key: JSON.stringify([
+                initialState.currentUser.userId,
+                initialState.currentTenantId,
+              ]),
+              currentTenantId: initialState.currentTenantId,
+              currentUser: initialState.currentUser,
+            }),
+          ]
+        : [],
     childrenRender: (dom) =>
       recovery ||
       (!initialState?.currentUser

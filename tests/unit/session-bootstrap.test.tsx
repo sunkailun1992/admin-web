@@ -84,7 +84,8 @@ async function runtime({
   };
   const app = await loadWithMocks<AppModule>('@/app', {
     '@/constants/auth': { BACKEND_BASE_URL: '' },
-    '@/components/LayoutRightContent': { default: () => null },
+    '@/components/AvatarDropdown': { default: () => null },
+    '@/components/MessageCenter': { default: () => null },
     '@/components/TenantSwitcher': {
       default: () => createElement('div', null, 'TENANT_SWITCHER'),
     },

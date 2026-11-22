@@ -6,8 +6,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { loadWithMocks } from '../support/loadWithMocks';
 
-type LayoutModule = typeof import('@/components/LayoutRightContent');
-type AccountState = Parameters<LayoutModule['default']>[0]['initialState'];
+type AvatarModule = typeof import('@/components/AvatarDropdown');
+type AccountState = Parameters<AvatarModule['default']>[0]['initialState'];
 type MenuItem = { key?: string; onClick?: () => unknown };
 // 截取到的下拉属性只按用例要读的几项看。
 type CapturedDropdown = {
@@ -23,11 +23,10 @@ async function renderAccount({
 }: { initialState?: AccountState; rejectLogout?: boolean } = {}) {
   let dropdown: CapturedDropdown | undefined;
   const effects: string[][] = [];
-  const { default: LayoutRightContent } = await loadWithMocks<LayoutModule>(
-    '@/components/LayoutRightContent',
+  const { default: AvatarDropdown } = await loadWithMocks<AvatarModule>(
+    '@/components/AvatarDropdown',
     {
       '@/constants/auth': { ADMIN_TYPE_VALUE_ENUM: {} },
-      '@/components/MessageCenter': { default: () => null },
       '@/services/auth': {
         logout: async () => {
           effects.push(['logout']);
@@ -57,14 +56,17 @@ async function renderAccount({
       },
     },
   );
+  // children 代表 ProLayout 交给 avatarProps.render 的头像与名称。
   const html = renderToStaticMarkup(
-    createElement(LayoutRightContent, { initialState }),
+    createElement(AvatarDropdown, {
+      initialState,
+      children: createElement('span', null, 'LAYOUT_AVATAR 合成管理员'),
+    }),
   );
   return { html, dropdown, effects };
 }
 
 const identity: AccountState = {
-  avatar: false,
   name: '合成管理员',
   currentUser: {
     userId: 'synthetic-user',
@@ -72,27 +74,25 @@ const identity: AccountState = {
   } as API.CurrentUser,
 };
 
-test('account menu has a named native button and click activation for touch and keyboard', async () => {
+test('avatar dropdown wraps the layout avatar in a named native button opened by click', async () => {
   const { html, dropdown } = await renderAccount({ initialState: identity });
   expect(html).toMatch(/<button\b[^>]*type="button"[^>]*aria-label="账户菜单"/);
   expect(html).toMatch(/aria-haspopup="menu"/);
   expect(html).toMatch(/aria-expanded="false"/);
   expect(html).not.toMatch(/tabindex="-1"/);
-  expect(html).toMatch(/合成管理员/);
+  expect(html).toMatch(/LAYOUT_AVATAR 合成管理员/);
   expect(Array.from(dropdown?.trigger || [])).toStrictEqual(['click']);
   expect(typeof dropdown?.onOpenChange).toBe('function');
   expect(dropdown?.open).toBe(false);
+});
+
+test('avatar dropdown lists settings then logout', async () => {
+  const { dropdown } = await renderAccount({ initialState: identity });
   expect(
     Array.from(dropdown?.menu.items || [])
       .filter((item) => item.key)
       .map((item) => item.key),
   ).toStrictEqual(['settings', 'logout']);
-});
-
-test('account menu stays absent without an authenticated display identity', async () => {
-  const { html, dropdown } = await renderAccount();
-  expect(html).toBe('');
-  expect(dropdown).toBe(undefined);
 });
 
 for (const rejectLogout of [false, true]) {
@@ -116,3 +116,8 @@ for (const rejectLogout of [false, true]) {
     ]);
   });
 }
+
+test('avatar dropdown renders no umi-plugin-layout classes', async () => {
+  const { html } = await renderAccount({ initialState: identity });
+  expect(html).not.toMatch(/umi-plugin-layout/);
+});

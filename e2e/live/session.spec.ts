@@ -187,7 +187,7 @@ test.describe.serial('经真实网关与 Keycloak', () => {
     expect(current.status()).toBe(200);
     await page.goto('/dashboard');
     await waitForPageContent(page, '工作台');
-    // 按可访问名称找账户按钮：按钮里显示名的 span 计算行高为 0、盒子高度为 0，Playwright 判它不可见。
+    // 按可访问名称找页头的账户按钮（AvatarDropdown 的原生按钮）。
     await page.getByRole('button', { name: '账户菜单' }).click();
     await page.getByRole('menuitem', { name: '退出登录' }).click();
     await page.waitForURL((url) => url.origin !== ORIGIN, {
