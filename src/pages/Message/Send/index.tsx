@@ -33,7 +33,7 @@ const SEND_STATE_VALUE_ENUM = {
 
 export default function MessageSendPage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
   const [formOpen, setFormOpen] = useState(false);
   const { currentTenantId, tenantValueEnum } = useTenantOptions();
 
@@ -41,7 +41,7 @@ export default function MessageSendPage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      hideInSearch: true,
+      search: false,
       valueEnum: tenantValueEnum,
     },
     {
@@ -65,7 +65,7 @@ export default function MessageSendPage() {
     {
       title: '发送人',
       dataIndex: 'senderName',
-      hideInSearch: true,
+      search: false,
       width: 150,
     },
     {
@@ -83,7 +83,7 @@ export default function MessageSendPage() {
     {
       title: '发送时间',
       dataIndex: 'sendDateTime',
-      hideInSearch: true,
+      search: false,
       width: 180,
     },
   ];

@@ -13,7 +13,7 @@ type Props = {
 export default function SessionRecovery(props: Props) {
   const liveRef = useLatestRef(props);
   const controller =
-    useRef<ReturnType<typeof createSessionRecoveryController>>();
+    useRef<ReturnType<typeof createSessionRecoveryController>>(undefined);
   const [loading, setLoading] = useState(false);
   const [exiting, setExiting] = useState(false);
   useEffect(() => {

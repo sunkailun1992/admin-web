@@ -37,8 +37,8 @@ import { useRef, useState } from 'react';
 
 export default function ResourcePage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
-  const formRef = useRef<ProFormInstance<API.AuthResourceBO>>();
+  const actionRef = useRef<ActionType>(undefined);
+  const formRef = useRef<ProFormInstance<API.AuthResourceBO>>(undefined);
   const [editingRecord, setEditingRecord] = useState<API.AuthResourceVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
@@ -63,7 +63,7 @@ export default function ResourcePage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      hideInSearch: true,
+      search: false,
       valueEnum: tenantValueEnum,
     },
     {
@@ -101,7 +101,7 @@ export default function ResourcePage() {
     {
       title: '排序',
       dataIndex: 'sorting',
-      hideInSearch: true,
+      search: false,
       width: 90,
     },
     {

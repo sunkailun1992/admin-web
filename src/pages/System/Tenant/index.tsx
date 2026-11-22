@@ -24,8 +24,8 @@ import { useRef, useState } from 'react';
 
 export default function TenantPage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
-  const formRef = useRef<ProFormInstance<API.AuthTenantBO>>();
+  const actionRef = useRef<ActionType>(undefined);
+  const formRef = useRef<ProFormInstance<API.AuthTenantBO>>(undefined);
   const [editingRecord, setEditingRecord] = useState<API.AuthTenantVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
@@ -62,7 +62,7 @@ export default function TenantPage() {
     {
       title: '版本',
       dataIndex: 'version',
-      hideInSearch: true,
+      search: false,
       width: 90,
     },
     {

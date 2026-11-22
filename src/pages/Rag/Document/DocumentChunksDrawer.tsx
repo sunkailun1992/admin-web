@@ -38,8 +38,8 @@ export default function DocumentChunksDrawer({
   getContainer,
 }: Props) {
   const cache = useRef(createChunkPageCache(document.documentId));
-  const request = useRef<AbortController>();
-  const retryCursor = useRef<string>();
+  const request = useRef<AbortController>(undefined);
+  const retryCursor = useRef<string>(undefined);
   const [page, setPage] = useState<RagAPI.DocumentChunkPageVO>();
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedId, setSelectedId] = useState<string>();

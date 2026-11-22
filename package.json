@@ -26,20 +26,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@ant-design/pro-components": "^2.4.4",
+    "@ant-design/icons": "^6.3.4",
+    "@ant-design/pro-components": "3.1.15-9",
     "@antv/g6": "5.1.1",
-    "@umijs/max": "^4.6.56",
-    "antd": "^5.4.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@umijs/max": "^4.7.36",
+    "antd": "^6.7.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.6",
-    "@types/react": "^18.0.33",
-    "@types/react-dom": "^18.0.11",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",

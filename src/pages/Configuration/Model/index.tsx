@@ -13,7 +13,8 @@ import ModelControlPlaneView from './ModelControlPlaneView';
 
 function ModelConfigurationWorkbench({ scope }: { scope: string }) {
   const liveScopeRef = useLatestRef(scope);
-  const controller = useRef<ReturnType<typeof createControlPlaneController>>();
+  const controller =
+    useRef<ReturnType<typeof createControlPlaneController>>(undefined);
   const [state, setState] = useState<ControlPlaneState>({ phase: 'idle' });
   const [query, setQuery] = useState('');
   const [capability, setCapability] = useState<AiAPI.ModelCapability>();

@@ -34,8 +34,8 @@ type UserRoleForm = API.AuthUserRoleSyncBO & {
 
 export default function UserPage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
-  const grantFormRef = useRef<ProFormInstance<UserRoleForm>>();
+  const actionRef = useRef<ActionType>(undefined);
+  const grantFormRef = useRef<ProFormInstance<UserRoleForm>>(undefined);
   const [editingRecord, setEditingRecord] = useState<API.AuthUserVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthUserVO>();
   const [formOpen, setFormOpen] = useState(false);
@@ -83,7 +83,7 @@ export default function UserPage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      hideInSearch: true,
+      search: false,
       valueEnum: tenantValueEnum,
     },
     {
@@ -98,7 +98,7 @@ export default function UserPage() {
     {
       title: '部门',
       dataIndex: 'deptId',
-      hideInSearch: true,
+      search: false,
       ellipsis: true,
     },
     {
@@ -110,7 +110,7 @@ export default function UserPage() {
     {
       title: '关联租户',
       dataIndex: 'tenantIds',
-      hideInSearch: true,
+      search: false,
       ellipsis: true,
       renderText: (_, record) =>
         (record.tenantIds || [record.tenantId])
@@ -127,7 +127,7 @@ export default function UserPage() {
     {
       title: '版本',
       dataIndex: 'version',
-      hideInSearch: true,
+      search: false,
       width: 90,
     },
     {

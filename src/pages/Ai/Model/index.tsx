@@ -74,7 +74,7 @@ export function ModelRouteWorkbench({
 }) {
   const liveScopeRef = useLatestRef(identityScope);
   const allowedRef = useLatestRef(canChange);
-  const controller = useRef<Controller>();
+  const controller = useRef<Controller>(undefined);
   const [state, setState] = useState<ModelSelectionState>({ phase: 'idle' });
   const [form] = Form.useForm<AiAPI.ModelSelectionUpdateBO>();
   const candidate = Form.useWatch('provider', form) as

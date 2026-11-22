@@ -50,10 +50,11 @@ type RoleDataScopeForm = API.AuthRoleDataScopeSyncBO & {
 
 export default function RolePage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
-  const formRef = useRef<ProFormInstance<API.AuthRoleBO>>();
-  const grantFormRef = useRef<ProFormInstance<RoleResourceForm>>();
-  const dataScopeFormRef = useRef<ProFormInstance<RoleDataScopeForm>>();
+  const actionRef = useRef<ActionType>(undefined);
+  const formRef = useRef<ProFormInstance<API.AuthRoleBO>>(undefined);
+  const grantFormRef = useRef<ProFormInstance<RoleResourceForm>>(undefined);
+  const dataScopeFormRef =
+    useRef<ProFormInstance<RoleDataScopeForm>>(undefined);
   const [editingRecord, setEditingRecord] = useState<API.AuthRoleVO>();
   const [grantRecord, setGrantRecord] = useState<API.AuthRoleVO>();
   const [dataScopeRecord, setDataScopeRecord] = useState<API.AuthRoleVO>();
@@ -148,7 +149,7 @@ export default function RolePage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      hideInSearch: true,
+      search: false,
       valueEnum: tenantValueEnum,
     },
     {
@@ -175,7 +176,7 @@ export default function RolePage() {
     {
       title: '排序',
       dataIndex: 'sorting',
-      hideInSearch: true,
+      search: false,
       width: 90,
     },
     {

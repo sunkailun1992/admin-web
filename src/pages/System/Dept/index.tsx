@@ -33,8 +33,8 @@ import { useRef, useState } from 'react';
 
 export default function DeptPage() {
   const { message } = App.useApp();
-  const actionRef = useRef<ActionType>();
-  const formRef = useRef<ProFormInstance<API.AuthDeptBO>>();
+  const actionRef = useRef<ActionType>(undefined);
+  const formRef = useRef<ProFormInstance<API.AuthDeptBO>>(undefined);
   const [editingRecord, setEditingRecord] = useState<API.AuthDeptVO>();
   const [formOpen, setFormOpen] = useState(false);
   const [codeLoading, setCodeLoading] = useState(false);
@@ -58,7 +58,7 @@ export default function DeptPage() {
     {
       title: '租户',
       dataIndex: 'tenantId',
-      hideInSearch: true,
+      search: false,
       valueEnum: tenantValueEnum,
     },
     {
@@ -79,7 +79,7 @@ export default function DeptPage() {
     {
       title: '排序',
       dataIndex: 'sorting',
-      hideInSearch: true,
+      search: false,
       width: 90,
     },
     {

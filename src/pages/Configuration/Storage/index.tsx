@@ -53,7 +53,8 @@ function StorageWorkbench({
   liveScope: () => string;
   canManage: () => boolean;
 }) {
-  const controller = useRef<ReturnType<typeof createStorageController>>();
+  const controller =
+    useRef<ReturnType<typeof createStorageController>>(undefined);
   const [state, setState] = useState<StorageState>({ phase: 'idle' });
   const [query, setQuery] = useState<AiAPI.StorageListQuery>({
     page: 1,

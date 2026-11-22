@@ -31,7 +31,7 @@ type Props = {
   graph?: RagAPI.KnowledgeGraphVO;
   selection?: GraphSelection;
   onSelect: (selection?: GraphSelection) => void;
-  fullscreenTarget: RefObject<HTMLDivElement>;
+  fullscreenTarget: RefObject<HTMLDivElement | null>;
   onFullscreenChange: (active: boolean) => void;
 };
 
@@ -42,10 +42,10 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
 ) {
   const { message } = App.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<Graph>();
-  const viewportRef = useRef<GraphViewport>();
-  const fullscreenRef = useRef<GraphFullscreen>();
-  const selectedIdRef = useRef<string>();
+  const graphRef = useRef<Graph>(undefined);
+  const viewportRef = useRef<GraphViewport>(undefined);
+  const fullscreenRef = useRef<GraphFullscreen>(undefined);
+  const selectedIdRef = useRef<string>(undefined);
   const selectRef = useRef(onSelect);
   const fullscreenCallback = useRef(onFullscreenChange);
   selectRef.current = onSelect;
