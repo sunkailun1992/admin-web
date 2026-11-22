@@ -78,7 +78,9 @@ export function TreeView({
 
   const states = useMemo(
     () =>
-      checkable ? checkStates(nodes, checkedLeaves(scope, checked)) : undefined,
+      checkable
+        ? checkStates(nodes, checkedLeaves(scope, checked), checked)
+        : undefined,
     [checkable, nodes, scope, checked],
   );
 
@@ -109,6 +111,7 @@ export function TreeView({
   };
 
   const activate = (node: TreeNode) => {
+    if (node.disabled) return;
     if (checkable) onCheckedChange?.(toggleChecked(scope, checked, node));
     else if (onSelect) onSelect(node.id);
     else if (hasChildren(node)) setExpanded(node.id, !isExpanded(node.id));
@@ -209,11 +212,12 @@ export function TreeView({
             aria-expanded={expandable ? expanded : undefined}
             aria-checked={state}
             aria-selected={isSelected}
+            aria-disabled={node.disabled || undefined}
             tabIndex={node.id === tabId ? 0 : -1}
             onFocus={() => setFocusedId(node.id)}
             onClick={() => activate(node)}
             className={cn(
-              'flex cursor-pointer items-center gap-1.5 rounded-sm py-1 pr-2 text-sm outline-none hover:bg-accent/60 focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              'flex cursor-pointer items-center gap-1.5 rounded-sm py-1 pr-2 text-sm outline-none hover:bg-accent/60 focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent',
               isSelected && 'bg-accent text-accent-foreground',
             )}
             style={{ paddingLeft: `${(level - 1) * 1.25 + 0.25}rem` }}

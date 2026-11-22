@@ -4,6 +4,8 @@ import type { Preview } from '@storybook/react-vite';
 import '../src/styles/globals.css';
 
 const preview: Preview = {
+  // 每个物料按 component 与 JSDoc 生成文档页（Storybook 官方的 autodocs）。
+  tags: ['autodocs'],
   // 与应用一样先初始化 i18next：物料里的文字走 common 命名空间。
   beforeAll: async () => {
     await initI18n({ lng: 'zh-CN' });

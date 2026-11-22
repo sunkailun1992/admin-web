@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EmptyState } from './states.tsx';
+import { EmptyState } from './empty-state.tsx';
 
 export type ItemListProps<T> = {
   items: T[];

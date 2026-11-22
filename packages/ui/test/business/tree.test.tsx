@@ -146,3 +146,69 @@ test('TreeView keeps checked ids that are not in the tree', async () => {
   await userEvent.click(screen.getByText('人事部'));
   expect(onChange).toHaveBeenLastCalledWith(['hr', 'gone']);
 });
+
+test('a disabled node cannot be toggled and is skipped when its parent is checked', async () => {
+  const withDisabled: TreeNode[] = [
+    {
+      id: 'root',
+      label: '总部',
+      children: [
+        { id: 'dev', label: '研发部' },
+        { id: 'ops', label: '运维部', disabled: true },
+      ],
+    },
+  ];
+  const onChange = vi.fn();
+  function Harness() {
+    const [checked, setChecked] = useState<string[]>([]);
+    return (
+      <TreeView
+        nodes={withDisabled}
+        checkable
+        defaultExpandAll
+        checked={checked}
+        onCheckedChange={(ids) => {
+          setChecked(ids);
+          onChange(ids);
+        }}
+      />
+    );
+  }
+  render(<Harness />);
+  expect(screen.getByRole('treeitem', { name: '运维部' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await userEvent.click(screen.getByText('运维部'));
+  expect(onChange).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByText('总部'));
+  expect(onChange).toHaveBeenLastCalledWith(['root', 'dev']);
+  expect(screen.getByRole('treeitem', { name: '运维部' })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  );
+});
+
+test('TreeSelect does not pick a disabled node', async () => {
+  const onChange = vi.fn();
+  render(
+    <TreeSelect
+      nodes={[
+        { id: 'a', label: '甲', disabled: true },
+        { id: 'b', label: '乙' },
+      ]}
+      placeholder="选择"
+      onChange={onChange}
+    />,
+  );
+  await userEvent.click(screen.getByRole('combobox', { name: '选择' }));
+  await userEvent.click(await screen.findByText('甲'));
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+test('TreeSelect falls back to the common placeholder', () => {
+  render(<TreeSelect nodes={nodes} onChange={() => {}} />);
+  expect(screen.getByRole('combobox', { name: '请选择' })).toHaveTextContent(
+    '请选择',
+  );
+});

@@ -15,7 +15,8 @@ import { filterTree, labelsOf, type TreeNode } from './tree.ts';
 
 type Common = {
   nodes: TreeNode[];
-  placeholder: string;
+  /** 未选时显示的文字，默认“请选择”（common 命名空间）。 */
+  placeholder?: string;
   id?: string;
   /**
    * 可访问名称。都不给时用 placeholder 作名称；给了 id（配合表单里的 label）或
@@ -35,15 +36,19 @@ type Common = {
   className?: string;
 };
 
-export type TreeSelectProps = Common &
-  (
-    | { multiple: true; value: string[]; onChange: (value: string[]) => void }
-    | {
-        multiple?: false;
-        value?: string;
-        onChange: (value: string | undefined) => void;
-      }
-  );
+export type TreeSelectSingleProps = Common & {
+  multiple?: false;
+  value?: string;
+  onChange: (value: string | undefined) => void;
+};
+
+export type TreeSelectMultipleProps = Common & {
+  multiple: true;
+  value: string[];
+  onChange: (value: string[]) => void;
+};
+
+export type TreeSelectProps = TreeSelectSingleProps | TreeSelectMultipleProps;
 
 const MAX_BADGES = 3;
 
@@ -51,7 +56,6 @@ const MAX_BADGES = 3;
 export function TreeSelect(props: TreeSelectProps) {
   const {
     nodes,
-    placeholder,
     id,
     disabled,
     loading = false,
@@ -61,6 +65,7 @@ export function TreeSelect(props: TreeSelectProps) {
     className,
   } = props;
   const { t } = useTranslation('common');
+  const placeholder = props.placeholder ?? t('actions.select');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const content = useRef<HTMLDivElement>(null);

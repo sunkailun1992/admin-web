@@ -28,7 +28,16 @@ const tenants: Tenant[] = Array.from({ length: 45 }, (_, index) => ({
   status: index % 3 === 0 ? 'DISABLED' : 'ENABLED',
 }));
 
-const meta = { title: '业务组件/DataTable' } satisfies Meta;
+const meta = {
+  title: '业务组件/DataTable',
+  component: DataTable<Tenant>,
+  args: {
+    caption: '租户列表',
+    columns,
+    data: tenants.slice(0, 10),
+    rowKey: (row: Tenant) => row.id,
+  },
+} satisfies Meta<typeof DataTable<Tenant>>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -64,26 +73,6 @@ export const ServerPaged: Story = {
   },
 };
 
-export const Loading: Story = {
-  render: () => (
-    <DataTable
-      caption="租户列表"
-      columns={columns}
-      data={[]}
-      rowKey={(row) => row.id}
-      loading
-    />
-  ),
-};
+export const Loading: Story = { args: { data: [], loading: true } };
 
-export const Empty: Story = {
-  render: () => (
-    <DataTable
-      caption="租户列表"
-      columns={columns}
-      data={[]}
-      rowKey={(row) => row.id}
-      emptyText="还没有租户"
-    />
-  ),
-};
+export const Empty: Story = { args: { data: [], emptyText: '还没有租户' } };
