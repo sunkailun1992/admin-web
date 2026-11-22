@@ -17,16 +17,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@admin-web/i18n": "workspace:*",
     "@admin-web/theme": "workspace:*",
+    "@hookform/resolvers": "catalog:",
+    "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
     "cmdk": "catalog:",
     "cn": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "radix-ui": "catalog:",
+    "react-hook-form": "catalog:",
+    "react-i18next": "catalog:",
     "recharts": "catalog:",
     "sonner": "catalog:",
-    "tw-animate-css": "catalog:"
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@admin-web/config-typescript": "workspace:*",
@@ -36,6 +42,10 @@
     "@storybook/addon-vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tailwindcss/vite": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

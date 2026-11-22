@@ -1,4 +1,18 @@
-// 物料包入口：shadcn/ui 组件（src/components，由 shadcn 命令行按单仓做法生成）与 cn。
+// 物料包入口：shadcn/ui 组件（src/components，由 shadcn 命令行按单仓做法生成）、
+// 业务组件（src/business，在 shadcn/ui 之上组合）与 cn。
+export * from './business/confirm-action.tsx';
+export * from './business/data-table.tsx';
+export * from './business/description-list.tsx';
+export * from './business/form-dialog.tsx';
+export * from './business/generated-code-input.tsx';
+export * from './business/item-list.tsx';
+export * from './business/page-container.tsx';
+export * from './business/states.tsx';
+export * from './business/status-badge.tsx';
+export * from './business/tree-select.tsx';
+export * from './business/tree-view.tsx';
+export type { TreeNode } from './business/tree.ts';
+export * from './business/upload-dropzone.tsx';
 export * from './components/accordion.tsx';
 export * from './components/alert-dialog.tsx';
 export * from './components/alert.tsx';

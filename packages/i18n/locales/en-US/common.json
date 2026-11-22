@@ -14,7 +14,10 @@
     "refresh": "Refresh",
     "submit": "Submit",
     "upload": "Upload",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "generate": "Generate",
+    "select": "Select",
+    "clear": "Clear"
   },
   "status": {
     "loading": "Loading…",
@@ -34,7 +37,10 @@
     "total": "{{count}} in total",
     "previous": "Previous",
     "next": "Next",
-    "pageSize": "{{size}} per page"
+    "pageSize": "{{size}} per page",
+    "page": "Page {{page}} of {{pages}}",
+    "label": "Pagination",
+    "pageSizeLabel": "Rows per page"
   },
   "table": {
     "actions": "Actions"
@@ -49,5 +55,9 @@
     "label": "Language",
     "zh-CN": "简体中文",
     "en-US": "English"
+  },
+  "upload": {
+    "dropHint": "Drop a file here or click to choose",
+    "invalidType": "This file type is not supported"
   }
 }

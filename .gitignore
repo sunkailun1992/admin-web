@@ -19,3 +19,6 @@ storybook-static
 
 # Playwright 浏览器测试的报告与截图
 e2e-out
+
+# Vitest 浏览器模式的失败截图等附件（默认 .vitest/attachments）
+.vitest/
