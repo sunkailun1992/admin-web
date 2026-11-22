@@ -16,6 +16,7 @@
     "lint:repo": "eslint . --max-warnings 0",
     "prepare": "husky",
     "test": "turbo run test",
+    "test:deploy": "node scripts/verify-independent-deploy.mjs",
     "test:e2e": "playwright test",
     "test:e2e:test": "ADMIN_WEB_E2E=live playwright test",
     "test:generator": "node scripts/test-generator.mjs",

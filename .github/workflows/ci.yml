@@ -73,5 +73,9 @@ jobs:
       - name: Generator check
         run: pnpm test:generator
 
+      # 独立部署：只重建 system（换一个版本号），主应用 dist 不变，运行中的主应用就用上新版子应用。
+      - name: Independent deploy check
+        run: pnpm test:deploy
+
       - name: Secret warning scan
         run: bash scripts/check-secrets.sh
