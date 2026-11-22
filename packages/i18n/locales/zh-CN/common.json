@@ -62,5 +62,10 @@
   },
   "account": {
     "defaultName": "管理员"
+  },
+  "session": {
+    "signInAtShell": "请先在主应用登录",
+    "signInAtShellDescription": "子应用单独运行时，登录统一在主应用完成；登录后回到这里刷新即可。",
+    "openShell": "打开主应用"
   }
 }

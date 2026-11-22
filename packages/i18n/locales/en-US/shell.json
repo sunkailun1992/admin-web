@@ -1,1 +1,60 @@
-{}
+{
+  "appName": "User Admin",
+  "menu": {
+    "label": "Main menu",
+    "dashboard": "Dashboard",
+    "unavailable": "Unavailable right now"
+  },
+  "remotes": {
+    "system": "System",
+    "message": "Messages",
+    "ai": "AI",
+    "rag": "RAG knowledge base"
+  },
+  "remote": {
+    "loadFailed": "{{name}} is unavailable right now",
+    "pageFailed": "This page failed to load"
+  },
+  "header": {
+    "toggleSidebar": "Toggle sidebar"
+  },
+  "tenant": {
+    "label": "Switch tenant"
+  },
+  "account": {
+    "menu": "Account menu",
+    "settings": "Account settings",
+    "username": "Username",
+    "nickname": "Nickname",
+    "adminType": "Admin type",
+    "currentTenant": "Current tenant",
+    "availableTenants": "Available tenants",
+    "adminTypes": {
+      "PLATFORM_SUPER_ADMIN": "Platform super admin",
+      "TENANT_ADMIN": "Tenant admin"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "currentTenant": "Current tenant",
+    "frontendResources": "Frontend resources",
+    "backendPermissions": "Backend permissions",
+    "frontendMenus": "Frontend menu resources",
+    "backendApis": "Backend API permissions"
+  },
+  "login": {
+    "failedTitle": "Sign-in failed",
+    "failedDescription": "Sign-in did not finish: the sign-in page may have been open too long, or the browser blocked the site's cookies. Please sign in again; contact your administrator if it keeps failing.",
+    "title": "Please sign in",
+    "description": "Sign in to use the admin console.",
+    "retry": "Sign in again"
+  },
+  "recovery": {
+    "title": "Session not restored yet",
+    "description": "Your identity and permissions could not be read, so protected content is hidden. Retry to return to the dashboard, or sign out."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "back": "Back to dashboard"
+  }
+}

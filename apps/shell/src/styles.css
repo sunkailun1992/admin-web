@@ -1,0 +1,2 @@
+/* 主应用的样式入口：物料包的基础样式（含默认主题）。换主题就在这里再引入另一个主题包，如 @admin-web/theme-emerald/theme.css。 */
+@import '@admin-web/ui/globals.css';

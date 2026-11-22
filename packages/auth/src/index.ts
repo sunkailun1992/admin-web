@@ -5,5 +5,7 @@ export * from './endpoints.ts';
 export * from './login.ts';
 export * from './RequireAccess.tsx';
 export * from './SessionProvider.tsx';
+export * from './StandaloneShell.tsx';
 export * from './tenant.ts';
 export * from './types.ts';
+export * from './unauthorized.ts';

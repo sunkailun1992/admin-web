@@ -1,0 +1,22 @@
+[
+  {
+    "name": "system",
+    "entry": "http://localhost:8101/mf-manifest.json",
+    "routePrefixes": ["/system"]
+  },
+  {
+    "name": "message",
+    "entry": "http://localhost:8102/mf-manifest.json",
+    "routePrefixes": ["/message"]
+  },
+  {
+    "name": "ai",
+    "entry": "http://localhost:8103/mf-manifest.json",
+    "routePrefixes": ["/ai", "/configuration"]
+  },
+  {
+    "name": "rag",
+    "entry": "http://localhost:8104/mf-manifest.json",
+    "routePrefixes": ["/rag-knowledge"]
+  }
+]

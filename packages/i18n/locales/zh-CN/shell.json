@@ -1,1 +1,60 @@
-{}
+{
+  "appName": "用户中心管理后台",
+  "menu": {
+    "label": "主菜单",
+    "dashboard": "工作台",
+    "unavailable": "暂时无法加载"
+  },
+  "remotes": {
+    "system": "系统管理",
+    "message": "消息管理",
+    "ai": "AI管理",
+    "rag": "RAG知识库"
+  },
+  "remote": {
+    "loadFailed": "{{name}}暂时无法加载",
+    "pageFailed": "页面加载出错"
+  },
+  "header": {
+    "toggleSidebar": "展开或收起侧边栏"
+  },
+  "tenant": {
+    "label": "切换租户"
+  },
+  "account": {
+    "menu": "账户菜单",
+    "settings": "账户设置",
+    "username": "用户名",
+    "nickname": "昵称",
+    "adminType": "管理员分类",
+    "currentTenant": "当前租户",
+    "availableTenants": "可用租户",
+    "adminTypes": {
+      "PLATFORM_SUPER_ADMIN": "平台超级管理员",
+      "TENANT_ADMIN": "租户管理员"
+    }
+  },
+  "dashboard": {
+    "title": "工作台",
+    "currentTenant": "当前租户",
+    "frontendResources": "前端资源",
+    "backendPermissions": "后端权限",
+    "frontendMenus": "前端菜单资源",
+    "backendApis": "后端接口权限"
+  },
+  "login": {
+    "failedTitle": "登录失败",
+    "failedDescription": "登录没有完成：可能在登录页停留太久，或浏览器拦截了站点 Cookie。请重新登录；仍然失败请联系管理员。",
+    "title": "请登录",
+    "description": "登录后才能使用管理后台。",
+    "retry": "重新登录"
+  },
+  "recovery": {
+    "title": "会话暂未恢复",
+    "description": "暂时无法读取身份与权限资源，已暂停显示受保护内容。请重试，成功后返回工作台；也可退出登录。"
+  },
+  "notFound": {
+    "title": "页面不存在",
+    "back": "返回工作台"
+  }
+}

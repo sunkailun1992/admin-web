@@ -1,0 +1,22 @@
+[
+  {
+    "name": "system",
+    "entry": "/remotes/system/mf-manifest.json",
+    "routePrefixes": ["/system"]
+  },
+  {
+    "name": "message",
+    "entry": "/remotes/message/mf-manifest.json",
+    "routePrefixes": ["/message"]
+  },
+  {
+    "name": "ai",
+    "entry": "/remotes/ai/mf-manifest.json",
+    "routePrefixes": ["/ai", "/configuration"]
+  },
+  {
+    "name": "rag",
+    "entry": "/remotes/rag/mf-manifest.json",
+    "routePrefixes": ["/rag-knowledge"]
+  }
+]

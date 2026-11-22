@@ -25,3 +25,16 @@ export function getTrafficHeaders(env: TrafficEnv): Record<string, string> {
   if (canaryWeight) headers['X-Canary-Weight'] = canaryWeight;
   return headers;
 }
+
+const text = (value: unknown) =>
+  typeof value === 'string' ? value : undefined;
+
+/** 从应用构建时的 import.meta.env 取灰度头的取值（VITE_RELEASE_VERSION 等）。 */
+export function trafficFromEnv(env: Record<string, unknown>): TrafficEnv {
+  return {
+    releaseVersion: text(env.VITE_RELEASE_VERSION),
+    lane: text(env.VITE_TRAFFIC_LANE),
+    canaryTag: text(env.VITE_CANARY_TAG),
+    canaryWeight: text(env.VITE_CANARY_WEIGHT),
+  };
+}

@@ -7,6 +7,7 @@ import {
 import { initI18n, type Locale } from '@admin-web/i18n';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
+import type { AxiosInstance } from 'axios';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 
@@ -19,6 +20,8 @@ export type RenderWithProvidersOptions = {
   route?: string;
   /** 没有会话时调用；默认什么都不做，测试里不真的跳转。 */
   onUnauthenticated?: () => void;
+  /** 自备的请求客户端；不给就新建一个（不提示、不跳登录）。 */
+  client?: AxiosInstance;
 };
 
 const ignore = () => {};
@@ -34,12 +37,14 @@ export async function renderWithProviders(
   await initI18n({ lng: options.locale ?? 'zh-CN' });
   const queryClient = createQueryClient();
   const notifications: string[] = [];
-  const client = createHttpClient({
-    traffic: {},
-    getTenantId: getSelectedTenantId,
-    onUnauthorized: ignore,
-    notify: (message) => notifications.push(message),
-  });
+  const client =
+    options.client ??
+    createHttpClient({
+      traffic: {},
+      getTenantId: getSelectedTenantId,
+      onUnauthorized: ignore,
+      notify: (message) => notifications.push(message),
+    });
   const result = render(
     <QueryClientProvider client={queryClient}>
       <SessionProvider

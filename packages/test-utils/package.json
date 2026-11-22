@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
+    "./no-motion": "./src/no-motion.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -16,6 +18,7 @@
     "@admin-web/i18n": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@testing-library/react": "catalog:",
+    "axios": "catalog:",
     "msw": "catalog:"
   },
   "devDependencies": {

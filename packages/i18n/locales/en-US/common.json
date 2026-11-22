@@ -62,5 +62,10 @@
   },
   "account": {
     "defaultName": "Administrator"
+  },
+  "session": {
+    "signInAtShell": "Sign in on the main app first",
+    "signInAtShellDescription": "When an app runs on its own, sign-in happens on the main app. Come back and refresh after signing in.",
+    "openShell": "Open the main app"
   }
 }
