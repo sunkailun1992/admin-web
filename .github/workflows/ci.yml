@@ -45,6 +45,10 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
+      # 物料包的故事测试在浏览器里跑（Storybook 的 Vitest 插件）：CI 用 Playwright 自带的 Chromium。
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Unit tests
         run: pnpm test
 

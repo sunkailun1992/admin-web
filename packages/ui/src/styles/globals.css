@@ -1,0 +1,19 @@
+/* 物料包的样式入口：Tailwind 4、动画、主题映射与主题变量；应用在自己的样式入口里引入它。 */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@admin-web/theme/tailwind.css';
+@import '@admin-web/theme/theme.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* 扫描物料包自己的源码；应用目录由应用自己的样式入口扫描。 */
+@source '../**/*.{ts,tsx}';
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

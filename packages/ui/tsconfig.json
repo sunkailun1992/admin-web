@@ -1,0 +1,10 @@
+{
+  "extends": "@admin-web/config-typescript/react.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@admin-web/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "test", ".storybook", "vitest.config.ts"]
+}
