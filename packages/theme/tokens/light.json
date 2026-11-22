@@ -1,0 +1,190 @@
+{
+  "$description": "浅色：shadcn/ui neutral 基础色，主色用品牌蓝（为白字达到 WCAG AA 降了亮度）。",
+  "$type": "color",
+  "background": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [1, 0, 0]
+    }
+  },
+  "foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.145, 0, 0]
+    }
+  },
+  "card": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [1, 0, 0]
+    }
+  },
+  "card-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.145, 0, 0]
+    }
+  },
+  "popover": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [1, 0, 0]
+    }
+  },
+  "popover-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.145, 0, 0]
+    }
+  },
+  "primary": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.566, 0.219, 259.04]
+    }
+  },
+  "primary-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.985, 0, 0]
+    }
+  },
+  "secondary": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.97, 0, 0]
+    }
+  },
+  "secondary-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.205, 0, 0]
+    }
+  },
+  "muted": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.97, 0, 0]
+    }
+  },
+  "muted-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.556, 0, 0]
+    }
+  },
+  "accent": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.97, 0, 0]
+    }
+  },
+  "accent-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.205, 0, 0]
+    }
+  },
+  "destructive": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.577, 0.245, 27.325]
+    }
+  },
+  "border": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.922, 0, 0]
+    }
+  },
+  "input": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.922, 0, 0]
+    }
+  },
+  "ring": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.708, 0, 0]
+    }
+  },
+  "chart-1": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.87, 0, 0]
+    }
+  },
+  "chart-2": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.556, 0, 0]
+    }
+  },
+  "chart-3": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.439, 0, 0]
+    }
+  },
+  "chart-4": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.371, 0, 0]
+    }
+  },
+  "chart-5": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.269, 0, 0]
+    }
+  },
+  "sidebar": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.985, 0, 0]
+    }
+  },
+  "sidebar-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.145, 0, 0]
+    }
+  },
+  "sidebar-primary": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.566, 0.219, 259.04]
+    }
+  },
+  "sidebar-primary-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.985, 0, 0]
+    }
+  },
+  "sidebar-accent": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.97, 0, 0]
+    }
+  },
+  "sidebar-accent-foreground": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.205, 0, 0]
+    }
+  },
+  "sidebar-border": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.922, 0, 0]
+    }
+  },
+  "sidebar-ring": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.708, 0, 0]
+    }
+  }
+}

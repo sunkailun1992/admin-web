@@ -1,0 +1,10 @@
+{
+  "$description": "不分浅色暗色的令牌：圆角基准（shadcn/ui 的 --radius）。",
+  "radius": {
+    "$type": "dimension",
+    "$value": {
+      "value": 0.625,
+      "unit": "rem"
+    }
+  }
+}

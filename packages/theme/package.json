@@ -1,0 +1,28 @@
+{
+  "name": "@admin-web/theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./dist/theme.css",
+    "./tailwind.css": "./dist/tailwind.css",
+    "./build": "./style-dictionary.config.mjs",
+    "./testing": "./test/checks.ts"
+  },
+  "scripts": {
+    "build": "node style-dictionary.config.mjs",
+    "test": "node style-dictionary.config.mjs && vitest run",
+    "typecheck": "node style-dictionary.config.mjs && tsc --noEmit"
+  },
+  "dependencies": {
+    "style-dictionary": "catalog:"
+  },
+  "devDependencies": {
+    "@admin-web/config-typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "colorjs.io": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

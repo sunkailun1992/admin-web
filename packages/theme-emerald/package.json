@@ -1,0 +1,24 @@
+{
+  "name": "@admin-web/theme-emerald",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./dist/theme.css"
+  },
+  "scripts": {
+    "build": "node style-dictionary.config.mjs",
+    "test": "node style-dictionary.config.mjs && vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@admin-web/theme": "workspace:*"
+  },
+  "devDependencies": {
+    "@admin-web/config-typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "colorjs.io": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$description": "暗色：覆盖项与浅色相同。",
+  "$type": "color",
+  "primary": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.543, 0.116, 163.225]
+    }
+  },
+  "ring": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.543, 0.116, 163.225]
+    }
+  },
+  "sidebar-primary": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.543, 0.116, 163.225]
+    }
+  },
+  "chart-1": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.845, 0.143, 164.978]
+    }
+  },
+  "chart-2": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.696, 0.17, 162.48]
+    }
+  },
+  "chart-3": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.596, 0.145, 163.225]
+    }
+  },
+  "chart-4": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.508, 0.118, 165.612]
+    }
+  },
+  "chart-5": {
+    "$value": {
+      "colorSpace": "oklch",
+      "components": [0.432, 0.095, 166.913]
+    }
+  }
+}
