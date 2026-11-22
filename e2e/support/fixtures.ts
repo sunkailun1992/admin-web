@@ -1,3 +1,7 @@
+import {
+  API_PROXY_PREFIXES,
+  GATEWAY_PREFIXES,
+} from '../../packages/config-vite/src/proxy.ts';
 import ai from '../fixtures/ai.json' with { type: 'json' };
 import auth from '../fixtures/auth.json' with { type: 'json' };
 import message from '../fixtures/message.json' with { type: 'json' };
@@ -7,8 +11,12 @@ import session from '../fixtures/session.json' with { type: 'json' };
 export type ApiFixture = { status: number; body: unknown };
 export type Fixtures = Record<string, unknown>;
 
-/** 经网关的接口前缀（与各应用开发代理一致）；/message 既是页面也是接口前缀，页面导航另按请求类型区分。 */
-const API_PREFIXES = ['/auth', '/api', '/message', '/logout', '/oauth2'];
+// 经网关的接口前缀：与各应用开发与预览代理同一份（@admin-web/config-vite 的 proxy.ts）；
+// /message 既是页面也是接口前缀，页面导航另按请求类型区分。
+const API_PREFIXES: readonly string[] = [
+  ...API_PROXY_PREFIXES,
+  ...GATEWAY_PREFIXES,
+];
 
 export function isApiRequest(pathname: string): boolean {
   return API_PREFIXES.some(
