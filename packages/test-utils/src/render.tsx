@@ -8,7 +8,7 @@ import { initI18n, type Locale } from '@admin-web/i18n';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import type { AxiosInstance } from 'axios';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 
 export type RenderWithProvidersOptions = {
@@ -45,18 +45,22 @@ export async function renderWithProviders(
       onUnauthorized: ignore,
       notify: (message) => notifications.push(message),
     });
-  const result = render(
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider
-        client={client}
-        session={options.session}
-        onUnauthenticated={options.onUnauthenticated ?? ignore}
-      >
-        <MemoryRouter initialEntries={[options.route ?? '/']}>
-          {ui}
-        </MemoryRouter>
-      </SessionProvider>
-    </QueryClientProvider>,
-  );
+  // 用 wrapper 套 Provider：rerender 时 Provider 还在。
+  function Providers({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider
+          client={client}
+          session={options.session}
+          onUnauthenticated={options.onUnauthenticated ?? ignore}
+        >
+          <MemoryRouter initialEntries={[options.route ?? '/']}>
+            {children}
+          </MemoryRouter>
+        </SessionProvider>
+      </QueryClientProvider>
+    );
+  }
+  const result = render(ui, { wrapper: Providers });
   return { ...result, client, queryClient, notifications };
 }

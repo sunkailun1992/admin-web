@@ -1,1 +1,54 @@
-{}
+{
+  "menu": {
+    "group": "Messages",
+    "send": "Send messages"
+  },
+  "send": {
+    "pageTitle": "Send messages",
+    "open": "Send a message",
+    "submit": "Send",
+    "tenant": "Tenant",
+    "tenantRequired": "Choose a tenant",
+    "receivers": "Recipients",
+    "receiversRequired": "Choose at least one recipient",
+    "messageType": "Message type",
+    "messageTypeRequired": "Choose the message type",
+    "messageTitle": "Title",
+    "messageTitleRequired": "Enter the title",
+    "content": "Content",
+    "contentRequired": "Enter the content",
+    "sent": "Sent {{count}} message(s)",
+    "columns": {
+      "tenant": "Tenant",
+      "messageType": "Type",
+      "title": "Title",
+      "receiver": "Recipient",
+      "sender": "Sender",
+      "sendState": "Send status",
+      "readState": "Read status",
+      "sendTime": "Sent at"
+    }
+  },
+  "bell": {
+    "label": "Messages, {{count}} unread",
+    "normal": "Messages",
+    "empty": "No unread messages",
+    "read": "Mark read",
+    "systemNotice": "System notice",
+    "acknowledge": "Got it"
+  },
+  "enums": {
+    "messageType": {
+      "SYSTEM_NOTICE": "System notice",
+      "NORMAL_MESSAGE": "Message"
+    },
+    "sendState": {
+      "SENT": "Sent",
+      "FAILED": "Failed"
+    },
+    "readState": {
+      "UNREAD": "Unread",
+      "READ": "Read"
+    }
+  }
+}

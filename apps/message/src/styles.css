@@ -1,0 +1,9 @@
+/*
+ * 子应用只带自己用到的工具类：基础样式与主题变量由主应用加载一次（单独运行时由 src/dev/main.tsx 引入完整样式）。
+ * 主题映射给工具类用（bg-primary 等指向主题变量）。
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import '@admin-web/theme/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));

@@ -1,1 +1,54 @@
-{}
+{
+  "menu": {
+    "group": "消息管理",
+    "send": "消息发送"
+  },
+  "send": {
+    "pageTitle": "消息发送",
+    "open": "发送消息",
+    "submit": "发送",
+    "tenant": "租户",
+    "tenantRequired": "请选择租户",
+    "receivers": "接收用户",
+    "receiversRequired": "请选择接收用户",
+    "messageType": "消息类型",
+    "messageTypeRequired": "请选择消息类型",
+    "messageTitle": "消息标题",
+    "messageTitleRequired": "请输入消息标题",
+    "content": "消息内容",
+    "contentRequired": "请输入消息内容",
+    "sent": "发送成功，共发送 {{count}} 条",
+    "columns": {
+      "tenant": "租户",
+      "messageType": "消息类型",
+      "title": "标题",
+      "receiver": "接收用户",
+      "sender": "发送人",
+      "sendState": "发送状态",
+      "readState": "读取状态",
+      "sendTime": "发送时间"
+    }
+  },
+  "bell": {
+    "label": "消息，{{count}} 条未读",
+    "normal": "正常消息",
+    "empty": "暂无未读消息",
+    "read": "已读",
+    "systemNotice": "系统提醒",
+    "acknowledge": "知道了"
+  },
+  "enums": {
+    "messageType": {
+      "SYSTEM_NOTICE": "系统提醒",
+      "NORMAL_MESSAGE": "正常消息"
+    },
+    "sendState": {
+      "SENT": "已发送",
+      "FAILED": "发送失败"
+    },
+    "readState": {
+      "UNREAD": "未读",
+      "READ": "已读"
+    }
+  }
+}
