@@ -51,7 +51,7 @@ export default function ModelControlPlaneView({
       <Alert
         showIcon
         type={data.available ? 'info' : 'warning'}
-        message={
+        title={
           data.available
             ? '模型管理目录已读回'
             : data.status === 'NOT_CONFIGURED'

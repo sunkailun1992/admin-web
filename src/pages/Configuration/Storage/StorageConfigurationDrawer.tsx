@@ -102,8 +102,8 @@ export default function StorageConfigurationDrawer({
       <Drawer
         title={current ? '编辑文件存储配置' : '新增文件存储配置'}
         open={open}
-        width={560}
-        destroyOnClose
+        size={560}
+        destroyOnHidden
         onClose={close}
         extra={
           <Space>
@@ -121,7 +121,7 @@ export default function StorageConfigurationDrawer({
         <Alert
           showIcon
           type="info"
-          message="配置面向所有租户"
+          title="配置面向所有租户"
           description="凭据仅单向提交，不读取旧密钥。保存不等于读写连接已验证；停用上传后历史文件仍按原平台读取。"
           className={styles.section}
         />
@@ -339,7 +339,7 @@ export default function StorageConfigurationDrawer({
           <Alert
             type="warning"
             showIcon
-            message="将提交成对的新凭据；不会展示密钥内容。"
+            title="将提交成对的新凭据；不会展示密钥内容。"
           />
         ) : null}
       </Modal>

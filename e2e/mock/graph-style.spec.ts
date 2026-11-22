@@ -26,10 +26,16 @@ test('graphStyleOverridesStillMatch', async ({ page }) => {
   await atLeastOne(content, '.ant-form');
   await atLeastOne(content, '.ant-form-item');
 
-  // 构建状态里的详情折叠面板：展开后才有内容区。
+  // 构建状态里的详情折叠面板（antd 6 的语义化 styles 设内边距，不再覆盖内部类名）：展开后核对实际生效的内边距。
   await content.getByText('查看构建详情').click();
-  await atLeastOne(content, '.ant-collapse-header');
-  await atLeastOne(content, '.ant-collapse-content-box');
+  const header = content.locator('.ant-collapse-header', {
+    hasText: '查看构建详情',
+  });
+  await expect(header).toHaveCSS('padding-top', '8px');
+  await expect(header).toHaveCSS('padding-left', '0px');
+  const body = header.locator('xpath=..').locator('.ant-collapse-body');
+  await expect(body).toHaveCSS('padding-top', '0px');
+  await expect(body).toHaveCSS('padding-left', '0px');
 
   // 选中节点后详情面板的页签。画布渲染完、视图控制按钮可用之后，定位节点才会选中它。
   await expect(
@@ -39,10 +45,28 @@ test('graphStyleOverridesStillMatch', async ({ page }) => {
   await page.getByTitle('合成实体').click();
   await atLeastOne(content, '.ant-tabs-tab');
 
-  // 最大化查看时画布区的加载容器。
+  // 最大化查看时，包着画布的加载外层与内容容器要撑满画布区（antd 6 的语义化 classNames 挂样式）。
   await content.getByRole('button', { name: '全屏查看图谱' }).click();
-  await atLeastOne(content, '.ant-spin-nested-loading');
-  await atLeastOne(content, '.ant-spin-container');
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const container = [
+            ...document.querySelectorAll('main .ant-spin-container'),
+          ].find((element) => element.querySelector('canvas'));
+          const root = container?.parentElement;
+          const pane = root?.parentElement;
+          if (!container || !root || !pane) return 'missing';
+          const height = (element: Element) =>
+            Math.round(element.getBoundingClientRect().height);
+          return height(container) === height(pane) &&
+            height(root) === height(pane)
+            ? 'fills'
+            : `${height(container)}/${height(root)}/${height(pane)}`;
+        }),
+      { message: '画布加载层撑满画布区', timeout: 15_000 },
+    )
+    .toBe('fills');
 
   expect(unmocked).toStrictEqual([]);
   expect(unexpectedProblems(problems, consoleAllowlist)).toStrictEqual([]);

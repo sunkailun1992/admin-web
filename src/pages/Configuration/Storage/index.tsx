@@ -275,7 +275,7 @@ function StorageWorkbench({
         <Alert
           showIcon
           type="info"
-          message="配置保存、生效和读写验证分别展示"
+          title="配置保存、生效和读写验证分别展示"
           description="文件存储由本工作台与服务端动态注册管理。环境连接及加密根配置仍由部署配置负责；不会把密钥写入浏览器存储或回显。"
         />
         {state.error ? (
@@ -284,7 +284,7 @@ function StorageWorkbench({
             type={
               state.pending || state.phase === 'blocked' ? 'warning' : 'error'
             }
-            message={state.error}
+            title={state.error}
             action={
               state.pending ? (
                 <Button
@@ -310,14 +310,14 @@ function StorageWorkbench({
             onClose={() => setFormError(undefined)}
             showIcon
             type="error"
-            message={formError}
+            title={formError}
           />
         ) : null}
         {state.pending ? (
           <Alert
             showIcon
             type="warning"
-            message="存在尚未确认的存储操作"
+            title="存在尚未确认的存储操作"
             description="新变更已暂停，继续用原请求标识查回终态。"
             action={
               <Button onClick={() => setOperationOpen(true)}>查看原操作</Button>
@@ -472,7 +472,7 @@ function StorageWorkbench({
         <Alert
           showIcon
           type="warning"
-          message={
+          title={
             intent?.action === 'PROBE'
               ? '将写入、读取并清理本轮合成探测对象，可能产生存储请求费用。'
               : intent?.action === 'DELETE'
@@ -508,7 +508,7 @@ export default function StorageConfigurationPage() {
         <Alert
           showIcon
           type="warning"
-          message="需要平台超级管理员身份与用户中心管理权限"
+          title="需要平台超级管理员身份与用户中心管理权限"
         />
       </PageContainer>
     );

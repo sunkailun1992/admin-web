@@ -1,19 +1,12 @@
+import AppList from '@/components/AppList';
+import ListRow from '@/components/AppList/ListRow';
 import {
   countCurrentUnreadMessages,
   queryCurrentUserMessages,
   readCurrentUserMessage,
 } from '@/services/message';
 import { BellOutlined } from '@ant-design/icons';
-import {
-  Badge,
-  Button,
-  Empty,
-  List,
-  Modal,
-  Popover,
-  Space,
-  Typography,
-} from 'antd';
+import { Badge, Button, Empty, Modal, Popover, Space, Typography } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MessageCenterProps {
@@ -135,42 +128,39 @@ export default function MessageCenter({
   const popoverContent = (
     <div style={{ width: 360 }}>
       {normalMessages.length ? (
-        <List
-          dataSource={normalMessages}
-          renderItem={(item) => (
-            <List.Item
-              actions={[
+        <AppList
+          items={normalMessages}
+          rowKey="id"
+          size="small"
+          itemRender={(item) => (
+            <ListRow
+              title={
+                <Space orientation="vertical" size={2}>
+                  <Typography.Text strong>{item.title}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {item.sendDateTime || '-'}
+                  </Typography.Text>
+                </Space>
+              }
+              description={
+                <Typography.Paragraph
+                  ellipsis={{ rows: 2 }}
+                  style={{ marginBottom: 0 }}
+                >
+                  {item.content}
+                </Typography.Paragraph>
+              }
+              extra={
                 <Button
-                  key="read"
                   size="small"
                   type="link"
                   onClick={() => markNormalMessageRead(item.id)}
                 >
                   已读
-                </Button>,
-              ]}
-            >
-              <List.Item.Meta
-                description={
-                  <Typography.Paragraph
-                    ellipsis={{ rows: 2 }}
-                    style={{ marginBottom: 0 }}
-                  >
-                    {item.content}
-                  </Typography.Paragraph>
-                }
-                title={
-                  <Space direction="vertical" size={2}>
-                    <Typography.Text strong>{item.title}</Typography.Text>
-                    <Typography.Text type="secondary">
-                      {item.sendDateTime || '-'}
-                    </Typography.Text>
-                  </Space>
-                }
-              />
-            </List.Item>
+                </Button>
+              }
+            />
           )}
-          size="small"
         />
       ) : (
         <Empty

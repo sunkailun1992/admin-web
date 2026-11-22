@@ -207,7 +207,7 @@ export default function StorageSettingsPanel({
         <Alert
           showIcon
           type="warning"
-          message="影响所有租户后续文件上传与签名策略"
+          title="影响所有租户后续文件上传与签名策略"
           description="对象不迁移；历史文件继续按原平台读取。变更使用策略版本核对，冲突时必须重新读取。"
         />
       </Modal>

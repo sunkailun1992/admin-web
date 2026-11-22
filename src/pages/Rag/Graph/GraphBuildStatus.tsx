@@ -54,12 +54,13 @@ export default function GraphBuildStatus({
         <Collapse
           ghost
           size="small"
+          styles={{ header: { padding: '8px 0' }, body: { padding: 0 } }}
           items={[
             {
               key: 'details',
               label: '查看构建详情',
               children: (
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                   <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
                     <Descriptions.Item label="实体出现次数">
                       {build.nodeCount}
@@ -91,7 +92,7 @@ export default function GraphBuildStatus({
         <Alert
           showIcon
           type="error"
-          message="图谱提交或状态读取失败，已发布结果保持不变"
+          title="图谱提交或状态读取失败，已发布结果保持不变"
           description={
             pendingSubmission
               ? '提交结果尚未确认。请查回同一提交；查无记录后如需重发，明确确认重新构建，仍复用原提交键。'

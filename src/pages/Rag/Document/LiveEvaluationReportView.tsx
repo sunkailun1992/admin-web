@@ -50,7 +50,7 @@ export default function LiveEvaluationReportView({
     };
   });
   return (
-    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <Descriptions bordered column={{ xs: 1, sm: 2 }} size="small">
         <Descriptions.Item label="报告文件" span={2}>
           {fileName}
@@ -135,7 +135,7 @@ export default function LiveEvaluationReportView({
       <Alert
         showIcon
         type="warning"
-        message="合成样本的来源级比较，不代表真实业务或当前服务验收。"
+        title="合成样本的来源级比较，不代表真实业务或当前服务验收。"
         description="报告直接调用 Python 检索实现；耗时不含 Java HTTP/RPC 与网络开销。未评估 OCR、生成答案正确性或忠实度；单轮比较不代表统计显著改善或压力测试。总验收按报告已有检查项显示，未新增指标阈值。"
       />
     </Space>

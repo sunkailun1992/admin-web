@@ -130,7 +130,7 @@ export function ModelRouteWorkbench({
           <Alert
             showIcon
             type="info"
-            message="当前账户只读"
+            title="当前账户只读"
             description="更改全局默认路由需同时具备平台超级管理员身份与用户中心管理权限。"
           />
         ) : null}
@@ -138,7 +138,7 @@ export function ModelRouteWorkbench({
           <Alert
             showIcon
             type={state.phase === 'uncertain' ? 'warning' : 'error'}
-            message={
+            title={
               state.phase === 'load-error'
                 ? '路由加载失败'
                 : state.phase === 'uncertain'
@@ -164,18 +164,18 @@ export function ModelRouteWorkbench({
           <Alert
             showIcon
             type="warning"
-            message="正在只读核对当前路由"
+            title="正在只读核对当前路由"
             description="提交结果不明，未自动重复变更。"
           />
         ) : null}
         {state.notice === 'saved' ? (
-          <Alert showIcon type="success" message="默认路由已更新" />
+          <Alert showIcon type="success" title="默认路由已更新" />
         ) : null}
         {state.notice === 'readback' ? (
           <Alert
             showIcon
             type="info"
-            message="已重新读取当前路由"
+            title="已重新读取当前路由"
             description="下方展示服务此刻返回的配置。上次提交未自动重发，读回不代表已确认原请求的执行过程。"
           />
         ) : null}
@@ -269,7 +269,7 @@ export function ModelRouteWorkbench({
         <Alert
           type="warning"
           showIcon
-          message="此操作会影响所有租户后续使用默认路由的 AI 请求。"
+          title="此操作会影响所有租户后续使用默认路由的 AI 请求。"
         />
         <Descriptions column={1} size="small" className={styles.actions}>
           <Descriptions.Item label="当前供应商">
@@ -300,7 +300,7 @@ export default function AiModelPage() {
   if (!userId || !tenantId)
     return (
       <PageContainer title="AI 模型路由">
-        <Alert type="info" showIcon message="请先登录以读取模型路由" />
+        <Alert type="info" showIcon title="请先登录以读取模型路由" />
       </PageContainer>
     );
   return (

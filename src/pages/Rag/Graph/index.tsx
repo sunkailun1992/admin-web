@@ -493,7 +493,7 @@ function KnowledgeGraphWorkbench() {
           <Alert
             showIcon
             type="error"
-            message="图谱读取失败，已显示结果保持不变，请重试查询"
+            title="图谱读取失败，已显示结果保持不变，请重试查询"
             action={
               <Button size="small" onClick={() => form.submit()}>
                 重新查询
@@ -541,7 +541,14 @@ function KnowledgeGraphWorkbench() {
           </div>
           <div className={styles.workspaceContent}>
             <div className={styles.canvasPane}>
-              <Spin spinning={loading}>
+              {/* 加载外层与内容容器经语义化 classNames 挂类：全屏时撑满画布区。 */}
+              <Spin
+                spinning={loading}
+                classNames={{
+                  root: styles.canvasSpin,
+                  container: styles.canvasSpin,
+                }}
+              >
                 <GraphCanvas
                   ref={canvasRef}
                   graph={graph}

@@ -84,7 +84,7 @@ export default function UploadDocumentDrawer({
     <Drawer
       open
       title="上传知识文档"
-      width="min(620px, 100vw)"
+      size="min(620px, 100vw)"
       onClose={onClose}
       closable={!uploading}
       maskClosable={!uploading}
@@ -122,11 +122,11 @@ export default function UploadDocumentDrawer({
       }
     >
       {result ? (
-        <Space direction="vertical" size={20} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={20} style={{ width: '100%' }}>
           <Alert
             showIcon
             type="success"
-            message={
+            title={
               result.idempotent ? '已复用相同文件的向量' : '文档上传并校验完成'
             }
           />
@@ -145,7 +145,7 @@ export default function UploadDocumentDrawer({
             </Descriptions.Item>
           </Descriptions>
           {notice && (
-            <Alert showIcon type={notice.type} message={notice.message} />
+            <Alert showIcon type={notice.type} title={notice.message} />
           )}
         </Space>
       ) : (
@@ -223,13 +223,13 @@ export default function UploadDocumentDrawer({
             ]}
           />
           {uploading && (
-            <Alert showIcon type="info" message="正在上传并校验，请等待结果" />
+            <Alert showIcon type="info" title="正在上传并校验，请等待结果" />
           )}
           {failed && (
             <Alert
               showIcon
               type="error"
-              message="上传结果未能确认"
+              title="上传结果未能确认"
               description="请先刷新文档列表核对结果，再决定是否重新上传。"
             />
           )}

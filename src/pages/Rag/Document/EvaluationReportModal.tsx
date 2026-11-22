@@ -52,11 +52,11 @@ export default function EvaluationReportModal({
       onCancel={onClose}
       width={1100}
     >
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Alert
           showIcon
           type="info"
-          message="仅在当前浏览器读取报告，不上传或保存文件"
+          title="仅在当前浏览器读取报告，不上传或保存文件"
           description="请选择评估工具生成的报告 JSON（不超过 2 MB），不要选择原始预测或业务数据。这里展示的是报告记录，不代表当前服务状态；离线结果也不代表真实模型或 OCR 质量。"
         />
         <Upload
@@ -97,7 +97,7 @@ export default function EvaluationReportModal({
         >
           <Button loading={reading}>选择本地评估报告</Button>
         </Upload>
-        {error && <Alert showIcon type="error" message={error} />}
+        {error && <Alert showIcon type="error" title={error} />}
         {report &&
           ('kind' in report ? (
             <LiveEvaluationReportView report={report} fileName={fileName} />
@@ -184,7 +184,7 @@ export default function EvaluationReportModal({
               <Alert
                 showIcon
                 type="warning"
-                message="分数按来源文档统计，不能替代切片准确性或真实业务验收。"
+                title="分数按来源文档统计，不能替代切片准确性或真实业务验收。"
                 description="真实模型、OCR、复杂表格和实际文档的召回质量需另行验证。未出现在门禁列表的指标未设置阈值，报告通过不表示这些指标达标。"
               />
               <Table<EvaluationDetail>

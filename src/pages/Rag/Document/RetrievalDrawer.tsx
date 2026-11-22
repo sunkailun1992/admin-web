@@ -1,3 +1,4 @@
+import AppList from '@/components/AppList';
 import { useLatestRef } from '@/hooks/useLatestRef';
 import { retrieveRagKnowledge } from '@/services/rag';
 import { SearchOutlined } from '@ant-design/icons';
@@ -9,7 +10,6 @@ import {
   Form,
   Input,
   InputNumber,
-  List,
   Space,
   Tag,
   Typography,
@@ -40,7 +40,7 @@ export default function RetrievalDrawer({
   const state = retrievalState(result);
 
   return (
-    <Drawer open width="min(780px, 100vw)" title="检索测试" onClose={onClose}>
+    <Drawer open size="min(780px, 100vw)" title="检索测试" onClose={onClose}>
       <Form
         layout="vertical"
         initialValues={{ knowledgeBase, topK: 6 }}
@@ -122,16 +122,16 @@ export default function RetrievalDrawer({
         </Typography.Paragraph>
       </Form>
       {failed && (
-        <Alert showIcon type="error" message="检索请求失败，请稍后重试。" />
+        <Alert showIcon type="error" title="检索请求失败，请稍后重试。" />
       )}
       {state === 'disabled' && (
-        <Alert showIcon type="warning" message="当前检索服务未启用。" />
+        <Alert showIcon type="warning" title="当前检索服务未启用。" />
       )}
       {state === 'unavailable' && (
         <Alert
           showIcon
           type="error"
-          message="检索服务暂不可用，本次结果不能视为没有相关资料。"
+          title="检索服务暂不可用，本次结果不能视为没有相关资料。"
         />
       )}
       {state === 'empty' && (
@@ -151,10 +151,12 @@ export default function RetrievalDrawer({
               {result.chunks.length} 条切片 / {result.sourceCount} 份文档
             </Typography.Text>
           </div>
-          <List
-            dataSource={result.chunks}
-            renderItem={(chunk, index) => (
-              <List.Item key={chunk.chunkId} className={styles.retrievalItem}>
+          <AppList
+            items={result.chunks}
+            rowKey="chunkId"
+            itemClassName={styles.retrievalItem}
+            itemRender={(chunk, index) => (
+              <>
                 <div className={styles.hitRank}>{index + 1}</div>
                 <div className={styles.hitBody}>
                   <Space wrap>
@@ -182,7 +184,7 @@ export default function RetrievalDrawer({
                     查看命中来源
                   </Button>
                 </div>
-              </List.Item>
+              </>
             )}
           />
         </section>

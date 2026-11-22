@@ -1,9 +1,9 @@
+import AppList from '@/components/AppList';
 import {
   Alert,
   Button,
   Descriptions,
   Drawer,
-  List,
   Space,
   Tag,
   Typography,
@@ -61,7 +61,7 @@ export default function StorageOperationDrawer({
       title="存储操作详情"
       open={open}
       onClose={onClose}
-      width={560}
+      size={560}
       extra={
         state.pending ? (
           <Button
@@ -79,7 +79,7 @@ export default function StorageOperationDrawer({
           className={styles.section}
           type="warning"
           showIcon
-          message="原操作尚未确认终态"
+          title="原操作尚未确认终态"
           description="继续使用同一请求标识只读查询；不会自动重发创建、更新、删除或探测。刷新页面也先恢复查回。"
         />
       ) : null}
@@ -88,7 +88,7 @@ export default function StorageOperationDrawer({
           className={styles.section}
           type="error"
           showIcon
-          message={state.error}
+          title={state.error}
         />
       ) : null}
       <Descriptions column={1} size="small">
@@ -139,7 +139,7 @@ export default function StorageOperationDrawer({
           className={styles.section}
           type="error"
           showIcon
-          message={storageFailureText(operation.failureCode)}
+          title={storageFailureText(operation.failureCode)}
         />
       ) : null}
       {operation?.cleanupStatus === 'FAILED' ||
@@ -148,31 +148,30 @@ export default function StorageOperationDrawer({
           className={styles.section}
           type="warning"
           showIcon
-          message="探测清理需要继续核对"
+          title="探测清理需要继续核对"
           description="不要以写入或读取步骤完成代替清理成功。请保留本次请求标识联系平台管理员。"
         />
       ) : null}
       {operation?.steps.length ? (
-        <List
+        <AppList
           className={styles.section}
           header="实际探测步骤"
-          dataSource={operation.steps}
-          renderItem={(step) => (
-            <List.Item>
-              <Space direction="vertical">
-                <Space>
-                  <Typography.Text>{stepLabels[step.name]}</Typography.Text>
-                  <Tag color={color(step.status)}>
-                    {statusLabels[step.status]}
-                  </Tag>
-                </Space>
-                {step.failureCode ? (
-                  <Typography.Text type="danger">
-                    {storageFailureText(step.failureCode)}
-                  </Typography.Text>
-                ) : null}
+          items={operation.steps}
+          rowKey="name"
+          itemRender={(step) => (
+            <Space orientation="vertical">
+              <Space>
+                <Typography.Text>{stepLabels[step.name]}</Typography.Text>
+                <Tag color={color(step.status)}>
+                  {statusLabels[step.status]}
+                </Tag>
               </Space>
-            </List.Item>
+              {step.failureCode ? (
+                <Typography.Text type="danger">
+                  {storageFailureText(step.failureCode)}
+                </Typography.Text>
+              ) : null}
+            </Space>
           )}
         />
       ) : null}

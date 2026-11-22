@@ -50,7 +50,7 @@ export default function ModelRouteOverview({
           <div className={styles.providerGrid}>
             {providers.map((provider) => (
               <Card key={provider} size="small" className={styles.providerCard}>
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Typography.Text strong>
                     {providerLabel(provider)}
                   </Typography.Text>

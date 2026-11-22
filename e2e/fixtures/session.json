@@ -16,15 +16,41 @@
       "rag:graph:view",
       "rag:graph:manage"
     ],
-    "availableTenants": [{ "id": "synthetic-tenant", "name": "合成租户" }],
+    "availableTenants": [
+      {
+        "id": "synthetic-tenant",
+        "name": "合成租户"
+      }
+    ],
     "frontendResources": [
-      { "code": "menu:tenant" },
-      { "code": "menu:dept" },
-      { "code": "menu:user" },
-      { "code": "menu:role" },
-      { "code": "menu:resource" },
-      { "code": "menu:rag:document" },
-      { "code": "menu:rag:graph" }
+      {
+        "id": "synthetic-resource-1",
+        "code": "menu:tenant"
+      },
+      {
+        "id": "synthetic-resource-2",
+        "code": "menu:dept"
+      },
+      {
+        "id": "synthetic-resource-3",
+        "code": "menu:user"
+      },
+      {
+        "id": "synthetic-resource-4",
+        "code": "menu:role"
+      },
+      {
+        "id": "synthetic-resource-5",
+        "code": "menu:resource"
+      },
+      {
+        "id": "synthetic-resource-6",
+        "code": "menu:rag:document"
+      },
+      {
+        "id": "synthetic-resource-7",
+        "code": "menu:rag:graph"
+      }
     ],
     "backendResources": []
   }

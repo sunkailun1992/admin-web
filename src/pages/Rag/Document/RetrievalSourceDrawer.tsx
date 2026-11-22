@@ -15,7 +15,7 @@ export function RetrievalSourceContent({
   onOpenDocument,
 }: SourceProps) {
   return (
-    <Space direction="vertical" size={20} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={20} style={{ width: '100%' }}>
       <Descriptions column={1} size="small">
         <Descriptions.Item label="来源位置">
           <span className={styles.breakText}>{chunk.source || '未提供'}</span>
@@ -57,7 +57,7 @@ export default function RetrievalSourceDrawer({
   return (
     <Drawer
       open
-      width="min(720px, 100vw)"
+      size="min(720px, 100vw)"
       title={props.chunk.title || '命中来源'}
       onClose={onClose}
     >

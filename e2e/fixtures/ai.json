@@ -101,14 +101,52 @@
         }
       ],
       "limits": {
-        "uploadTtlSeconds": { "min": 60, "max": 3600, "defaultValue": 60 },
-        "viewTtlSeconds": { "min": 60, "max": 3600, "defaultValue": 1800 },
+        "uploadTtlSeconds": {
+          "min": 60,
+          "max": 3600,
+          "defaultValue": 60
+        },
+        "viewTtlSeconds": {
+          "min": 60,
+          "max": 3600,
+          "defaultValue": 1800
+        },
         "maxUploadBytes": {
           "min": 1,
           "max": 52428800,
           "defaultValue": 52428800
         }
       }
+    }
+  },
+  "GET /api/ai/storage-configurations?size=100&uploadEnabled=true": {
+    "success": true,
+    "code": "00000",
+    "data": {
+      "items": [
+        {
+          "id": "config-1",
+          "platform": "platform-1",
+          "name": "合成私有存储",
+          "provider": "MINIO",
+          "endpoint": "https://storage.example.invalid",
+          "bucket": "synthetic-bucket",
+          "region": null,
+          "uploadEnabled": true,
+          "isDefault": true,
+          "version": 3,
+          "configRevision": 2,
+          "appliedRevision": 2,
+          "runtimeStatus": "APPLIED",
+          "credentialsConfigured": true,
+          "credentialUpdatedAt": null,
+          "referenceCount": 1,
+          "lastProbe": null
+        }
+      ],
+      "page": 1,
+      "size": 100,
+      "total": 1
     }
   }
 }

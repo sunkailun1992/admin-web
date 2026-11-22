@@ -4,6 +4,7 @@ import routes from '../../config/routes';
 import { isApiRequest, resolveFixture } from '../../e2e/support/api-fixtures';
 import {
   assertAllowlistValid,
+  consoleAllowlist,
   type AllowlistEntry,
 } from '../../e2e/support/console-allowlist';
 import { menuPagesFromRoutes } from '../../e2e/support/pages';
@@ -107,4 +108,13 @@ test('allowlist entries need a source and an end condition', () => {
   expect(() =>
     assertAllowlistValid([{ ...valid, until: 'some day' }]),
   ).toThrow();
+});
+
+test('no part-one allowlist entries remain', () => {
+  // 第一部分只为第三方的旧版本警告留过条目，升级完成后必须删光；以后只收附上游 issue 链接的条目。
+  expect(
+    consoleAllowlist
+      .filter((entry) => entry.until === 'part2')
+      .map((entry) => entry.source),
+  ).toStrictEqual([]);
 });

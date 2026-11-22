@@ -1,3 +1,4 @@
+import AppList from '@/components/AppList';
 import { useEffectEvent } from '@/hooks/useEffectEvent';
 import { listRagDocumentChunks } from '@/services/rag';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
@@ -9,7 +10,6 @@ import {
   Descriptions,
   Drawer,
   Empty,
-  List,
   Space,
   Spin,
   Tag,
@@ -112,7 +112,7 @@ export default function DocumentChunksDrawer({
     <Drawer
       open
       title={document.title || '文档切片'}
-      width="min(1120px, 100vw)"
+      size="min(1120px, 100vw)"
       onClose={onClose}
       getContainer={getContainer}
       rootStyle={
@@ -159,7 +159,7 @@ export default function DocumentChunksDrawer({
           showIcon
           type="error"
           className={styles.inlineChunkAlert}
-          message="切片读取失败，已读内容保持不变。"
+          title="切片读取失败，已读内容保持不变。"
           action={
             <Button size="small" onClick={() => loadFrom(retryCursor.current)}>
               重试读取
@@ -177,39 +177,43 @@ export default function DocumentChunksDrawer({
               <div className={styles.chunkDirectoryTitle}>
                 当前页 {page.items.length} 条切片
               </div>
-              <List
-                dataSource={page.items}
-                renderItem={(item) => (
-                  <List.Item className={styles.chunkDirectoryItem}>
-                    <Button
-                      type="text"
-                      block
-                      className={`${styles.chunkChoice} ${
-                        selected?.chunkId === item.chunkId
-                          ? styles.chunkChoiceSelected
-                          : ''
-                      }`}
-                      aria-pressed={selected?.chunkId === item.chunkId}
-                      onClick={() => setSelectedId(item.chunkId)}
+              <AppList
+                items={page.items}
+                rowKey="chunkId"
+                itemClassName={styles.chunkDirectoryItem}
+                itemRender={(item) => (
+                  <Button
+                    type="text"
+                    block
+                    className={`${styles.chunkChoice} ${
+                      selected?.chunkId === item.chunkId
+                        ? styles.chunkChoiceSelected
+                        : ''
+                    }`}
+                    aria-pressed={selected?.chunkId === item.chunkId}
+                    onClick={() => setSelectedId(item.chunkId)}
+                  >
+                    <Space>
+                      <strong>切片 {item.chunkIndex + 1}</strong>
+                      <Tag>{item.chunkType}</Tag>
+                    </Space>
+                    <Typography.Paragraph
+                      ellipsis={{ rows: 2 }}
+                      className={styles.chunkSnippet}
                     >
-                      <Space>
-                        <strong>切片 {item.chunkIndex + 1}</strong>
-                        <Tag>{item.chunkType}</Tag>
-                      </Space>
-                      <Typography.Paragraph
-                        ellipsis={{ rows: 2 }}
-                        className={styles.chunkSnippet}
-                      >
-                        {item.content}
-                      </Typography.Paragraph>
-                    </Button>
-                  </List.Item>
+                      {item.content}
+                    </Typography.Paragraph>
+                  </Button>
                 )}
               />
             </aside>
             {selected && source && (
               <article className={styles.chunkReader} aria-label="切片内容">
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space
+                  orientation="vertical"
+                  size={16}
+                  style={{ width: '100%' }}
+                >
                   <div>
                     <Typography.Title level={5}>
                       切片 {selected.chunkIndex + 1}

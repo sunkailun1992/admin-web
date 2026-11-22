@@ -1,8 +1,8 @@
+import AppList from '@/components/AppList';
 import {
   Button,
   Descriptions,
   Empty,
-  List,
   Space,
   Tabs,
   Tag,
@@ -154,19 +154,18 @@ export default function GraphDetails({
             key: 'relations',
             label: node ? `当前结果关联 (${related.length})` : '关联节点',
             children: node ? (
-              <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                 <Typography.Text type="secondary">
                   仅显示当前查询已返回的关系，点击名称定位已有节点。
                 </Typography.Text>
-                <List
+                <AppList
                   size="small"
-                  locale={{ emptyText: '当前结果中没有相邻关系' }}
-                  dataSource={related}
-                  renderItem={(item) => (
-                    <List.Item
-                      key={item.edge.id}
-                      className={styles.relationItem}
-                    >
+                  emptyText="当前结果中没有相邻关系"
+                  items={related}
+                  rowKey={(item) => item.edge.id}
+                  itemClassName={styles.relationItem}
+                  itemRender={(item) => (
+                    <>
                       <Typography.Text
                         type="secondary"
                         className={styles.breakText}
@@ -180,12 +179,12 @@ export default function GraphDetails({
                           相邻节点未包含在当前结果
                         </Typography.Text>
                       )}
-                    </List.Item>
+                    </>
                   )}
                 />
               </Space>
             ) : edge ? (
-              <Space direction="vertical">
+              <Space orientation="vertical">
                 {endpoint(edge.source)}
                 {endpoint(edge.target)}
               </Space>

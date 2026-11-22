@@ -1,7 +1,9 @@
+import AppList from '@/components/AppList';
+import ListRow from '@/components/AppList/ListRow';
 import PageContainer from '@/components/AppPageContainer';
 import { ProCard, StatisticCard } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { List, Tag } from 'antd';
+import { Tag } from 'antd';
 
 export default function DashboardPage() {
   const { initialState } = useModel('@@initialState');
@@ -41,24 +43,28 @@ export default function DashboardPage() {
       </StatisticCard.Group>
       <ProCard gutter={16} style={{ marginTop: 16 }}>
         <ProCard title="前端菜单资源" colSpan="50%">
-          <List
-            dataSource={frontendResources}
-            renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta title={item.name} description={item.path} />
-                <Tag color="blue">{item.code}</Tag>
-              </List.Item>
+          <AppList
+            items={frontendResources}
+            rowKey="id"
+            itemRender={(item) => (
+              <ListRow
+                title={item.name}
+                description={item.path}
+                extra={<Tag color="blue">{item.code}</Tag>}
+              />
             )}
           />
         </ProCard>
         <ProCard title="后端接口权限" colSpan="50%">
-          <List
-            dataSource={backendResources}
-            renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta title={item.name} description={item.path} />
-                <Tag color="orange">{item.code}</Tag>
-              </List.Item>
+          <AppList
+            items={backendResources}
+            rowKey="id"
+            itemRender={(item) => (
+              <ListRow
+                title={item.name}
+                description={item.path}
+                extra={<Tag color="orange">{item.code}</Tag>}
+              />
             )}
           />
         </ProCard>

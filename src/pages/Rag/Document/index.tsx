@@ -364,7 +364,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
             showIcon
             type="error"
             className={styles.inlineAlert}
-            message="文档读取失败，已载入内容保持不变。请重试刷新。"
+            title="文档读取失败，已载入内容保持不变。请重试刷新。"
           />
         )}
         <ProTable<RagAPI.DocumentVO>

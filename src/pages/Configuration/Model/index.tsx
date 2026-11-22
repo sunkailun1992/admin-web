@@ -53,7 +53,7 @@ function ModelConfigurationWorkbench({ scope }: { scope: string }) {
           <Alert
             showIcon
             type="error"
-            message="模型目录读取失败"
+            title="模型目录读取失败"
             description="无法确认当前目录。请重新读取；没有自动发起模型验证或修改。"
             action={
               <Button onClick={() => void controller.current?.load()}>
@@ -90,7 +90,7 @@ export default function ModelConfigurationPage() {
         <Alert
           type="warning"
           showIcon
-          message="需要平台超级管理员身份与用户中心管理权限"
+          title="需要平台超级管理员身份与用户中心管理权限"
         />
       </PageContainer>
     );
