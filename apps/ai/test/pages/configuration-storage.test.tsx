@@ -242,6 +242,9 @@ test('an unfinished probe is looked up by the same request id and never posted a
   await user.click(await screen.findByRole('button', { name: '确认操作' }));
   const sheet = await screen.findByRole('dialog', { name: '存储操作详情' });
   expect(await within(sheet).findByText('原操作尚未确认终态')).toBeVisible();
+  // 待查回的操作在提交前就记下（提示随即出现），提交有了回应后“只读查回”才可用：等它可用再往下看。
+  const readback = within(sheet).getByRole('button', { name: '只读查回' });
+  await waitFor(() => expect(readback).toBeEnabled());
   const posted = (writes(calls)[0]!.body as { requestId: string }).requestId;
   expect(
     JSON.parse(sessionStorage.getItem(`storage-operation-v1:${scope}`)!),
@@ -258,7 +261,7 @@ test('an unfinished probe is looked up by the same request id and never posted a
       );
     }),
   );
-  await user.click(within(sheet).getByRole('button', { name: '只读查回' }));
+  await user.click(readback);
   await waitFor(() =>
     expect(sessionStorage.getItem(`storage-operation-v1:${scope}`)).toBe(null),
   );
