@@ -1,0 +1,48 @@
+{
+  "name": "@admin-web/{{ name }}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build --mode prod",
+    "build:dev": "vite build --mode dev",
+    "build:test": "vite build --mode test",
+    "dev": "vite --mode dev",
+    "preview": "vite preview --mode dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@admin-web/api": "workspace:*",
+    "@admin-web/auth": "workspace:*",
+    "@admin-web/i18n": "workspace:*",
+    "@admin-web/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "axios": "catalog:",
+    "i18next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-i18next": "catalog:",
+    "react-router": "catalog:",
+    "sonner": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@admin-web/config-typescript": "workspace:*",
+    "@admin-web/config-vite": "workspace:*",
+    "@admin-web/test-utils": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "jsdom": "catalog:",
+    "msw": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,9 @@
+import { defineAppConfig } from '@admin-web/config-vite';
+
+export default defineAppConfig({
+  name: '{{ name }}',
+  role: 'remote',
+  devPort: {{ devPort }},
+  previewPort: {{ previewPort }},
+  exposes: { './routes': './src/routes.tsx' },
+});

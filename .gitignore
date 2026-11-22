@@ -22,3 +22,6 @@ e2e-out
 
 # Vitest 浏览器模式的失败截图等附件（默认 .vitest/attachments）
 .vitest/
+
+# 物料注册表的构建产物（pnpm --filter @admin-web/ui registry:build 生成）
+packages/ui/public/r

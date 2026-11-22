@@ -1,0 +1,13 @@
+import { expect, test } from 'vitest';
+import routes from '../../src/routes.tsx';
+
+test('./routes default-exports the example page under its own menu group', () => {
+  const group = { key: '{{ name }}', labelKey: '{{ name }}:menu.group' };
+  expect(routes.menu).toStrictEqual([
+    { path: '/{{ name }}/example', labelKey: '{{ name }}:menu.example', group },
+  ]);
+  expect(routes.routes.map((route) => route.path)).toStrictEqual([
+    '/{{ name }}',
+    '/{{ name }}/example',
+  ]);
+});

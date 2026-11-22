@@ -1,0 +1,20 @@
+import { createServiceClient } from '@admin-web/api';
+import { client } from '../http.ts';
+import type { CrudService } from '../pages/CrudPage.tsx';
+
+export type ExampleVO = { id: string; name: string; code: string; version?: number };
+
+// 示例接口（经网关同路径）：后端就绪后换成真实路径与字段；更新带 version（乐观锁）。
+const BASE = '/api/{{ name }}/examples';
+const api = createServiceClient(client);
+
+export const exampleService: CrudService<ExampleVO> = {
+  list: (query) => api.getPage<ExampleVO>(BASE, query),
+  create: (values) => api.post(BASE, values),
+  update: (record, values) =>
+    api.put(`${BASE}/${encodeURIComponent(record.id)}`, {
+      ...values,
+      version: record.version,
+    }),
+  remove: (record) => api.remove(`${BASE}/${encodeURIComponent(record.id)}`),
+};

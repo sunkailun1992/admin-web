@@ -8,3 +8,6 @@ e2e-out
 .superpowers
 .remember
 .serena
+
+# 生成器模板（Handlebars 占位符，生成后的文件才按项目规范格式化）
+turbo/generators/templates

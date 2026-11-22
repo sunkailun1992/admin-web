@@ -1,0 +1,28 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { exampleService, type ExampleVO } from '../services/example.ts';
+import { CrudPage, type CrudTexts } from './CrudPage.tsx';
+
+const KEY = ['{{ name }}', 'examples'] as const;
+
+/** 示例页：物料注册表的 crud-page 模板（./CrudPage.tsx）接上示例接口；按业务改字段、文案与接口。 */
+export default function ExamplePage() {
+  const { t } = useTranslation('{{ name }}');
+  const texts = useMemo<CrudTexts>(
+    () => ({
+      title: t('example.title'),
+      create: t('example.create'),
+      edit: t('example.edit'),
+      name: t('example.name'),
+      code: t('example.code'),
+      nameRequired: t('example.nameRequired'),
+      codeRequired: t('example.codeRequired'),
+      deleteTitle: t('example.deleteTitle'),
+      deleteDescription: t('example.deleteDescription'),
+    }),
+    [t],
+  );
+  return (
+    <CrudPage<ExampleVO> queryKey={KEY} service={exampleService} texts={texts} />
+  );
+}

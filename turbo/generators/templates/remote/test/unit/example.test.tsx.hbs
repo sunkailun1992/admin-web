@@ -1,0 +1,38 @@
+import type { SessionState } from '@admin-web/auth';
+import { renderWithProviders, setupMsw } from '@admin-web/test-utils';
+import { screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
+import { expect, test } from 'vitest';
+import { client } from '../../src/http.ts';
+import ExamplePage from '../../src/pages/Example.tsx';
+
+const server = setupMsw();
+
+const currentUser = {
+  userId: 'u1',
+  username: 'operator',
+  name: 'Operator',
+  tenantId: 't1',
+  permissions: [],
+};
+const session: SessionState = { currentUser, currentTenantId: 't1' };
+const record = { id: 'e1', name: 'EXAMPLE_NAME', code: 'EXAMPLE_CODE', version: 1 };
+
+test('the example page lists the records the service returns', async () => {
+  const queries: Array<Record<string, string>> = [];
+  server.use(
+    http.get('/api/{{ name }}/examples', ({ request }) => {
+      queries.push(Object.fromEntries(new URL(request.url).searchParams));
+      const data = { records: [record], total: 1 };
+      return HttpResponse.json({ success: true, data });
+    }),
+  );
+  await renderWithProviders(<ExamplePage />, { client, session });
+  expect(await screen.findByText('EXAMPLE_NAME')).toBeInTheDocument();
+  expect(screen.getByText('EXAMPLE_CODE')).toBeInTheDocument();
+  expect(queries[0]).toStrictEqual({
+    current: '1',
+    size: '10',
+    assignment: 'true',
+  });
+});

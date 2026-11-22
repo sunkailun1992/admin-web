@@ -1,0 +1,10 @@
+import { defineConfig } from 'vitest/config';
+
+// 单元测试在 jsdom 里跑，接口经 MSW 在 Node 里拦截；需要真实浏览器的页面交互时照其他子应用加 pages 项目。
+export default defineConfig({
+  test: {
+    include: ['test/unit/**/*.test.{ts,tsx}'],
+    environment: 'jsdom',
+    setupFiles: ['test/setup-unit.ts'],
+  },
+});
