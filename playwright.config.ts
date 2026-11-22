@@ -31,6 +31,11 @@ export default defineConfig({
     trace: live ? 'off' : 'retain-on-failure',
     screenshot: live ? 'off' : 'only-on-failure',
   },
+  // 先跑预热项目（e2e/warm-up.setup.ts），再跑本组用例：首次编译的开销不算进用例的等待上限。
+  projects: [
+    { name: 'warm-up', testDir: 'e2e', testMatch: /warm-up\.setup\.ts$/ },
+    { name: 'chromium', dependencies: ['warm-up'] },
+  ],
   webServer: {
     command: live ? 'pnpm dev:test' : `PORT=${port} pnpm dev`,
     url: `http://localhost:${port}`,

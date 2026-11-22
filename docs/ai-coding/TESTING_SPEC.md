@@ -31,6 +31,8 @@
 - 固定数据一组（`pnpm test:e2e`，`e2e/mock/`）：开发服务开在 8001 端口，`page.route` 拦截全部接口，返回 `e2e/fixtures/` 里的合成数据；没有固定数据的接口回 501 并让用例失败。进 CI，本机用系统 Chrome、CI 用 Playwright 自带的 Chromium。
 - 真实网关一组（`pnpm test:e2e:test`，`e2e/live/`）：`ADMIN_WEB_ENV=test` 的开发服务开在 8000 端口（已在 Keycloak 登记回调），经真实网关与 Keycloak 登录一次后串行跑。只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行，账号口令由脚本放进 `ADMIN_WEB_E2E_USERNAME`、`ADMIN_WEB_E2E_PASSWORD`，不写进仓库与命令行。
 
+两组都先跑预热项目（`e2e/warm-up.setup.ts`，上限 3 分钟）：开发服务按需编译，冷启动（CI 没有编译缓存）时第一次打开页面要等整包编译，开销算在预热里，正式用例的等待上限（动作 15 秒、导航 30 秒）不变。
+
 任何功能改动至少执行：
 
 ```bash
