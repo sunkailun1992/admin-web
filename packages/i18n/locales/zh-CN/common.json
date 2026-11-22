@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "新建",
+    "search": "查询",
+    "reset": "重置",
+    "retry": "重试",
+    "close": "关闭",
+    "back": "返回",
+    "refresh": "刷新",
+    "submit": "提交",
+    "upload": "上传",
+    "logout": "退出登录"
+  },
+  "status": {
+    "loading": "加载中…",
+    "empty": "暂无数据",
+    "loadFailed": "加载失败",
+    "saveSucceeded": "保存成功",
+    "deleteSucceeded": "删除成功",
+    "requestFailed": "请求处理失败",
+    "forbidden": "无权限访问",
+    "networkError": "网络请求异常"
+  },
+  "confirmDelete": {
+    "title": "确认删除",
+    "description": "删除后不能恢复。"
+  },
+  "pagination": {
+    "total": "共 {{count}} 条",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageSize": "每页 {{size}} 条"
+  },
+  "table": {
+    "actions": "操作"
+  },
+  "theme": {
+    "label": "主题",
+    "light": "浅色",
+    "dark": "暗色",
+    "system": "跟随系统"
+  },
+  "language": {
+    "label": "语言",
+    "zh-CN": "简体中文",
+    "en-US": "English"
+  }
+}

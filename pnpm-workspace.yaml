@@ -73,6 +73,7 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - lint-staged@17.6.2
+  - i18next@27.2.3
 
 patchedDependencies:
   '@storybook/addon-vitest@10.6.8': patches/@storybook__addon-vitest@10.6.8.patch
