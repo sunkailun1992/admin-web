@@ -36,7 +36,8 @@ const backups = Object.fromEntries(
 let failure;
 try {
   run('pnpm', ['turbo', 'gen', 'remote', '--args', NAME, '8199', '8299']);
-  run('pnpm', ['install', '--prefer-offline']);
+  // 新子应用要登记进 pnpm-lock.yaml（结束时还原）。设了 CI 环境变量时 pnpm 默认冻结锁文件，这里明确放开。
+  run('pnpm', ['install', '--no-frozen-lockfile', '--prefer-offline']);
   for (const task of ['typecheck', 'test', 'build'])
     run('pnpm', ['--filter', `@admin-web/${NAME}`, task]);
 } catch (error) {
