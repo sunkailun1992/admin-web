@@ -18,10 +18,14 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
+  container,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
+  /** 渲染到的容器（Radix Portal 的 container），默认 document.body；原生全屏时传全屏元素。 */
+  container?: React.ComponentProps<typeof PopoverPrimitive.Portal>['container'];
+}) {
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}

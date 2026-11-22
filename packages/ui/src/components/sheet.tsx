@@ -46,13 +46,16 @@ function SheetContent({
   children,
   side = 'right',
   showCloseButton = true,
+  container,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: 'top' | 'right' | 'bottom' | 'left';
   showCloseButton?: boolean;
+  /** 渲染到的容器（Radix Portal 的 container），默认 document.body；原生全屏时传全屏元素。 */
+  container?: React.ComponentProps<typeof SheetPrimitive.Portal>['container'];
 }) {
   return (
-    <SheetPortal>
+    <SheetPortal container={container}>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"

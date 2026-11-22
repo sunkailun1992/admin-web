@@ -1,0 +1,121 @@
+import {
+  Badge,
+  Button,
+  DescriptionList,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@admin-web/ui';
+import { useTranslation } from 'react-i18next';
+import { CopyButton } from '../../components/CopyButton.tsx';
+import type { DocumentVO, RetrievalChunkVO } from '../../services/types.ts';
+
+export type OpenDocument = (
+  document: Pick<DocumentVO, 'documentId' | 'title' | 'sourceName'>,
+) => void;
+
+type SourceProps = {
+  chunk: RetrievalChunkVO;
+  canViewDocument: boolean;
+  onOpenDocument: OpenDocument;
+};
+
+/** 检索命中的来源（照 1.2.4 的 RetrievalSourceContent）：位置、评分、切片编号与命中内容；内容按文本显示。 */
+export function RetrievalSourceContent({
+  chunk,
+  canViewDocument,
+  onOpenDocument,
+}: SourceProps) {
+  const { t } = useTranslation('rag');
+  return (
+    <div className="flex flex-col gap-5">
+      <DescriptionList
+        items={[
+          {
+            label: t('retrieval.source.location'),
+            value: (
+              <span className="break-all">
+                {chunk.source || t('notProvided')}
+              </span>
+            ),
+          },
+          {
+            label: t('retrieval.source.score'),
+            value: (
+              <Badge variant="secondary">
+                {Number.isFinite(chunk.score)
+                  ? chunk.score.toFixed(4)
+                  : t('notProvided')}
+              </Badge>
+            ),
+          },
+          {
+            label: t('retrieval.source.chunkId'),
+            value: (
+              <span className="flex items-center gap-1 break-all">
+                <code className="font-mono text-xs">{chunk.chunkId}</code>
+                <CopyButton
+                  value={chunk.chunkId}
+                  label={t('retrieval.source.copyChunkId')}
+                />
+              </span>
+            ),
+          },
+        ]}
+      />
+      <section className="flex flex-col gap-2">
+        <h3 className="font-semibold">{t('retrieval.source.content')}</h3>
+        <div className="max-h-[50vh] overflow-auto rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words">
+          {chunk.content}
+        </div>
+      </section>
+      {canViewDocument && chunk.documentId ? (
+        <div>
+          <Button
+            variant="outline"
+            onClick={() =>
+              onOpenDocument({
+                documentId: chunk.documentId,
+                title: chunk.title || t('documentFallback'),
+                sourceName: chunk.source?.split(' / ')[0] || '',
+              })
+            }
+          >
+            {t('viewChunks')}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function RetrievalSourceSheet({
+  onClose,
+  ...props
+}: SourceProps & { onClose: () => void }) {
+  const { t } = useTranslation('rag');
+  return (
+    <Sheet
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent className="overflow-y-auto sm:max-w-2xl">
+        <SheetHeader>
+          <SheetTitle className="break-all">
+            {props.chunk.title || t('retrieval.source.fallbackTitle')}
+          </SheetTitle>
+          <SheetDescription>
+            {t('retrieval.source.description')}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="px-4 pb-6">
+          <RetrievalSourceContent {...props} />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
