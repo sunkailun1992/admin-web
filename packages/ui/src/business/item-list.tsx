@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from './empty-state.tsx';
 
@@ -24,15 +24,22 @@ export function ItemList<T>({
   itemClassName,
 }: ItemListProps<T>) {
   const { t } = useTranslation('common');
+  const headerId = useId();
   return (
     <div className="rounded-md border">
       {header ? (
-        <div className="border-b px-4 py-2 text-sm font-medium">{header}</div>
+        <div id={headerId} className="border-b px-4 py-2 text-sm font-medium">
+          {header}
+        </div>
       ) : null}
       {items.length === 0 ? (
         <EmptyState title={emptyText ?? t('status.empty')} />
       ) : (
-        <ul className="divide-y">
+        // 有表头时用它给列表命名，读屏软件进入列表时会读出来。
+        <ul
+          className="divide-y"
+          aria-labelledby={header ? headerId : undefined}
+        >
           {items.map((item) => (
             <li
               key={rowKey(item)}

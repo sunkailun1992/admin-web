@@ -78,3 +78,15 @@ test('ItemList puts the item class on every row and renders an optional header',
       Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
 });
+
+test('ItemList names the list by its header so assistive technology announces it', () => {
+  render(
+    <ItemList
+      items={items}
+      rowKey={(i) => i.id}
+      renderItem={(i) => i.text}
+      header="LIST_HEADER"
+    />,
+  );
+  expect(screen.getByRole('list', { name: 'LIST_HEADER' })).toBeVisible();
+});
