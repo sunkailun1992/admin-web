@@ -1,6 +1,6 @@
 # AI 代码编写指导规范
 
-本文档用于约束 AI 在本项目中生成、修改和审查前端代码。项目基线为 Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5 和 ProComponents；工具链与门禁见 README「工具链与门禁」。
+本文档用于约束 AI 在本项目中生成、修改和审查前端代码。项目基线为 Ant Design Pro、Umi Max 4.7、React 19、TypeScript、Ant Design 6 和 ProComponents 3；工具链与门禁见 README「工具链与门禁」。
 
 ## 基本原则
 
@@ -102,6 +102,9 @@ src/pages/System/Resource
 - 危险操作必须使用 `Popconfirm` 二次确认。
 - 状态、分类、HTTP 方法等固定选项集中放在 `src/constants`。
 - 页面标题使用 `PageContainer title`，不要额外堆叠说明性卡片。
+- 表格之外的简单列表用 `src/components/AppList`（antd 6.6 起 `List` 弃用，`AppList` 是 `Listy` 的外壳，补了分隔线、标题与空状态；标题加描述的条目用 `AppList/ListRow`），不再用 `List`。`rowKey` 用接口里的稳定主键。
+- 页头右侧用 ProLayout 的 `avatarProps`（账户菜单经 `render` 包成 `AvatarDropdown`）与 `actionsRender`（消息中心），不用 Umi 布局插件的 `rightRender`（ProLayout v3 已删 `rightContentRender`）。
+- `useRef` 必须给初值（React 19）；ProTable 列用 `search: false` 隐藏查询项（v3 删了 `hideInSearch`）。
 
 ## 请求规范
 
@@ -170,6 +173,7 @@ menu:resource
 
 - 优先使用 ProComponents 和 Ant Design 默认样式。
 - 只在页面需要明显布局差异时新增 `.less`。
+- 要调 antd 组件内部的样式，用 antd 6 的语义化 `classNames`、`styles`（如 Collapse 的 `header`、`body`，Spin 的 `root`、`container`），不要用 `:global(.ant-*)` 覆盖内部类名：类名会随版本改，覆盖会悄悄失效（antd 6 升级时 `.ant-collapse-content-box`、`.ant-spin-nested-loading` 就是这样失效的）。
 - 不使用大面积单色渐变、装饰性空卡片、嵌套卡片。
 - 表格、表单、弹窗宽度要稳定，避免内容变化导致布局跳动。
 

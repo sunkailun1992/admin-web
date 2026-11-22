@@ -17,7 +17,7 @@
 
 - 项目名称：`admin-web`
 - 项目类型：用户中心后台管理前端
-- 技术栈：Ant Design Pro、Umi Max、React、TypeScript、Ant Design 5、ProComponents
+- 技术栈：Ant Design Pro、Umi Max 4.7、React 19、TypeScript、Ant Design 6、ProComponents 3（beta，精确锁定）
 - 工具链（1.2.2 起）：Node 26、pnpm 12.21.0、TypeScript 6.0（`tsc --noEmit` 只做类型检查）、ESLint 10 扁平配置与 Prettier 3、Vitest、Playwright（固定数据与真实网关两组）、husky 与 lint-staged
 - 包管理器：`pnpm`
 - 网关项目：同级仓库 `../gateway`

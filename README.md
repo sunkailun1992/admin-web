@@ -34,7 +34,7 @@ project:
   type: frontend-admin
   framework: Ant Design Pro + Umi Max
   language: TypeScript
-  ui: Ant Design 5 + ProComponents
+  ui: Ant Design 6 + ProComponents 3
   runtime: Node 26
   packageManager: pnpm 12.21.0
   tests: Vitest + Playwright
@@ -82,11 +82,11 @@ AI 处理本项目任务时，优先读取：
 
 ## 技术栈
 
-- React
+- React 19
 - TypeScript
-- Umi Max
-- Ant Design 5
-- Ant Design ProComponents
+- Umi Max 4.7
+- Ant Design 6
+- Ant Design ProComponents 3
 - pnpm
 
 工具链见下文「工具链与门禁」。
@@ -281,6 +281,13 @@ bash scripts/check-secrets.sh
 - 单元测试用 Vitest（`vitest.config.mts`），浏览器测试用 Playwright（`playwright.config.ts`，固定数据与真实网关两组、不重试），规则见 [TESTING_SPEC.md](docs/ai-coding/TESTING_SPEC.md)。
 - 提交钩子：`pnpm install` 时 `prepare` 装好 husky，pre-commit 对暂存文件跑 `eslint --fix` 与 `prettier --write`（`.lintstagedrc`）。
 - CI（`.github/workflows/ci.yml`，Node 26，action 固定到完整提交 SHA）依次跑安装、`format:check`、`lint`、`typecheck`、`test`、`build:dev`、安装 Chromium、固定数据一组浏览器测试（失败时上传 `e2e-out/` 报告）与密钥扫描。
+
+## 依赖升级（1.2.3 起）
+
+- React 19.3、antd 6.7（图标 6.3）、ProComponents 3.1.15-9（3.x 仍是 beta，`package.json` 精确锁定）、Umi Max 4.7.36；不加 overrides。Umi 自己的布局插件仍依赖 ProComponents 2.8.10，构建统计（`dist/stats.json`）核对过打进产物的只有 v3。
+- 页头右侧改用 ProLayout v3 的 `avatarProps` 与 `actionsRender`：v3 删了 `rightContentRender`，Umi 布局插件的 `rightRender` 不再生效。
+- 弃用写法按 antd 6 源码里各组件的弃用表迁移完；`List` 改用 `Listy`（经 `src/components/AppList`）；改 antd 内部样式用语义化 `classNames`、`styles`。浏览器测试的控制台允许清单为空，以后只收附上游 issue 链接的第三方条目。
+- 卡片按 ProComponents v3 的默认样式（带边框）。
 
 如果开发服务异常退出后端口未释放：
 
