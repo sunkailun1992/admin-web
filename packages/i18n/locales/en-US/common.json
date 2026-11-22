@@ -59,5 +59,8 @@
   "upload": {
     "dropHint": "Drop a file here or click to choose",
     "invalidType": "This file type is not supported"
+  },
+  "account": {
+    "defaultName": "Administrator"
   }
 }

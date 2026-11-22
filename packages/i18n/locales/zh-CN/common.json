@@ -59,5 +59,8 @@
   "upload": {
     "dropHint": "拖入文件或点击选择",
     "invalidType": "不支持这种文件类型"
+  },
+  "account": {
+    "defaultName": "管理员"
   }
 }
