@@ -3,6 +3,7 @@
   "tasks": {
     "//#format:repo": { "cache": false },
     "//#lint:repo": { "cache": false },
+    "//#typecheck:repo": { "cache": false },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

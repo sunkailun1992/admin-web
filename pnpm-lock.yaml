@@ -382,12 +382,18 @@ importers:
       '@admin-web/config-eslint':
         specifier: workspace:*
         version: link:packages/config-eslint
+      '@admin-web/config-typescript':
+        specifier: workspace:*
+        version: link:packages/config-typescript
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.65.1
       '@turbo/gen':
         specifier: 'catalog:'
         version: 2.11.13(@types/node@26.6.6)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
       eslint:
         specifier: 'catalog:'
         version: 10.15.0(jiti@2.7.0)

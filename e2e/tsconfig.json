@@ -1,0 +1,9 @@
+{
+  "extends": "@admin-web/config-typescript/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.ts", "../playwright.config.ts"]
+}

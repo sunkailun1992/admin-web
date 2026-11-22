@@ -7,7 +7,7 @@
     "build": "turbo run build",
     "build:dev": "turbo run build:dev",
     "build:test": "turbo run build:test",
-    "check": "turbo run format:repo lint:repo typecheck test build:dev",
+    "check": "turbo run format:repo lint:repo typecheck typecheck:repo test build:dev",
     "dev": "turbo run dev",
     "format": "prettier --write .",
     "format:check": "turbo run format:repo",
@@ -17,13 +17,17 @@
     "prepare": "husky",
     "test": "turbo run test",
     "test:e2e": "playwright test",
+    "test:e2e:test": "ADMIN_WEB_E2E=live playwright test",
     "test:generator": "node scripts/test-generator.mjs",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck typecheck:repo",
+    "typecheck:repo": "tsc -p e2e"
   },
   "devDependencies": {
     "@admin-web/config-eslint": "workspace:*",
+    "@admin-web/config-typescript": "workspace:*",
     "@playwright/test": "catalog:",
     "@turbo/gen": "catalog:",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "husky": "catalog:",
     "lint-staged": "catalog:",
