@@ -1,6 +1,8 @@
 node_modules
-.umi
-.umi-production
+dist
+.turbo
+coverage
+storybook-static
 pnpm-lock.yaml
 e2e-out
 .superpowers

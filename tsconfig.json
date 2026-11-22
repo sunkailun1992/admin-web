@@ -1,7 +1,0 @@
-{
-  "extends": "./src/.umi/tsconfig.json",
-  "compilerOptions": {
-    "types": ["node"]
-  },
-  "files": ["vitest.config.mts"]
-}

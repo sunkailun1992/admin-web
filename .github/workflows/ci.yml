@@ -48,24 +48,9 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      # 浏览器测试步骤在第四部分任务14 加回（重写后的固定数据一组）。
       - name: Build with development configuration
         run: pnpm build:dev
-
-      - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
-
-      # 固定数据一组：浏览器里拦截全部接口，不连任何后端；真实网关一组只在维护者本机经全链路脚本跑。
-      - name: Browser tests (fixture data)
-        run: pnpm test:e2e
-
-      - name: Upload browser test report
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: e2e-out
-          path: e2e-out/
-          retention-days: 7
-          if-no-files-found: ignore
 
       - name: Secret warning scan
         run: bash scripts/check-secrets.sh

@@ -1,30 +1,21 @@
-/node_modules
-/.env.local
-/.umirc.local.ts
-/config/config.local.ts
-/src/.umi
-/src/.umi-production
-/src/.umi-test
-/.umi
-/.umi-production
-/.umi-test
-/dist
-/.mfsu
-.swc
-.turbopack
+# 依赖与构建产物
+node_modules
+dist
+.turbo
+coverage
+storybook-static
 
-# local IDE files
+# 本机配置
+.env.local
+*.local
+
+# IDE 与系统文件
 .idea/
 .run/
 *.iml
-
-# system and logs
 .DS_Store
-**/.DS_Store
 *.log
-
-### Generated artifacts ###
 *.class
 
 # Playwright 浏览器测试的报告与截图
-/e2e-out
+e2e-out
