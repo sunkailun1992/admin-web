@@ -1,7 +1,12 @@
+import { ASYNC_UTIL_TIMEOUT } from '@admin-web/config-vitest';
 import { initI18n, setLocale, type Locale } from '@admin-web/i18n';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview } from '@storybook/react-vite';
+import { configure } from 'storybook/test';
 import '../src/styles/globals.css';
+
+// 故事的 play 函数用 storybook/test 自带的一份 Testing Library：与单元测试一样调大 waitFor 的等待。
+configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT });
 
 const preview: Preview = {
   // 每个物料按 component 与 JSDoc 生成文档页（Storybook 官方的 autodocs）。

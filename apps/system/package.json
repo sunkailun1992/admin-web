@@ -32,6 +32,7 @@
   "devDependencies": {
     "@admin-web/config-typescript": "workspace:*",
     "@admin-web/config-vite": "workspace:*",
+    "@admin-web/config-vitest": "workspace:*",
     "@admin-web/test-utils": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@testing-library/dom": "catalog:",

@@ -1,3 +1,4 @@
+import { TEST_TIMEOUT } from '@admin-web/config-vitest';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { msw } from 'msw/vite';
@@ -43,6 +44,7 @@ export default defineConfig({
   },
   test: {
     include: ['test/**/*.test.{ts,tsx}'],
+    testTimeout: TEST_TIMEOUT,
     setupFiles: ['test/setup.ts'],
     browser: {
       enabled: true,

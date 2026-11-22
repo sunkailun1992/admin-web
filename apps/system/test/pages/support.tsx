@@ -1,6 +1,8 @@
 import type { SessionState } from '@admin-web/auth';
 import { renderWithProviders } from '@admin-web/test-utils/browser';
+import { screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
+import { expect } from 'vitest';
 import { client } from '../../src/http.ts';
 
 export const manager: SessionState = {
@@ -37,3 +39,10 @@ export const page = <T,>(records: T[]) => ({
   data: { records, total: records.length },
 });
 export const ok = <T,>(data: T) => ({ success: true, data });
+
+/**
+ * 保存、删除成功后，弹窗要等列表重新读完才关闭。等它关上再结束用例：
+ * 写请求一到处理器就结束的话，随后的重新读取会落到下一个用例（那时处理器已清掉）。
+ */
+export const closed = (role: 'dialog' | 'alertdialog' = 'dialog') =>
+  waitFor(() => expect(screen.queryByRole(role)).toBeNull());

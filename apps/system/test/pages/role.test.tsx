@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
 import RolePage from '../../src/pages/Role/index.tsx';
-import { ok, page, renderPage } from './support.tsx';
+import { closed, ok, page, renderPage } from './support.tsx';
 
 const worker = setupMswWorker();
 
@@ -56,6 +56,7 @@ test('binding resources submits the checked resource ids', async () => {
       { tenantId: 't1', roleId: 'r1', resourceIds: ['res-a', 'res-b'] },
     ]),
   );
+  await closed();
 });
 
 test('the data scope dialog submits the selected departments', async () => {
@@ -93,4 +94,5 @@ test('the data scope dialog submits the selected departments', async () => {
       { tenantId: 't1', roleId: 'r1', deptIds: ['d1'] },
     ]),
   );
+  await closed();
 });

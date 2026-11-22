@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@admin-web/config-typescript": "workspace:*",
+    "@admin-web/config-vitest": "workspace:*",
     "@storybook/addon-a11y": "catalog:",
     "@storybook/addon-docs": "catalog:",
     "@storybook/addon-themes": "catalog:",

@@ -100,7 +100,8 @@ function actionOf(call: Seen) {
 const writes = (calls: Seen[]) => calls.filter((call) => call.method !== 'GET');
 
 /**
- * 写操作有了终态后页面会重新读取：等读完（新增按钮重新可用）再结束用例，
+ * 页面空闲（读取完成、没有进行中的操作）时新增按钮才可用。两处要等它：
+ * 开始操作前（首次读取没完成时按钮是禁用的，点不了）；写操作有了终态、页面重新读完后再结束用例，
  * 免得还在路上的请求落到下一个用例的处理器里。操作详情打开时页面其余部分对读屏隐藏，所以带 hidden。
  */
 const settled = () =>
@@ -362,7 +363,8 @@ test('creating a configuration sends the provider location and paired credential
   const calls = serve();
   const user = userEvent.setup();
   await renderPage(<StorageConfigurationPage />);
-  await user.click(await screen.findByRole('button', { name: '新增存储' }));
+  await settled();
+  await user.click(screen.getByRole('button', { name: '新增存储' }));
   const sheet = await screen.findByRole('dialog', { name: '新增文件存储配置' });
   await user.type(
     within(sheet).getByRole('textbox', { name: '显示名称' }),

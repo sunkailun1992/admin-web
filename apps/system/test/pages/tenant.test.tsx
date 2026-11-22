@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
 import TenantPage from '../../src/pages/Tenant/index.tsx';
-import { ok, page, renderPage } from './support.tsx';
+import { closed, ok, page, renderPage } from './support.tsx';
 
 const worker = setupMswWorker();
 
@@ -93,7 +93,7 @@ test('creating a tenant validates, generates the code from the backend and submi
   );
   expect(codes).toStrictEqual([{ target: 'TENANT', name: '新租户' }]);
   await userEvent.click(within(dialog).getByRole('button', { name: '保存' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  await closed();
   expect(created).toStrictEqual([
     { code: 'TENANT_0002', name: '新租户', state: '启用' },
   ]);
@@ -130,6 +130,7 @@ test('editing sends id and version, and the code cannot change', async () => {
       },
     ]),
   );
+  await closed();
 });
 
 test('deleting asks for confirmation first', async () => {
@@ -148,4 +149,5 @@ test('deleting asks for confirmation first', async () => {
   expect(removed).toStrictEqual([]);
   await userEvent.click(within(confirm).getByRole('button', { name: '删除' }));
   await waitFor(() => expect(removed).toStrictEqual(['t1']));
+  await closed('alertdialog');
 });

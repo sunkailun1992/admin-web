@@ -49,7 +49,7 @@ test('the canvas renders exactly the nodes and relations the fixture returns', a
 });
 
 test('a rebuild sends a valid submission key and, after a network failure, only looks that submission up', async () => {
-  serveGraph();
+  const queries = serveGraph();
   const posts: Array<string | null> = [];
   const lookups: Array<{ key: string; knowledgeBase: string | null }> = [];
   worker.use(
@@ -107,6 +107,8 @@ test('a rebuild sends a valid submission key and, after a network failure, only 
     knowledgeBase: 'general-knowledge',
   });
   expect(await screen.findByText('构建成功')).toBeVisible();
+  // 构建成功后重新读取已发布的图谱；读完再结束用例，不留还在路上的请求。
+  await waitFor(() => expect(queries).toHaveLength(2));
   expect(posts).toHaveLength(1);
 });
 

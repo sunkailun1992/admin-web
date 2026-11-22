@@ -473,6 +473,9 @@ importers:
       '@admin-web/config-vite':
         specifier: workspace:*
         version: link:../../packages/config-vite
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../../packages/config-vitest
       '@admin-web/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
@@ -582,6 +585,9 @@ importers:
       '@admin-web/config-vite':
         specifier: workspace:*
         version: link:../../packages/config-vite
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../../packages/config-vitest
       '@admin-web/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
@@ -697,6 +703,9 @@ importers:
       '@admin-web/config-vite':
         specifier: workspace:*
         version: link:../../packages/config-vite
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../../packages/config-vitest
       '@admin-web/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
@@ -812,6 +821,9 @@ importers:
       '@admin-web/config-vite':
         specifier: workspace:*
         version: link:../../packages/config-vite
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../../packages/config-vitest
       '@admin-web/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
@@ -918,6 +930,9 @@ importers:
       '@admin-web/config-vite':
         specifier: workspace:*
         version: link:../../packages/config-vite
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../../packages/config-vitest
       '@admin-web/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils
@@ -991,6 +1006,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -1049,6 +1067,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -1140,6 +1161,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -1149,6 +1173,42 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(@vitest/browser-playwright@5.1.1)(@vitest/ui@5.1.1)(jsdom@31.0.1)(msw@3.0.7(@types/node@26.6.6)(typescript@6.0.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/config-vitest:
+    devDependencies:
+      '@admin-web/config-typescript':
+        specifier: workspace:*
+        version: link:../config-typescript
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      jsdom:
+        specifier: 'catalog:'
+        version: 31.0.1
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
       vitest:
         specifier: 'catalog:'
         version: 5.1.1(@types/node@26.6.6)(@vitest/browser-playwright@5.1.1)(@vitest/ui@5.1.1)(jsdom@31.0.1)(msw@3.0.7(@types/node@26.6.6)(typescript@6.0.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -1165,6 +1225,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1208,6 +1271,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -1343,6 +1409,9 @@ importers:
       '@admin-web/config-typescript':
         specifier: workspace:*
         version: link:../config-typescript
+      '@admin-web/config-vitest':
+        specifier: workspace:*
+        version: link:../config-vitest
       '@storybook/addon-a11y':
         specifier: 'catalog:'
         version: 10.6.8(storybook@10.6.8(@types/react@19.3.0)(prettier@3.10.1)(react@19.3.1))

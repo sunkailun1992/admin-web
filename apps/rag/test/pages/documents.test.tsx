@@ -1,5 +1,5 @@
 import { setupMswWorker } from '@admin-web/test-utils/browser';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
@@ -69,7 +69,7 @@ test('the document list shows real statuses and filters on title, file name and 
 });
 
 test('upload rejects a disguised file before any request, then sends a valid one as multipart', async () => {
-  serveDocuments();
+  const reads = serveDocuments();
   const posts: Array<Record<string, string>> = [];
   worker.use(
     http.post('/api/rag/documents', async ({ request }) => {
@@ -134,6 +134,8 @@ test('upload rejects a disguised file before any request, then sends a valid one
   expect(posts).toStrictEqual([
     { file: 'manual.pdf', knowledgeBase: 'general-knowledge', title: '新手册' },
   ]);
+  // 上传成功后文档列表重新读一次；读完再结束用例，不留还在路上的请求。
+  await waitFor(() => expect(reads).toStrictEqual([{}, {}]));
 });
 
 test('retrieval shows real hits, opens the source with escaped content and then the document chunks', async () => {

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
 import UserPage from '../../src/pages/User/index.tsx';
-import { ok, page, renderPage } from './support.tsx';
+import { closed, ok, page, renderPage } from './support.tsx';
 
 const worker = setupMswWorker();
 
@@ -54,6 +54,7 @@ test('binding roles submits the selected role ids', async () => {
       { tenantId: 't1', userId: 'u1', roleIds: ['r1'] },
     ]),
   );
+  await closed();
 });
 
 test('a new user needs a username, a password and at least one tenant', async () => {

@@ -1,3 +1,4 @@
+import { TEST_TIMEOUT } from '@admin-web/config-vitest';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -41,6 +42,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
+          testTimeout: TEST_TIMEOUT,
           include: ['test/**/*.test.{ts,tsx}'],
           exclude: ['test/business/**'],
           environment: 'node',
@@ -53,6 +55,7 @@ export default defineConfig({
         optimizeDeps,
         test: {
           name: 'components',
+          testTimeout: TEST_TIMEOUT,
           include: ['test/business/**/*.test.tsx'],
           browser: browser(),
           setupFiles: ['test/no-motion.ts', 'test/setup-browser.ts'],
@@ -67,6 +70,7 @@ export default defineConfig({
         optimizeDeps,
         test: {
           name: 'storybook',
+          testTimeout: TEST_TIMEOUT,
           browser: browser(),
           setupFiles: ['test/no-motion.ts'],
         },

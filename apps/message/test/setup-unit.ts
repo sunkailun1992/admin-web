@@ -1,3 +1,4 @@
+import '@admin-web/config-vitest/setup';
 import { initI18n } from '@admin-web/i18n';
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';

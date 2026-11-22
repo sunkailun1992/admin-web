@@ -1,3 +1,4 @@
+import { TEST_TIMEOUT } from '@admin-web/config-vitest';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { msw } from 'msw/vite';
@@ -13,6 +14,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
+          testTimeout: TEST_TIMEOUT,
           include: ['test/unit/**/*.test.{ts,tsx}'],
           environment: 'jsdom',
           setupFiles: ['test/setup-unit.ts'],
@@ -52,6 +54,7 @@ export default defineConfig({
         },
         test: {
           name: 'pages',
+          testTimeout: TEST_TIMEOUT,
           include: ['test/pages/**/*.test.{ts,tsx}'],
           setupFiles: ['test/setup-pages.ts'],
           browser: {

@@ -27,21 +27,24 @@ const messages = [
   },
 ];
 
-/** 铃铛的三类请求：未读数、普通未读消息、未读系统提醒；记下每次请求的租户。 */
+/** 铃铛的三类请求：未读数、普通未读消息、未读系统提醒；按“类别@租户”记下每次请求。 */
 function serve({ notice }: { notice?: object } = {}) {
-  const state = { unread: 2, tenants: [] as string[], read: [] as string[] };
+  const state = { unread: 2, reads: [] as string[], read: [] as string[] };
+  const record = (kind: 'count' | 'normal' | 'notice', request: Request) =>
+    state.reads.push(
+      `${kind}@${new URL(request.url).searchParams.get('tenantId') ?? ''}`,
+    );
   worker.use(
     http.get(
       '/message/messages/user-messages/current/unread-count',
       ({ request }) => {
-        state.tenants.push(
-          new URL(request.url).searchParams.get('tenantId') ?? '',
-        );
+        record('count', request);
         return HttpResponse.json(ok(state.unread));
       },
     ),
     http.get('/message/messages/user-messages/current', ({ request }) => {
       const type = new URL(request.url).searchParams.get('messageType');
+      record(type === 'SYSTEM_NOTICE' ? 'notice' : 'normal', request);
       if (type === 'SYSTEM_NOTICE')
         return HttpResponse.json(
           page(notice && !state.read.includes('n1') ? [notice] : []),
@@ -98,9 +101,14 @@ test('a different tenant requests again with that tenant', async () => {
   const state = serve();
   const view = renderPage(<Bell userId="u1" tenantId="t1" />);
   await screen.findByRole('button', { name: '消息，2 条未读' });
+  expect(state.reads.every((read) => read.endsWith('@t1'))).toBe(true);
   (await view).rerender(<Bell userId="u1" tenantId="t2" />);
-  await waitFor(() => expect(state.tenants).toContain('t2'));
-  expect(state.tenants[0]).toBe('t1');
+  // 三类请求都用新租户重新发过：全部到了再结束用例，不留还在路上的请求。
+  await waitFor(() =>
+    expect(
+      state.reads.filter((read) => read.endsWith('@t2')).sort(),
+    ).toStrictEqual(['count@t2', 'normal@t2', 'notice@t2']),
+  );
 });
 
 test('an unread system notice opens a dialog and 知道了 marks it read', async () => {
@@ -120,5 +128,9 @@ test('an unread system notice opens a dialog and 知道了 marks it read', async
   await waitFor(() => expect(state.read).toContain('n1'));
   await waitFor(() =>
     expect(screen.queryByRole('dialog', { name: '维护通知' })).toBeNull(),
+  );
+  // 标记已读后重新读一次系统提醒（有下一条就接着弹出）；读完再结束用例。
+  await waitFor(() =>
+    expect(state.reads.filter((read) => read === 'notice@t1')).toHaveLength(2),
   );
 });

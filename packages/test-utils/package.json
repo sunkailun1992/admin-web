@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@admin-web/config-typescript": "workspace:*",
+    "@admin-web/config-vitest": "workspace:*",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@types/node": "catalog:",
