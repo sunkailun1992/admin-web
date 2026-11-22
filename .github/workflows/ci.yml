@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - main
+      # 本仓库的短分支（AGENTS：新功能分支用 codex/ 前缀）推送后也跑，合入前就能看到结果。
+      - 'codex/**'
   pull_request:
     branches:
       - main
@@ -52,9 +54,24 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      # 浏览器测试步骤在第四部分任务14 加回（重写后的固定数据一组）。
       - name: Build with development configuration
         run: pnpm build:dev
+
+      # 固定数据一组浏览器测试：起五个预览服务，接口全部按 e2e/fixtures 回（Playwright 自带的 Chromium）。
+      - name: Browser tests (fixture data)
+        run: pnpm test:e2e
+
+      - name: Upload browser test output
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-out
+          path: e2e-out
+          retention-days: 7
+
+      # 新建子应用生成器：生成 apps/gen-check 并 typecheck、test、build，结束后还原工作区。
+      - name: Generator check
+        run: pnpm test:generator
 
       - name: Secret warning scan
         run: bash scripts/check-secrets.sh

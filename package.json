@@ -16,11 +16,13 @@
     "lint:repo": "eslint . --max-warnings 0",
     "prepare": "husky",
     "test": "turbo run test",
+    "test:e2e": "playwright test",
     "test:generator": "node scripts/test-generator.mjs",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@admin-web/config-eslint": "workspace:*",
+    "@playwright/test": "catalog:",
     "@turbo/gen": "catalog:",
     "eslint": "catalog:",
     "husky": "catalog:",

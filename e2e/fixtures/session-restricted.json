@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "code": "00000",
+  "data": {
+    "userId": "synthetic-admin",
+    "username": "synthetic-admin",
+    "nickname": "合成管理员",
+    "tenantId": "synthetic-tenant",
+    "adminType": "PLATFORM_SUPER_ADMIN",
+    "permissions": [
+      "user:auth:manage",
+      "message:user-message:send",
+      "ai:model:manage",
+      "rag:document:manage",
+      "rag:retrieval:use"
+    ],
+    "availableTenants": [
+      {
+        "id": "synthetic-tenant",
+        "name": "合成租户"
+      }
+    ],
+    "frontendResources": [
+      {
+        "id": "synthetic-resource-1",
+        "code": "menu:tenant"
+      },
+      {
+        "id": "synthetic-resource-2",
+        "code": "menu:dept"
+      },
+      {
+        "id": "synthetic-resource-3",
+        "code": "menu:user"
+      },
+      {
+        "id": "synthetic-resource-4",
+        "code": "menu:role"
+      },
+      {
+        "id": "synthetic-resource-5",
+        "code": "menu:resource"
+      },
+      {
+        "id": "synthetic-resource-6",
+        "code": "menu:rag:document"
+      }
+    ],
+    "backendResources": []
+  }
+}
