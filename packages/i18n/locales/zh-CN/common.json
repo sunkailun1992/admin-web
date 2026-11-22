@@ -27,7 +27,9 @@
     "deleteSucceeded": "删除成功",
     "requestFailed": "请求处理失败",
     "forbidden": "无权限访问",
-    "networkError": "网络请求异常"
+    "networkError": "网络请求异常",
+    "createSucceeded": "创建成功",
+    "updateSucceeded": "更新成功"
   },
   "confirmDelete": {
     "title": "确认删除",
@@ -67,5 +69,8 @@
     "signInAtShell": "请先在主应用登录",
     "signInAtShellDescription": "子应用单独运行时，登录统一在主应用完成；登录后回到这里刷新即可。",
     "openShell": "打开主应用"
+  },
+  "filter": {
+    "all": "全部"
   }
 }

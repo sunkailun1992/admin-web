@@ -27,7 +27,9 @@
     "deleteSucceeded": "Deleted",
     "requestFailed": "The request failed",
     "forbidden": "Access denied",
-    "networkError": "Network error"
+    "networkError": "Network error",
+    "createSucceeded": "Created",
+    "updateSucceeded": "Updated"
   },
   "confirmDelete": {
     "title": "Delete this item?",
@@ -67,5 +69,8 @@
     "signInAtShell": "Sign in on the main app first",
     "signInAtShellDescription": "When an app runs on its own, sign-in happens on the main app. Come back and refresh after signing in.",
     "openShell": "Open the main app"
+  },
+  "filter": {
+    "all": "All"
   }
 }
