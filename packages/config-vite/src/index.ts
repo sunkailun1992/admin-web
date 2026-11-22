@@ -37,7 +37,14 @@ export function federationOptions(options: AppConfigOptions) {
   };
   if (options.role === 'host') return common;
   // 子应用的资源按清单所在的地址加载（各自独立上线，地址由宿主的 apps.json 决定）。
-  return { ...common, exposes: options.exposes ?? {}, publicPath: 'auto' };
+  // 插件缺省不处理 CSS（bundleAllCSS: false），子应用的工具类样式要跟着暴露的模块注入宿主页面；
+  // 子应用的 CSS 只有它自己用到的工具类，体积很小。
+  return {
+    ...common,
+    exposes: options.exposes ?? {},
+    publicPath: 'auto',
+    bundleAllCSS: true,
+  };
 }
 
 /**

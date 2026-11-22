@@ -20,6 +20,22 @@ describe('子应用之间的引用边界', () => {
     expect(messages[0]?.message).toContain('子应用之间');
   });
 
+  test('a test of an app may import that app source through ../../src', () => {
+    const messages = lint(
+      'apps/system/test/pages/a.test.tsx',
+      "import x from '../../src/pages/x';\nexport default x;\n",
+    );
+    expect(messages).toStrictEqual([]);
+  });
+
+  test('climbing out of the app and into another app source is still an error', () => {
+    const messages = lint(
+      'apps/system/test/pages/a.test.tsx',
+      "import x from '../../../rag/src/x';\nexport default x;\n",
+    );
+    expect(messages).toHaveLength(1);
+  });
+
   test('importing a shared package entry is allowed', () => {
     const messages = lint(
       'apps/system/src/a.ts',

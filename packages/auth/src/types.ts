@@ -2,7 +2,18 @@ import type { RouteObject } from 'react-router';
 import type { Access } from './access.ts';
 
 // 会话相关的接口类型，照 1.2.4 的 src/services/auth/types.d.ts。
-export type AuthState = '默认' | '启用' | '禁用';
+/** 后端的状态取值（中文字符串，照后端枚举）；应用里用这里的常量，不在应用源码里写死。 */
+export const AUTH_STATE = {
+  default: '默认',
+  enabled: '启用',
+  disabled: '禁用',
+} as const;
+export const AUTH_STATES = [
+  AUTH_STATE.default,
+  AUTH_STATE.enabled,
+  AUTH_STATE.disabled,
+] as const;
+export type AuthState = (typeof AUTH_STATES)[number];
 export type ResourceCategory = 'FRONTEND' | 'BACKEND';
 export type DataScope = 'ALL' | 'SELF' | 'DEPT' | 'DEPT_TREE' | 'CUSTOM';
 export type AdminType = 'PLATFORM_SUPER_ADMIN' | 'TENANT_ADMIN';

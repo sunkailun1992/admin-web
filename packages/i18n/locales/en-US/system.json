@@ -1,1 +1,124 @@
-{}
+{
+  "menu": {
+    "group": "System",
+    "tenant": "Tenants",
+    "dept": "Departments",
+    "user": "Users",
+    "role": "Roles",
+    "resource": "Permission resources"
+  },
+  "common": {
+    "tenant": "Tenant",
+    "tenantRequired": "Choose a tenant",
+    "state": "Status",
+    "sort": "Order",
+    "version": "Version",
+    "defaultTenant": "Default tenant",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "tenant": {
+    "title": "Tenants",
+    "create": "New tenant",
+    "edit": "Edit tenant",
+    "delete": "Delete tenant",
+    "deleteConfirm": "Delete this tenant?",
+    "code": "Tenant code",
+    "name": "Tenant name",
+    "codeRequired": "Enter the tenant code",
+    "nameRequired": "Enter the tenant name"
+  },
+  "dept": {
+    "title": "Departments",
+    "create": "New department",
+    "edit": "Edit department",
+    "delete": "Delete department",
+    "deleteConfirm": "Delete this department?",
+    "code": "Department code",
+    "name": "Department name",
+    "parent": "Parent department",
+    "codeRequired": "Enter the department code",
+    "nameRequired": "Enter the department name"
+  },
+  "user": {
+    "title": "Users",
+    "create": "New user",
+    "edit": "Edit user",
+    "delete": "Delete user",
+    "deleteConfirm": "Delete this user?",
+    "username": "Username",
+    "nickname": "Nickname",
+    "dept": "Department",
+    "deptField": "Department",
+    "adminType": "Admin type",
+    "tenants": "Tenants",
+    "password": "Password",
+    "usernameRequired": "Enter the username",
+    "passwordRequired": "Enter the password",
+    "adminTypeRequired": "Choose the admin type",
+    "tenantsRequired": "Choose at least one tenant",
+    "bindRoles": "Assign roles",
+    "bindRolesTitle": "Assign roles to the user",
+    "userId": "User ID",
+    "roles": "Roles",
+    "rolesPlaceholder": "Choose roles; leave empty to remove all"
+  },
+  "role": {
+    "title": "Roles",
+    "create": "New role",
+    "edit": "Edit role",
+    "delete": "Delete role",
+    "deleteConfirm": "Delete this role?",
+    "code": "Role code",
+    "name": "Role name",
+    "dataScope": "Data scope",
+    "codeRequired": "Enter the role code",
+    "nameRequired": "Enter the role name",
+    "bindResources": "Assign resources",
+    "bindResourcesTitle": "Assign resources to the role",
+    "resources": "Resources",
+    "dataScopeTitle": "Role data scope",
+    "role": "Role",
+    "depts": "Visible departments"
+  },
+  "resource": {
+    "title": "Permission resources",
+    "create": "New resource",
+    "edit": "Edit resource",
+    "delete": "Delete resource",
+    "deleteConfirm": "Delete this resource?",
+    "code": "Resource code",
+    "name": "Resource name",
+    "category": "Category",
+    "categoryField": "Resource category",
+    "path": "Path",
+    "pathField": "Resource path",
+    "method": "Method",
+    "methodField": "HTTP method",
+    "parent": "Parent resource",
+    "codeRequired": "Enter the resource code",
+    "nameRequired": "Enter the resource name",
+    "categoryRequired": "Choose the resource category"
+  },
+  "enums": {
+    "state": {
+      "启用": "Enabled",
+      "禁用": "Disabled"
+    },
+    "adminType": {
+      "PLATFORM_SUPER_ADMIN": "Platform super admin",
+      "TENANT_ADMIN": "Tenant admin"
+    },
+    "dataScope": {
+      "ALL": "All data",
+      "SELF": "Own data only",
+      "DEPT": "Own department",
+      "DEPT_TREE": "Own department and below",
+      "CUSTOM": "Custom departments"
+    },
+    "category": {
+      "FRONTEND": "Frontend resource",
+      "BACKEND": "Backend API"
+    }
+  }
+}

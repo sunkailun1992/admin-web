@@ -138,6 +138,8 @@ test('remote config exposes the given modules and emits a manifest', async () =>
     exposes: { './routes': './src/routes.tsx' },
     // 子应用的资源按清单所在地址加载。
     publicPath: 'auto',
+    // 插件缺省不给暴露的模块注入 CSS，子应用的工具类样式要跟着模块进宿主页面。
+    bundleAllCSS: true,
   });
   // @module-federation/vite 在 Vitest 里默认不加插件（返回空数组），按它的开关临时打开再看。
   process.env.MFE_VITE_NO_TEST_ENV_CHECK = 'true';

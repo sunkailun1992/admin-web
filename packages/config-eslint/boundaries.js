@@ -1,7 +1,8 @@
 // 子应用之间的引用边界与界面文案规则，都用 ESLint 内置规则实现（no-restricted-imports、no-restricted-syntax）。
 
 // 相对路径先往上走、再进入另一个目录的 src：即从一个子应用伸进别的子应用或共享包的源码。
-const CROSS_APP_SOURCE = String.raw`^(\.\./)+([^/]+/)*[^/]+/src(/|$)`;
+// 目录名不以点开头：.. 不算目录名，测试经 ../../src 引用本应用的源码不受限。
+const CROSS_APP_SOURCE = String.raw`^(\.\./)+([^/.][^/]*/)*[^/.][^/]*/src(/|$)`;
 
 // 共享包只能从入口引用，不能深层引用它的 src。
 const PACKAGE_DEEP_IMPORT = ['@admin-web/*/src', '@admin-web/*/src/**'];

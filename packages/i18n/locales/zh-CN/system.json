@@ -1,1 +1,124 @@
-{}
+{
+  "menu": {
+    "group": "系统管理",
+    "tenant": "租户管理",
+    "dept": "部门管理",
+    "user": "用户管理",
+    "role": "角色管理",
+    "resource": "权限资源"
+  },
+  "common": {
+    "tenant": "租户",
+    "tenantRequired": "请选择租户",
+    "state": "状态",
+    "sort": "排序",
+    "version": "版本",
+    "defaultTenant": "默认租户",
+    "expand": "展开",
+    "collapse": "收起"
+  },
+  "tenant": {
+    "title": "租户管理",
+    "create": "新建租户",
+    "edit": "编辑租户",
+    "delete": "删除租户",
+    "deleteConfirm": "确认删除该租户吗？",
+    "code": "租户编码",
+    "name": "租户名称",
+    "codeRequired": "请输入租户编码",
+    "nameRequired": "请输入租户名称"
+  },
+  "dept": {
+    "title": "部门管理",
+    "create": "新建部门",
+    "edit": "编辑部门",
+    "delete": "删除部门",
+    "deleteConfirm": "确认删除该部门吗？",
+    "code": "部门编码",
+    "name": "部门名称",
+    "parent": "上级部门",
+    "codeRequired": "请输入部门编码",
+    "nameRequired": "请输入部门名称"
+  },
+  "user": {
+    "title": "用户管理",
+    "create": "新建用户",
+    "edit": "编辑用户",
+    "delete": "删除用户",
+    "deleteConfirm": "确认删除该用户吗？",
+    "username": "用户名",
+    "nickname": "昵称",
+    "dept": "部门",
+    "deptField": "所属部门",
+    "adminType": "管理员分类",
+    "tenants": "关联租户",
+    "password": "密码",
+    "usernameRequired": "请输入用户名",
+    "passwordRequired": "请输入密码",
+    "adminTypeRequired": "请选择管理员分类",
+    "tenantsRequired": "请选择关联租户",
+    "bindRoles": "绑定角色",
+    "bindRolesTitle": "绑定用户角色",
+    "userId": "用户 ID",
+    "roles": "角色",
+    "rolesPlaceholder": "请选择角色，可清空全部角色"
+  },
+  "role": {
+    "title": "角色管理",
+    "create": "新建角色",
+    "edit": "编辑角色",
+    "delete": "删除角色",
+    "deleteConfirm": "确认删除该角色吗？",
+    "code": "角色编码",
+    "name": "角色名称",
+    "dataScope": "数据范围",
+    "codeRequired": "请输入角色编码",
+    "nameRequired": "请输入角色名称",
+    "bindResources": "绑定资源",
+    "bindResourcesTitle": "绑定角色资源",
+    "resources": "资源",
+    "dataScopeTitle": "角色数据范围",
+    "role": "角色",
+    "depts": "可见部门"
+  },
+  "resource": {
+    "title": "权限资源",
+    "create": "新建资源",
+    "edit": "编辑资源",
+    "delete": "删除资源",
+    "deleteConfirm": "确认删除该资源吗？",
+    "code": "资源编码",
+    "name": "资源名称",
+    "category": "分类",
+    "categoryField": "资源分类",
+    "path": "路径",
+    "pathField": "资源路径",
+    "method": "方法",
+    "methodField": "请求方法",
+    "parent": "父级资源",
+    "codeRequired": "请输入资源编码",
+    "nameRequired": "请输入资源名称",
+    "categoryRequired": "请选择资源分类"
+  },
+  "enums": {
+    "state": {
+      "启用": "启用",
+      "禁用": "禁用"
+    },
+    "adminType": {
+      "PLATFORM_SUPER_ADMIN": "平台超级管理员",
+      "TENANT_ADMIN": "租户管理员"
+    },
+    "dataScope": {
+      "ALL": "全部数据",
+      "SELF": "仅本人数据",
+      "DEPT": "本部门数据",
+      "DEPT_TREE": "本部门及下级部门",
+      "CUSTOM": "自定义部门数据"
+    },
+    "category": {
+      "FRONTEND": "前端资源",
+      "BACKEND": "后端接口"
+    }
+  }
+}
