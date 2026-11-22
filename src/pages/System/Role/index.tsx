@@ -175,7 +175,7 @@ export default function RolePage() {
     },
     {
       title: '排序',
-      dataIndex: 'sorting',
+      dataIndex: 'sort',
       search: false,
       width: 90,
     },

@@ -100,7 +100,7 @@ export default function ResourcePage() {
     },
     {
       title: '排序',
-      dataIndex: 'sorting',
+      dataIndex: 'sort',
       search: false,
       width: 90,
     },
@@ -189,7 +189,7 @@ export default function ResourcePage() {
                 tenantId: currentTenantId,
                 resourceCategory: 'FRONTEND',
                 state: '启用',
-                sorting: 0,
+                sort: 0,
               }
         }
         modalProps={{
@@ -276,7 +276,7 @@ export default function ResourcePage() {
           }}
           width="md"
         />
-        <ProFormDigit label="排序" min={0} name="sorting" width="md" />
+        <ProFormDigit label="排序" min={0} name="sort" width="md" />
         <ProFormSelect
           label="状态"
           name="state"

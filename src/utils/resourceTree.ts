@@ -32,7 +32,7 @@ export const buildResourceTree = (
   });
 
   const sortNodes = (nodes: ResourceTreeNode[]) => {
-    nodes.sort((a, b) => (a.sorting || 0) - (b.sorting || 0));
+    nodes.sort((a, b) => (a.sort || 0) - (b.sort || 0));
     nodes.forEach((node) => {
       if (!node.children?.length) {
         delete node.children;

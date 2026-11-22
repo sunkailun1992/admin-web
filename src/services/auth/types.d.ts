@@ -74,7 +74,7 @@ declare namespace API {
     name?: string;
     state?: AuthState;
     stateDesc?: string;
-    sorting?: number;
+    sort?: number;
     version?: number;
   }
 
@@ -141,7 +141,7 @@ declare namespace API {
     dataScopeDesc?: string;
     state?: AuthState;
     stateDesc?: string;
-    sorting?: number;
+    sort?: number;
     version?: number;
   }
 
@@ -177,7 +177,7 @@ declare namespace API {
     ownerUserId?: string;
     state?: AuthState;
     stateDesc?: string;
-    sorting?: number;
+    sort?: number;
     version?: number;
     children?: AuthDeptVO[];
   }
@@ -189,7 +189,7 @@ declare namespace API {
     name?: string;
     parentId?: string;
     ownerUserId?: string;
-    sorting?: number;
+    sort?: number;
     state?: AuthState;
   }
 
@@ -201,7 +201,7 @@ declare namespace API {
     name?: string;
     parentId?: string;
     ownerUserId?: string;
-    sorting?: number;
+    sort?: number;
     state?: AuthState;
   }
 
@@ -214,7 +214,7 @@ declare namespace API {
     path?: string;
     method?: string;
     parentId?: string;
-    sorting?: number;
+    sort?: number;
     state?: AuthState;
     stateDesc?: string;
     tenantId: string;
@@ -244,7 +244,7 @@ declare namespace API {
     path?: string;
     method?: string;
     parentId?: string;
-    sorting?: number;
+    sort?: number;
     state?: AuthState;
   }
 
