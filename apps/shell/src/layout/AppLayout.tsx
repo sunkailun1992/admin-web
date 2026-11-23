@@ -7,13 +7,16 @@ import { AppHeader } from './AppHeader.tsx';
 import { AppSidebar } from './AppSidebar.tsx';
 
 export function AppLayout() {
+  // 换租户后内容区按新租户整个重挂（React 文档“用 key 重置状态”的做法）：页面在新会话就位后重新请求，
+  // 打开的面板、选中的行等本地状态一并清掉，不留上一个租户的数据。
+  const { currentTenantId } = useSession();
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <AppHeader />
         <div className="flex-1">
-          <Outlet />
+          <Outlet key={currentTenantId ?? ''} />
         </div>
       </SidebarInset>
     </SidebarProvider>

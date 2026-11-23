@@ -1,11 +1,13 @@
 import type { RemoteRoutes } from '@admin-web/auth';
 import { setupMswWorker } from '@admin-web/test-utils/browser';
+import { useQuery } from '@tanstack/react-query';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, expect, test, vi } from 'vitest';
 import type { RemoteApp } from '../src/remotes/registry.ts';
+import { useShell } from '../src/shell.ts';
 import { manager, renderApp } from './support.tsx';
 
 const worker = setupMswWorker();
@@ -187,6 +189,53 @@ test('switching tenant clears the shared query cache', async () => {
   expect(queryClient.getQueryCache().getAll()).toStrictEqual([]);
   expect(localStorage.getItem('admin_web_selected_tenant_id')).toBe('t2');
   await waitFor(() => expect(seenTenant).toBe('t2'));
+});
+
+/** 生成器生成的那种页面：直接用 useQuery，不包 RequireAccess。 */
+function RowsPage() {
+  const { client } = useShell();
+  const rows = useQuery({
+    queryKey: ['demo', 'rows'],
+    queryFn: async () => (await client.get<string[]>('/demo/rows')).data,
+  });
+  return <p>{rows.data?.join(',') ?? 'ROWS_LOADING'}</p>;
+}
+
+test("after switching tenant, a page outside RequireAccess shows the new tenant's rows", async () => {
+  worker.use(
+    http.get('/auth/current/resources', ({ request }) =>
+      HttpResponse.json(
+        resourcesFor(request.headers.get('x-tenant-id') ?? 't1'),
+      ),
+    ),
+    http.get('/demo/rows', ({ request }) =>
+      HttpResponse.json([`row-of-${request.headers.get('x-tenant-id')}`]),
+    ),
+  );
+  localStorage.setItem('admin_web_selected_tenant_id', 't1');
+  const demo: RemoteRoutes = {
+    routes: [{ path: '/demo/rows', element: <RowsPage /> }],
+    menu: [],
+  };
+  renderApp({
+    apps: [
+      {
+        name: 'demo',
+        entry: 'http://localhost:8109/mf-manifest.json',
+        routePrefixes: ['/demo'],
+      },
+    ],
+    loadModule: async (id) =>
+      id === 'demo/routes' ? { default: demo } : Promise.reject(new Error(id)),
+    session: manager,
+    route: '/demo/rows',
+  });
+  const main = screen.getByRole('main');
+  expect(await within(main).findByText('row-of-t1')).toBeVisible();
+  await userEvent.click(screen.getByRole('combobox', { name: '切换租户' }));
+  await userEvent.click(await screen.findByRole('option', { name: '租户乙' }));
+  expect(await within(main).findByText('row-of-t2')).toBeVisible();
+  expect(within(main).queryByText('row-of-t1')).toBeNull();
 });
 
 test('account menu logout clears the tenant before calling logout', async () => {

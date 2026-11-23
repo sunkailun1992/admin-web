@@ -17,7 +17,8 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * 切换租户（照 1.2.4，可按名称查找）：记下新租户（请求头 X-Tenant-Id 跟着走），清掉各子应用共用的
- * 查询缓存，再按新租户重读菜单、权限与数据范围，不会显示上一个租户的数据。
+ * 查询缓存，再按新租户重读菜单、权限与数据范围；新会话就位后内容区按租户重挂（AppLayout），
+ * 页面重新请求，不会显示上一个租户的数据。
  */
 export function TenantSwitcher() {
   const { t } = useTranslation('shell');
