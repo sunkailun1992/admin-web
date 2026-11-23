@@ -218,7 +218,7 @@ export function StorageConfigurationSheet({
           if (!open) onClose();
         }}
       >
-        <SheetContent className="overflow-y-auto sm:max-w-xl">
+        <SheetContent className="ai:overflow-y-auto ai:sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>
               {current
@@ -229,7 +229,7 @@ export function StorageConfigurationSheet({
               {t('storage.editor.introDescription')}
             </SheetDescription>
           </SheetHeader>
-          <div className="flex flex-col gap-4 px-4">
+          <div className="ai:flex ai:flex-col ai:gap-4 ai:px-4">
             <Notice tone="info" title={t('storage.editor.introTitle')} />
             {current ? (
               <DescriptionList
@@ -237,7 +237,7 @@ export function StorageConfigurationSheet({
                   {
                     label: t('storage.editor.platform'),
                     value: (
-                      <span className="break-all">{current.platform}</span>
+                      <span className="ai:break-all">{current.platform}</span>
                     ),
                   },
                   {
@@ -247,13 +247,13 @@ export function StorageConfigurationSheet({
                   {
                     label: t('storage.editor.endpoint'),
                     value: (
-                      <span className="break-all">{current.endpoint}</span>
+                      <span className="ai:break-all">{current.endpoint}</span>
                     ),
                   },
                   {
                     label: t('storage.editor.bucketRegion'),
                     value: (
-                      <span className="break-all">
+                      <span className="ai:break-all">
                         {current.bucket}
                         {current.region ? ` / ${current.region}` : ''}
                       </span>
@@ -272,7 +272,7 @@ export function StorageConfigurationSheet({
               id={formId}
               noValidate
               autoComplete="off"
-              className="flex flex-col gap-4"
+              className="ai:flex ai:flex-col ai:gap-4"
               onSubmit={form.handleSubmit((submitted) => {
                 if (
                   disabled ||
@@ -308,7 +308,7 @@ export function StorageConfigurationSheet({
                           <SelectTrigger
                             id={providerId}
                             aria-invalid={fieldState.invalid}
-                            className="w-full"
+                            className="ai:w-full"
                           >
                             <SelectValue />
                           </SelectTrigger>
@@ -377,7 +377,7 @@ export function StorageConfigurationSheet({
                       onCheckedChange={field.onChange}
                       disabled={disabled}
                     />
-                    <div className="flex flex-col gap-1">
+                    <div className="ai:flex ai:flex-col ai:gap-1">
                       <FieldLabel htmlFor={uploadId}>
                         {t('storage.editor.uploadEnabled')}
                       </FieldLabel>
@@ -409,7 +409,7 @@ export function StorageConfigurationSheet({
                         }}
                         disabled={disabled}
                       >
-                        <SelectTrigger id={credentialId} className="w-full">
+                        <SelectTrigger id={credentialId} className="ai:w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -447,13 +447,13 @@ export function StorageConfigurationSheet({
                   />
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="ai:text-sm ai:text-muted-foreground">
                   {t('storage.editor.credentialsHidden')}
                 </p>
               )}
             </form>
           </div>
-          <SheetFooter className="flex-row justify-end">
+          <SheetFooter className="ai:flex-row ai:justify-end">
             <Button variant="outline" onClick={onClose}>
               {tc('actions.cancel')}
             </Button>

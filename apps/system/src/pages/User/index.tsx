@@ -346,7 +346,7 @@ export default function UserPage() {
           id: 'tenants',
           header: t('user.tenants'),
           cell: ({ row }) => (
-            <div className="flex flex-wrap gap-1">
+            <div className="system:flex system:flex-wrap system:gap-1">
               {(row.original.tenantIds?.length
                 ? row.original.tenantIds
                 : [row.original.tenantId]

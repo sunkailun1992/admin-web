@@ -1,8 +1,11 @@
 /*
- * 子应用只带自己用到的工具类：基础样式与主题变量由主应用加载一次（单独运行时由 src/dev/main.tsx 引入完整样式）。
- * 主题映射给工具类用（bg-primary 等指向主题变量）。
+ * 子应用只带自己用到的工具类，类名都加子应用名作前缀（Tailwind 的 prefix，如 system:flex、system:md:hidden）：
+ * 各应用单独构建的工具类会先后进同一个页面，同名的类后来的覆盖先来的，会打乱变体的先后（主应用侧边栏的
+ * hidden md:block 就会被后加载的 .hidden 盖住）；加了前缀，子应用之间、子应用与主应用之间没有同名的类。
+ * 基础样式与主题变量由主应用加载一次（单独运行时由 src/dev/main.tsx 引入完整样式）；
+ * 主题映射给工具类用（system:bg-primary 指向主题变量 --primary）。
  */
-@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/theme.css' layer(theme) prefix(system);
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import '@admin-web/theme/tailwind.css';
 

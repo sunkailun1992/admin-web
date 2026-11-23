@@ -39,7 +39,7 @@ function CheckBadges({
 }) {
   const { t } = useTranslation('rag');
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="rag:flex rag:flex-wrap rag:gap-2">
       {Object.entries(checks).map(([key, passed]) => (
         <li key={key}>
           <StatusBadge
@@ -90,7 +90,7 @@ function OfflineReport({
           id: 'state',
           header: t('evaluation.detailColumns.state'),
           cell: ({ row: { original: row } }) => (
-            <span className="flex flex-wrap gap-1">
+            <span className="rag:flex rag:flex-wrap rag:gap-1">
               {row.failed ? (
                 <StatusBadge
                   value="x"
@@ -154,7 +154,7 @@ function OfflineReport({
         detailColumns.accessor('retrievedSourceIds', {
           header: t('evaluation.detailColumns.sources'),
           cell: (info) => (
-            <span className="font-mono text-xs break-all">
+            <span className="rag:font-mono rag:text-xs rag:break-all">
               {info.getValue().join(t('evaluation.sourceSeparator')) ||
                 t('evaluation.none')}
             </span>
@@ -164,12 +164,12 @@ function OfflineReport({
     [t],
   );
   return (
-    <div className="flex flex-col gap-4">
+    <div className="rag:flex rag:flex-col rag:gap-4">
       <DescriptionList
         items={[
           {
             label: t('evaluation.fileName'),
-            value: <span className="break-all">{fileName}</span>,
+            value: <span className="rag:break-all">{fileName}</span>,
           },
           {
             label: t('evaluation.mode'),
@@ -228,7 +228,7 @@ function OfflineReport({
           {
             label: t('evaluation.datasetSha'),
             value: (
-              <span className="font-mono text-xs break-all">
+              <span className="rag:font-mono rag:text-xs rag:break-all">
                 {report.provenance.datasetSha256}
               </span>
             ),
@@ -236,7 +236,7 @@ function OfflineReport({
           {
             label: t('evaluation.corpusSha'),
             value: (
-              <span className="font-mono text-xs break-all">
+              <span className="rag:font-mono rag:text-xs rag:break-all">
                 {report.provenance.corpusSha256}
               </span>
             ),
@@ -356,12 +356,12 @@ function LiveReport({
       .map(([code, count]) => t('evaluation.live.errorCount', { code, count }))
       .join(t('evaluation.live.errorSeparator')) || t('evaluation.none');
   return (
-    <div className="flex flex-col gap-4">
+    <div className="rag:flex rag:flex-col rag:gap-4">
       <DescriptionList
         items={[
           {
             label: t('evaluation.fileName'),
-            value: <span className="break-all">{fileName}</span>,
+            value: <span className="rag:break-all">{fileName}</span>,
           },
           { label: t('evaluation.mode'), value: t('evaluation.live.mode') },
           {
@@ -540,14 +540,14 @@ export function EvaluationReportDialog({ onClose }: { onClose: () => void }) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
+      <DialogContent className="rag:max-h-[90vh] rag:overflow-y-auto rag:sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{t('evaluation.title')}</DialogTitle>
           <DialogDescription>
             {t('evaluation.localOnlyTitle')}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
+        <div className="rag:flex rag:flex-col rag:gap-4">
           <Notice
             tone="info"
             title={t('evaluation.localOnlyTitle')}

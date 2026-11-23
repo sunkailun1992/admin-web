@@ -75,14 +75,14 @@ export function StorageOperationSheet({
         if (!next) onClose();
       }}
     >
-      <SheetContent className="overflow-y-auto sm:max-w-xl">
+      <SheetContent className="ai:overflow-y-auto ai:sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>{t('storage.operation.title')}</SheetTitle>
           <SheetDescription>
             {t('storage.operation.description')}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-4 px-4 pb-6">
+        <div className="ai:flex ai:flex-col ai:gap-4 ai:px-4 ai:pb-6">
           {state.pending ? (
             <div>
               <Button
@@ -120,7 +120,7 @@ export function StorageOperationSheet({
               {
                 label: t('storage.operation.requestId'),
                 value: (
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs break-all">
+                  <code className="ai:rounded ai:bg-muted ai:px-1.5 ai:py-0.5 ai:font-mono ai:text-xs ai:break-all">
                     {state.pending?.requestId ||
                       operation?.requestId ||
                       t('storage.operation.none')}
@@ -187,13 +187,13 @@ export function StorageOperationSheet({
               rowKey={(step) => step.name}
               size="small"
               renderItem={(step) => (
-                <div className="flex flex-col gap-1">
-                  <span className="flex items-center gap-2">
+                <div className="ai:flex ai:flex-col ai:gap-1">
+                  <span className="ai:flex ai:items-center ai:gap-2">
                     <span>{t(`storage.operation.stepNames.${step.name}`)}</span>
                     <StatusBadge value={step.status} options={statuses} />
                   </span>
                   {step.failureCode ? (
-                    <span className="text-sm text-destructive">
+                    <span className="ai:text-sm ai:text-destructive">
                       {t(storageFailureKey(step.failureCode))}
                     </span>
                   ) : null}
@@ -202,7 +202,7 @@ export function StorageOperationSheet({
             />
           ) : null}
           {operation && operation.action !== 'PROBE' ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="ai:text-sm ai:text-muted-foreground">
               {t('storage.operation.configNote')}
             </p>
           ) : null}

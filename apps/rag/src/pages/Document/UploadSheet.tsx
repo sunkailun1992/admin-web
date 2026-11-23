@@ -195,7 +195,7 @@ export function UploadSheet({
       }}
     >
       <SheetContent
-        className="overflow-y-auto sm:max-w-xl"
+        className="rag:overflow-y-auto rag:sm:max-w-xl"
         showCloseButton={!uploading}
         onEscapeKeyDown={(event) => {
           if (uploading) event.preventDefault();
@@ -208,7 +208,7 @@ export function UploadSheet({
           <SheetTitle>{t('upload.title')}</SheetTitle>
           <SheetDescription>{t('upload.description')}</SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-4 px-4">
+        <div className="rag:flex rag:flex-col rag:gap-4 rag:px-4">
           {result ? (
             <>
               <Notice
@@ -222,7 +222,9 @@ export function UploadSheet({
                   {
                     label: t('upload.document'),
                     value: (
-                      <span className="break-all">{result.document.title}</span>
+                      <span className="rag:break-all">
+                        {result.document.title}
+                      </span>
                     ),
                   },
                   {
@@ -250,10 +252,12 @@ export function UploadSheet({
               id={formId}
               noValidate
               onSubmit={(event) => void form.handleSubmit(upload)(event)}
-              className="flex flex-col gap-4"
+              className="rag:flex rag:flex-col rag:gap-4"
             >
               <Field data-invalid={!!fileError}>
-                <span className="text-sm font-medium">{t('upload.file')}</span>
+                <span className="rag:text-sm rag:font-medium">
+                  {t('upload.file')}
+                </span>
                 <UploadDropzone
                   label={t('upload.dropzone')}
                   accept={RAG_UPLOAD_ACCEPT}
@@ -269,9 +273,9 @@ export function UploadSheet({
                   }}
                 />
                 {file ? (
-                  <span className="flex items-center gap-2 text-sm">
-                    <FileText aria-hidden="true" className="size-4" />
-                    <span className="break-all">{file.name}</span>
+                  <span className="rag:flex rag:items-center rag:gap-2 rag:text-sm">
+                    <FileText aria-hidden="true" className="rag:size-4" />
+                    <span className="rag:break-all">{file.name}</span>
                     <Badge variant="secondary">{t('upload.selected')}</Badge>
                   </span>
                 ) : null}
@@ -307,16 +311,16 @@ export function UploadSheet({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="group -ml-2"
+                    className="rag:group rag:-ml-2"
                   >
                     {t('upload.helpTitle')}
                     <ChevronDown
                       aria-hidden="true"
-                      className="transition-transform group-data-[state=open]:rotate-180"
+                      className="rag:transition-transform rag:group-data-[state=open]:rotate-180"
                     />
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pt-1 text-sm text-muted-foreground">
+                <CollapsibleContent className="rag:pt-1 rag:text-sm rag:text-muted-foreground">
                   {t('upload.help')}
                 </CollapsibleContent>
               </Collapsible>
@@ -333,7 +337,7 @@ export function UploadSheet({
             </form>
           )}
         </div>
-        <SheetFooter className="flex-row justify-end">
+        <SheetFooter className="rag:flex-row rag:justify-end">
           <Button variant="outline" onClick={onClose} disabled={uploading}>
             {result ? t('upload.done') : tc('actions.close')}
           </Button>

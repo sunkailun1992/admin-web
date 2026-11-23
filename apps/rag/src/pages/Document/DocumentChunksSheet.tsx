@@ -123,15 +123,15 @@ export function DocumentChunksSheet({
     >
       <SheetContent
         container={container}
-        className="w-full overflow-y-auto sm:max-w-5xl"
+        className="rag:w-full rag:overflow-y-auto rag:sm:max-w-5xl"
       >
         <SheetHeader>
-          <SheetTitle className="break-all">
+          <SheetTitle className="rag:break-all">
             {document.title || t('chunks.title')}
           </SheetTitle>
           <SheetDescription asChild>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="break-all">
+            <div className="rag:flex rag:flex-wrap rag:items-center rag:gap-2">
+              <span className="rag:break-all">
                 {document.sourceName || t('chunks.sourceMissing')}
               </span>
               {document.documentVersion !== undefined ? (
@@ -147,10 +147,10 @@ export function DocumentChunksSheet({
             </div>
           </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-4 px-4 pb-6">
+        <div className="rag:flex rag:flex-col rag:gap-4 rag:px-4 rag:pb-6">
           <nav
             aria-label={t('chunks.pagination')}
-            className="flex items-center justify-end gap-2"
+            className="rag:flex rag:items-center rag:justify-end rag:gap-2"
           >
             <Button
               variant="outline"
@@ -163,7 +163,7 @@ export function DocumentChunksSheet({
             >
               <ChevronLeft aria-hidden="true" />
             </Button>
-            <span className="text-sm">
+            <span className="rag:text-sm">
               {t('chunks.page', { page: pageNumber })}
             </span>
             <Button
@@ -197,16 +197,16 @@ export function DocumentChunksSheet({
           {page?.items.length ? (
             <div
               aria-busy={loading}
-              className="grid gap-4 md:grid-cols-[minmax(0,18rem)_1fr]"
+              className="rag:grid rag:gap-4 rag:md:grid-cols-[minmax(0,18rem)_1fr]"
             >
               <aside
                 aria-label={t('chunks.directory')}
-                className="flex flex-col gap-2"
+                className="rag:flex rag:flex-col rag:gap-2"
               >
-                <span className="text-sm text-muted-foreground">
+                <span className="rag:text-sm rag:text-muted-foreground">
                   {t('chunks.count', { count: page.items.length })}
                 </span>
-                <ul className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
+                <ul className="rag:flex rag:max-h-[60vh] rag:flex-col rag:gap-1 rag:overflow-y-auto">
                   {page.items.map((item) => {
                     const active = selected?.chunkId === item.chunkId;
                     return (
@@ -216,11 +216,11 @@ export function DocumentChunksSheet({
                           aria-pressed={active}
                           onClick={() => setSelectedId(item.chunkId)}
                           className={cn(
-                            'flex w-full flex-col items-start gap-1 rounded-md border p-2 text-left text-sm transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                            active && 'border-primary bg-accent',
+                            'rag:flex rag:w-full rag:flex-col rag:items-start rag:gap-1 rag:rounded-md rag:border rag:p-2 rag:text-left rag:text-sm rag:transition-colors rag:hover:bg-accent rag:focus-visible:ring-[3px] rag:focus-visible:ring-ring/50 rag:focus-visible:outline-none',
+                            active && 'rag:border-primary rag:bg-accent',
                           )}
                         >
-                          <span className="flex items-center gap-2">
+                          <span className="rag:flex rag:items-center rag:gap-2">
                             <strong>
                               {t('chunks.chunk', {
                                 index: item.chunkIndex + 1,
@@ -228,7 +228,7 @@ export function DocumentChunksSheet({
                             </strong>
                             <Badge variant="outline">{item.chunkType}</Badge>
                           </span>
-                          <span className="line-clamp-2 text-muted-foreground break-all">
+                          <span className="rag:line-clamp-2 rag:text-muted-foreground rag:break-all">
                             {item.content}
                           </span>
                         </button>
@@ -240,38 +240,42 @@ export function DocumentChunksSheet({
               {selected && source ? (
                 <article
                   aria-label={t('chunks.content')}
-                  className="flex min-w-0 flex-col gap-3"
+                  className="rag:flex rag:min-w-0 rag:flex-col rag:gap-3"
                 >
                   <div>
-                    <h3 className="font-semibold">
+                    <h3 className="rag:font-semibold">
                       {t('chunks.chunk', { index: selected.chunkIndex + 1 })}
                     </h3>
-                    <span className="text-sm text-muted-foreground break-all">
+                    <span className="rag:text-sm rag:text-muted-foreground rag:break-all">
                       {selected.sourceLocator ||
                         source.sectionPath ||
                         t('chunks.locationMissing')}
                     </span>
                   </div>
-                  <div className="max-h-[50vh] overflow-auto rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words">
+                  <div className="rag:max-h-[50vh] rag:overflow-auto rag:rounded-md rag:border rag:bg-muted/40 rag:p-3 rag:text-sm rag:whitespace-pre-wrap rag:break-words">
                     {selected.content}
                   </div>
                   <Collapsible>
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="group -ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="rag:group rag:-ml-2"
+                      >
                         {t('chunks.metadata')}
                         <ChevronDown
                           aria-hidden="true"
-                          className="transition-transform group-data-[state=open]:rotate-180"
+                          className="rag:transition-transform rag:group-data-[state=open]:rotate-180"
                         />
                       </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
+                    <CollapsibleContent className="rag:pt-2">
                       <DescriptionList
                         items={[
                           {
                             label: t('chunks.source'),
                             value: (
-                              <span className="break-all">
+                              <span className="rag:break-all">
                                 {source.sourceName ||
                                   document.sourceName ||
                                   t('notProvided')}
@@ -281,7 +285,7 @@ export function DocumentChunksSheet({
                           {
                             label: t('graph.sources.location'),
                             value: (
-                              <span className="break-all">
+                              <span className="rag:break-all">
                                 {selected.sourceLocator || t('notProvided')}
                               </span>
                             ),
@@ -293,8 +297,8 @@ export function DocumentChunksSheet({
                           {
                             label: t('graph.sources.chunkId'),
                             value: (
-                              <span className="flex items-center gap-1 break-all">
-                                <code className="font-mono text-xs">
+                              <span className="rag:flex rag:items-center rag:gap-1 rag:break-all">
+                                <code className="rag:font-mono rag:text-xs">
                                   {selected.chunkId}
                                 </code>
                                 <CopyButton
@@ -326,9 +330,9 @@ export function DocumentChunksSheet({
               ) : null}
             </div>
           ) : loading ? (
-            <div className="flex flex-col gap-2" aria-busy="true">
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-24 w-full" />
+            <div className="rag:flex rag:flex-col rag:gap-2" aria-busy="true">
+              <Skeleton className="rag:h-4 rag:w-48" />
+              <Skeleton className="rag:h-24 rag:w-full" />
             </div>
           ) : (
             <EmptyState

@@ -16,6 +16,7 @@
     "@admin-web/api": "workspace:*",
     "@admin-web/auth": "workspace:*",
     "@admin-web/i18n": "workspace:*",
+    "@admin-web/theme": "workspace:*",
     "@admin-web/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "axios": "catalog:",

@@ -86,8 +86,8 @@ docs/ai-coding/    AI 编码规范
 - **共享单例**：react、react-dom、react-router、@tanstack/react-query、i18next、react-i18next、sonner 与 `@admin-web/{ui,api,auth,i18n}`，版本由 pnpm catalog 统一（`singleton` 加 `requiredVersion`），见 `packages/config-vite/src/shared.ts`。
 - **故障隔离**：慢的、坏的子应用只影响它自己的域：还在加载时菜单与页面显示加载中，加载失败或 8 秒没加载好时菜单标为不可用、页面显示错误页与“重试”，其它域照常；清单读不到时页面显示“重试”，不当成页面不存在；清单里格式不对的一项记日志跳过，不连累别的子应用。加载用运行时插件 @module-federation/retry-plugin 重试；主应用里加载远程模块（如消息铃铛）等清单读到、子应用登记好再加载。
 - **独立部署**：只重建一个子应用，主应用 `dist` 不变，运行中的主应用就用上新版子应用；`pnpm test:deploy` 验证这一点（CI 也跑）。
-- **单独运行**：每个子应用有一个只在开发时用的最小外壳（`src/dev/main.tsx`，经 `StandaloneShell`），配同样的代理；登录统一到主应用的 8000 端口完成，localhost 的 Cookie 不分端口。
-- **样式**：主题变量与 Tailwind 基础样式只由主应用加载一次；子应用只带自己用到的工具类，配置相同，重复不冲突。
+- **单独运行**：每个子应用有一个只在开发时用的最小外壳（`index.html` → `src/dev/main.tsx`，经 `StandaloneShell`，带完整样式），配同样的代理；登录统一到主应用的 8000 端口完成，localhost 的 Cookie 不分端口。子应用的生产构建不打它：产物只有 `remoteEntry.js`、清单与暴露的模块。
+- **样式**：主题变量与 Tailwind 基础样式只由主应用加载一次；子应用只带自己用到的工具类，类名都加子应用名作前缀（Tailwind 的 `prefix`，如 `system:flex`、`rag:md:hidden`，写在子应用的 `src/styles.css`）。各应用单独构建的工具类会先后进同一个页面，同名的类后来的覆盖先来的，会打乱响应式等变体的先后；加了前缀，子应用之间、子应用与主应用之间没有同名的类。ESLint 规则 `admin-web/tailwind-prefix` 检查子应用源码里的类名（可自动补前缀），生成器建的新子应用自动带前缀；任意值里引用主题用设计令牌（如 `var(--border)`），不用 Tailwind 内部的 `--color-*` 变量。
 
 ## 业务范围
 

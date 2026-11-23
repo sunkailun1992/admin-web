@@ -44,7 +44,7 @@ const PROBE_TONES: Record<StorageProbeState, StatusTone> = {
 const helper = createDataTableColumns<StorageConfigurationVO>();
 
 const Muted = ({ children }: { children: ReactNode }) => (
-  <div className="text-xs text-muted-foreground">{children}</div>
+  <div className="ai:text-xs ai:text-muted-foreground">{children}</div>
 );
 
 /**
@@ -92,9 +92,9 @@ export function StorageConfigurationTable({
         id: 'identity',
         header: t('storage.table.identity'),
         cell: ({ row: { original: row } }) => (
-          <div className="flex flex-col items-start gap-1 break-all">
-            <span className="flex flex-wrap items-center gap-1">
-              <span className="font-medium">{row.name}</span>
+          <div className="ai:flex ai:flex-col ai:items-start ai:gap-1 ai:break-all">
+            <span className="ai:flex ai:flex-wrap ai:items-center ai:gap-1">
+              <span className="ai:font-medium">{row.name}</span>
               {row.isDefault ? (
                 <Badge>{t('storage.table.default')}</Badge>
               ) : null}
@@ -108,7 +108,7 @@ export function StorageConfigurationTable({
         id: 'location',
         header: t('storage.table.location'),
         cell: ({ row: { original: row } }) => (
-          <div className="break-all">
+          <div className="ai:break-all">
             <div>{row.bucket}</div>
             <Muted>{row.endpoint}</Muted>
             {row.region ? <Muted>{row.region}</Muted> : null}
@@ -119,7 +119,7 @@ export function StorageConfigurationTable({
         id: 'state',
         header: t('storage.table.state'),
         cell: ({ row: { original: row } }) => (
-          <div className="flex flex-col items-start gap-1">
+          <div className="ai:flex ai:flex-col ai:items-start ai:gap-1">
             <Badge variant={row.uploadEnabled ? 'default' : 'secondary'}>
               {row.uploadEnabled
                 ? t('storage.list.uploadEnabled')
@@ -160,7 +160,7 @@ export function StorageConfigurationTable({
         id: 'probe',
         header: t('storage.table.probe'),
         cell: ({ row: { original: row } }) => (
-          <div className="flex flex-col items-start gap-1">
+          <div className="ai:flex ai:flex-col ai:items-start ai:gap-1">
             <StatusBadge value={probeState(row)} options={probe} />
             {row.lastProbe ? (
               <>
@@ -191,7 +191,7 @@ export function StorageConfigurationTable({
               ? t('storage.table.referencedUndeletable')
               : undefined;
           return (
-            <div className="flex flex-wrap gap-x-1">
+            <div className="ai:flex ai:flex-wrap ai:gap-x-1">
               <Button
                 variant="link"
                 size="sm"
@@ -231,7 +231,7 @@ export function StorageConfigurationTable({
               <Button
                 variant="link"
                 size="sm"
-                className="text-destructive"
+                className="ai:text-destructive"
                 disabled={!writable || !!undeletable}
                 title={undeletable}
                 onClick={() => onIntent({ action: 'DELETE', row })}

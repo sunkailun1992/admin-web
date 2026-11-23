@@ -1,5 +1,6 @@
-// 生成器的端到端检查：用 turbo gen remote 生成 apps/gen-check，对它跑 typecheck、test、build，
-// 最后删掉生成的子应用、还原生成器改过的共享文件，并核对工作区与开始时一样（任何一步失败就以非零退出码结束）。
+// 生成器的端到端检查：用 turbo gen remote 生成 apps/gen-check，核对它的 Tailwind 前缀（gencheck），
+// 对它跑 lint、typecheck、test、build，最后删掉生成的子应用、还原生成器改过的共享文件，
+// 并核对工作区与开始时一样（任何一步失败就以非零退出码结束）。
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -38,8 +39,19 @@ try {
   run('pnpm', ['turbo', 'gen', 'remote', '--args', NAME, '8199', '8299']);
   // 新子应用要登记进 pnpm-lock.yaml（结束时还原）。设了 CI 环境变量时 pnpm 默认冻结锁文件，这里明确放开。
   run('pnpm', ['install', '--no-frozen-lockfile', '--prefer-offline']);
+  // 类名带子应用前缀：样式入口写了 prefix(gencheck)，复制来的 crud-page 已补上前缀，lint 通过。
+  const styles = readFileSync(join(app, 'src/styles.css'), 'utf8');
+  if (!styles.includes('prefix(gencheck)'))
+    throw new Error('生成的 src/styles.css 没有 prefix(gencheck)');
+  const page = readFileSync(join(app, 'src/pages/CrudPage.tsx'), 'utf8');
+  if (!page.includes('className="gencheck:flex'))
+    throw new Error('生成的 CrudPage.tsx 类名没带前缀 gencheck:');
+  run('pnpm', ['exec', 'eslint', `apps/${NAME}`, '--max-warnings', '0']);
   for (const task of ['typecheck', 'test', 'build'])
     run('pnpm', ['--filter', `@admin-web/${NAME}`, task]);
+  // 开发用的单独运行页不进生产构建。
+  if (existsSync(join(app, 'dist/index.html')))
+    throw new Error('生成的子应用构建产物里有开发用的 index.html');
 } catch (error) {
   failure = error;
 } finally {

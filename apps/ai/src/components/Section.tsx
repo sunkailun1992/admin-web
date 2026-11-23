@@ -19,18 +19,22 @@ export function Section({
   return (
     <section
       aria-labelledby={titleId}
-      className="flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground shadow-sm"
+      className="ai:flex ai:flex-col ai:gap-4 ai:rounded-xl ai:border ai:bg-card ai:p-6 ai:text-card-foreground ai:shadow-sm"
     >
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <Heading id={titleId} className="font-semibold leading-none">
+      <header className="ai:flex ai:flex-wrap ai:items-start ai:justify-between ai:gap-3">
+        <div className="ai:flex ai:flex-col ai:gap-1">
+          <Heading id={titleId} className="ai:font-semibold ai:leading-none">
             {title}
           </Heading>
           {description ? (
-            <div className="text-sm text-muted-foreground">{description}</div>
+            <div className="ai:text-sm ai:text-muted-foreground">
+              {description}
+            </div>
           ) : null}
         </div>
-        {extra ? <div className="flex items-center gap-2">{extra}</div> : null}
+        {extra ? (
+          <div className="ai:flex ai:items-center ai:gap-2">{extra}</div>
+        ) : null}
       </header>
       {children}
     </section>

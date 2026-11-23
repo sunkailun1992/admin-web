@@ -7,6 +7,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export { appBoundaries, noHardcodedCjk } from './boundaries.js';
+export { readTailwindPrefix, tailwindPrefix } from './tailwind-prefix.js';
 
 export default defineConfig([
   globalIgnores([

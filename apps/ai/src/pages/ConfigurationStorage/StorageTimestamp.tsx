@@ -22,7 +22,7 @@ export function StorageTimestamp({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <time dateTime={stamp.iso} tabIndex={0} className="cursor-help">
+          <time dateTime={stamp.iso} tabIndex={0} className="ai:cursor-help">
             {stamp.text}
           </time>
         </TooltipTrigger>

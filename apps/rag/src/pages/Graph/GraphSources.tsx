@@ -27,30 +27,30 @@ export function GraphSources({
   if (!sources.items.length)
     return <EmptyState title={t('graph.sources.empty')} />;
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm">
+    <div className="rag:flex rag:flex-col rag:gap-3">
+      <p className="rag:text-sm">
         {t('graph.sources.summary', {
           shown: sources.items.length,
           count: sources.count,
         })}
       </p>
       {sources.truncated ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="rag:text-sm rag:text-muted-foreground">
           {t('graph.sources.truncated')}
         </p>
       ) : null}
-      <ul className="flex flex-col gap-3">
+      <ul className="rag:flex rag:flex-col rag:gap-3">
         {sources.items.map((source, index) => (
           <li
             key={`${source.documentId || 'source'}-${source.details.chunkId || index}`}
-            className="flex flex-col gap-2 rounded-lg border p-3"
+            className="rag:flex rag:flex-col rag:gap-2 rag:rounded-lg rag:border rag:p-3"
           >
             <DescriptionList
               items={[
                 {
                   label: t('graph.sources.file'),
                   value: (
-                    <span className="break-all">
+                    <span className="rag:break-all">
                       {source.details.sourceName ||
                         source.documentCode ||
                         t('notProvided')}
@@ -82,7 +82,7 @@ export function GraphSources({
                 {
                   label: t('graph.sources.location'),
                   value: (
-                    <span className="break-all">
+                    <span className="rag:break-all">
                       {source.sourceLocator || t('notProvided')}
                     </span>
                   ),
@@ -100,7 +100,7 @@ export function GraphSources({
                       {
                         label: t('graph.sources.chunkId'),
                         value: (
-                          <span className="break-all">
+                          <span className="rag:break-all">
                             {source.details.chunkId}
                           </span>
                         ),
@@ -118,7 +118,9 @@ export function GraphSources({
                 ...(source.details.metadata.length
                   ? source.details.metadata.map((detail) => ({
                       label: detail.label,
-                      value: <span className="break-all">{detail.value}</span>,
+                      value: (
+                        <span className="rag:break-all">{detail.value}</span>
+                      ),
                     }))
                   : [
                       {
@@ -129,22 +131,22 @@ export function GraphSources({
               ]}
             />
             {source.evidence ? (
-              <div className="rounded-md bg-muted/40 p-2 text-sm">
+              <div className="rag:rounded-md rag:bg-muted/40 rag:p-2 rag:text-sm">
                 <strong>{t('graph.sources.evidence')}</strong>
                 {source.evidenceTruncated ? (
-                  <span className="text-muted-foreground">
+                  <span className="rag:text-muted-foreground">
                     {t('graph.sources.evidenceTruncated')}
                   </span>
                 ) : null}
                 {source.evidenceNormalized ? (
                   <span
-                    className="text-muted-foreground"
+                    className="rag:text-muted-foreground"
                     title={t('graph.sources.normalizedHint')}
                   >
                     {t('graph.sources.evidenceNormalized')}
                   </span>
                 ) : null}
-                <div className="whitespace-pre-wrap break-words">
+                <div className="rag:whitespace-pre-wrap rag:break-words">
                   {source.evidence}
                 </div>
               </div>

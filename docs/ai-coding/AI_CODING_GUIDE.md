@@ -170,6 +170,7 @@ menu:resource
 ## 样式规范
 
 - 用 Tailwind 工具类与主题变量（`bg-background`、`text-muted-foreground`、`--primary` 等），不写死颜色值；新令牌改 `packages/theme/tokens` 后重新生成。
+- 子应用的类名都带子应用前缀（Tailwind 的 `prefix`，如 `ai:flex`、`ai:sm:w-72`，写在子应用的 `src/styles.css`）：各应用单独构建的工具类会先后进同一个页面，不加前缀时同名的类会互相覆盖、打乱变体的先后。ESLint 规则 `admin-web/tailwind-prefix` 检查 `className`、`*ClassName`、`cn()` 里的类名，`pnpm lint:repo --fix` 可自动补前缀；主应用与物料包（`packages/ui`）不加前缀。任意值里引用主题用设计令牌（`var(--border)`），不用 Tailwind 内部的 `--color-*`。
 - 改物料组件的外观在物料包里改（带故事），不在应用里覆盖物料的内部类名。
 - 浅色与暗色都要看；不使用大面积单色渐变、装饰性空卡片、嵌套卡片。
 - 表格、表单、弹窗宽度要稳定，避免内容变化导致布局跳动。

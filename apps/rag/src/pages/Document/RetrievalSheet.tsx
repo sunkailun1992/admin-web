@@ -136,16 +136,16 @@ export function RetrievalSheet({
         if (!open) onClose();
       }}
     >
-      <SheetContent className="overflow-y-auto sm:max-w-2xl">
+      <SheetContent className="rag:overflow-y-auto rag:sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>{t('retrieval.title')}</SheetTitle>
           <SheetDescription>{t('retrieval.description')}</SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-4 px-4 pb-6">
+        <div className="rag:flex rag:flex-col rag:gap-4 rag:px-4 rag:pb-6">
           <form
             noValidate
             onSubmit={(event) => void form.handleSubmit(search)(event)}
-            className="flex flex-col gap-4"
+            className="rag:flex rag:flex-col rag:gap-4"
           >
             <Controller
               control={form.control}
@@ -192,7 +192,7 @@ export function RetrievalSheet({
                       field.onChange(event);
                     }}
                   />
-                  <FieldDescription className="text-right">
+                  <FieldDescription className="rag:text-right">
                     {t('retrieval.queryCount', {
                       count: query?.length ?? 0,
                       max: MAX_QUERY,
@@ -204,12 +204,12 @@ export function RetrievalSheet({
                 </Field>
               )}
             />
-            <div className="flex flex-wrap items-end gap-3">
+            <div className="rag:flex rag:flex-wrap rag:items-end rag:gap-3">
               <Controller
                 control={form.control}
                 name="topK"
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="w-40">
+                  <Field data-invalid={fieldState.invalid} className="rag:w-40">
                     <FieldLabel htmlFor={ids.topK}>
                       {t('retrieval.topK')}
                     </FieldLabel>
@@ -244,7 +244,7 @@ export function RetrievalSheet({
                 {t('retrieval.submit')}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="rag:text-sm rag:text-muted-foreground">
               {t('retrieval.costNote')}
             </p>
           </form>
@@ -266,31 +266,34 @@ export function RetrievalSheet({
           {state === 'matched' && result ? (
             <section
               aria-label={t('retrieval.results')}
-              className="flex flex-col gap-2"
+              className="rag:flex rag:flex-col rag:gap-2"
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="font-semibold">{t('retrieval.matched')}</h3>
-                <span className="text-sm text-muted-foreground">
+              <div className="rag:flex rag:flex-wrap rag:items-baseline rag:justify-between rag:gap-2">
+                <h3 className="rag:font-semibold">{t('retrieval.matched')}</h3>
+                <span className="rag:text-sm rag:text-muted-foreground">
                   {t('retrieval.matchedCount', {
                     chunks: result.chunks.length,
                     documents: result.sourceCount,
                   })}
                 </span>
               </div>
-              <ol className="flex flex-col divide-y rounded-md border">
+              <ol className="rag:flex rag:flex-col rag:divide-y rag:rounded-md rag:border">
                 {result.chunks.map((chunk, index) => (
-                  <li key={chunk.chunkId} className="flex gap-3 p-3">
+                  <li
+                    key={chunk.chunkId}
+                    className="rag:flex rag:gap-3 rag:p-3"
+                  >
                     <span
                       aria-hidden="true"
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs"
+                      className="rag:flex rag:size-6 rag:shrink-0 rag:items-center rag:justify-center rag:rounded-full rag:bg-muted rag:text-xs"
                     >
                       {index + 1}
                     </span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="flex flex-wrap items-center gap-2">
+                    <div className="rag:flex rag:min-w-0 rag:flex-1 rag:flex-col rag:gap-1">
+                      <span className="rag:flex rag:flex-wrap rag:items-center rag:gap-2">
                         <Button
                           variant="link"
-                          className="h-auto p-0 break-all whitespace-normal"
+                          className="rag:h-auto rag:p-0 rag:break-all rag:whitespace-normal"
                           onClick={() => onSource(chunk)}
                         >
                           {chunk.title || t('documentFallback')}
@@ -301,10 +304,10 @@ export function RetrievalSheet({
                             : t('retrieval.scoreMissing')}
                         </Badge>
                       </span>
-                      <span className="text-xs text-muted-foreground break-all">
+                      <span className="rag:text-xs rag:text-muted-foreground rag:break-all">
                         {chunk.source}
                       </span>
-                      <p className="line-clamp-3 text-sm whitespace-pre-wrap break-words">
+                      <p className="rag:line-clamp-3 rag:text-sm rag:whitespace-pre-wrap rag:break-words">
                         {chunk.content}
                       </p>
                       <div>

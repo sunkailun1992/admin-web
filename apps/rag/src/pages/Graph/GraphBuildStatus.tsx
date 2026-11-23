@@ -55,10 +55,10 @@ export function GraphBuildStatus({
   return (
     <section
       aria-label={t('graph.build.region')}
-      className="flex flex-col gap-2 rounded-lg border p-3"
+      className="rag:flex rag:flex-col rag:gap-2 rag:rounded-lg rag:border rag:p-3"
     >
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">{t('graph.build.title')}</span>
+      <div className="rag:flex rag:flex-wrap rag:items-center rag:gap-2 rag:text-sm">
+        <span className="rag:font-medium">{t('graph.build.title')}</span>
         {build ? (
           <StatusBadge value={build.status} options={statuses} />
         ) : (
@@ -74,7 +74,7 @@ export function GraphBuildStatus({
           />
         )}
         {build ? (
-          <span className="text-muted-foreground">
+          <span className="rag:text-muted-foreground">
             {t('graph.build.progress', {
               processed: build.processedDocumentCount,
               total: build.documentCount,
@@ -83,7 +83,7 @@ export function GraphBuildStatus({
         ) : null}
         {build &&
         (build.status === 'FAILED' || build.status === 'CANCELLED') ? (
-          <span className="text-amber-700 dark:text-amber-300">
+          <span className="rag:text-amber-700 rag:dark:text-amber-300">
             {t('graph.build.keptPublished')}
           </span>
         ) : null}
@@ -91,15 +91,15 @@ export function GraphBuildStatus({
       {build ? (
         <Collapsible>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="group -ml-2">
+            <Button variant="ghost" size="sm" className="rag:group rag:-ml-2">
               {t('graph.build.details')}
               <ChevronDown
                 aria-hidden="true"
-                className="transition-transform group-data-[state=open]:rotate-180"
+                className="rag:transition-transform rag:group-data-[state=open]:rotate-180"
               />
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="flex flex-col gap-2 pt-2">
+          <CollapsibleContent className="rag:flex rag:flex-col rag:gap-2 rag:pt-2">
             <DescriptionList
               items={[
                 { label: t('graph.build.nodeCount'), value: build.nodeCount },
@@ -122,7 +122,7 @@ export function GraphBuildStatus({
                   : []),
               ]}
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="rag:text-sm rag:text-muted-foreground">
               {t('graph.build.countNote')}
             </p>
           </CollapsibleContent>

@@ -37,8 +37,9 @@ export function federationOptions(options: AppConfigOptions) {
   };
   if (options.role === 'host') return common;
   // 子应用的资源按清单所在的地址加载（各自独立上线，地址由宿主的 apps.json 决定）。
-  // 插件缺省不处理 CSS（bundleAllCSS: false），子应用的工具类样式要跟着暴露的模块注入宿主页面；
-  // 子应用的 CSS 只有它自己用到的工具类，体积很小。
+  // 插件缺省（bundleAllCSS: false）只把暴露模块的 CSS 列进清单，由运行时插入、不等它就绪；打开后由暴露模块的
+  // 加载器先插入样式、等它加载完再返回模块，页面不会先闪一下没样式的样子。它带上的是构建里的全部 CSS，
+  // 所以子应用的生产构建不打开发用的 index.html（见 defineAppConfig），CSS 只有子应用自己用到的工具类。
   return {
     ...common,
     exposes: options.exposes ?? {},
@@ -61,6 +62,11 @@ export function defineAppConfig(options: AppConfigOptions): UserConfigFnObject {
       base: remote && command === 'build' ? './' : '/',
       envPrefix: ENV_PREFIX,
       plugins: [react(), tailwindcss(), federation(federationOptions(options))],
+      // 子应用的 index.html 只给开发时单独运行（src/dev/main.tsx 带完整样式与最小外壳）：生产构建不打它，
+      // 产物里只有 remoteEntry.js、清单与暴露的模块，主题变量与基础样式不会随子应用进到主应用页面。
+      ...(remote && command === 'build'
+        ? { build: { rolldownOptions: { input: {} } } }
+        : {}),
       server: {
         port: options.devPort,
         strictPort: true,

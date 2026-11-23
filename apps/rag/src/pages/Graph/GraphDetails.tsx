@@ -38,7 +38,7 @@ export function GraphDetails({
   const { t } = useTranslation('rag');
   if (!selection)
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="rag:flex rag:h-full rag:items-center rag:justify-center">
         <EmptyState title={t('graph.details.empty')} />
       </div>
     );
@@ -52,7 +52,7 @@ export function GraphDetails({
     <Button
       variant="link"
       size="sm"
-      className="h-auto p-0 break-all whitespace-normal"
+      className="rag:h-auto rag:p-0 rag:break-all rag:whitespace-normal"
       disabled={!graph?.nodes.some((value) => value.id === id)}
       onClick={() => onFocus(id)}
     >
@@ -61,10 +61,10 @@ export function GraphDetails({
   );
   const kind = node ? t('graph.details.node') : t('graph.details.edge');
   return (
-    <section aria-label={kind} className="flex flex-col gap-3">
-      <header className="flex flex-col items-start gap-1">
-        <span className="text-sm text-muted-foreground">{kind}</span>
-        <h3 className="font-semibold break-all">
+    <section aria-label={kind} className="rag:flex rag:flex-col rag:gap-3">
+      <header className="rag:flex rag:flex-col rag:items-start rag:gap-1">
+        <span className="rag:text-sm rag:text-muted-foreground">{kind}</span>
+        <h3 className="rag:font-semibold rag:break-all">
           {node?.name || edge?.label || edge?.type}
         </h3>
         {presentation ? (
@@ -93,7 +93,7 @@ export function GraphDetails({
               : t('graph.details.endpoints')}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="sources" className="pt-2">
+        <TabsContent value="sources" className="rag:pt-2">
           <GraphSources
             properties={selection.value.properties}
             legacy={node}
@@ -101,18 +101,20 @@ export function GraphDetails({
             onOpenDocument={onOpenDocument}
           />
         </TabsContent>
-        <TabsContent value="attributes" className="pt-2">
+        <TabsContent value="attributes" className="rag:pt-2">
           <DescriptionList
             items={[
               {
                 label: t('graph.details.id'),
-                value: <span className="break-all">{selection.value.id}</span>,
+                value: (
+                  <span className="rag:break-all">{selection.value.id}</span>
+                ),
               },
               ...(node && presentation
                 ? [
                     {
                       label: t('graph.details.name'),
-                      value: <span className="break-all">{node.name}</span>,
+                      value: <span className="rag:break-all">{node.name}</span>,
                     },
                     {
                       label: t('graph.details.type'),
@@ -163,7 +165,7 @@ export function GraphDetails({
                     {
                       label: t('graph.sources.location'),
                       value: (
-                        <span className="break-all">
+                        <span className="rag:break-all">
                           {selection.value.sourceLocator}
                         </span>
                       ),
@@ -173,26 +175,29 @@ export function GraphDetails({
             ]}
           />
         </TabsContent>
-        <TabsContent value="relations" className="flex flex-col gap-2 pt-2">
+        <TabsContent
+          value="relations"
+          className="rag:flex rag:flex-col rag:gap-2 rag:pt-2"
+        >
           {node ? (
             <>
-              <p className="text-sm text-muted-foreground">
+              <p className="rag:text-sm rag:text-muted-foreground">
                 {t('graph.details.relationsHint')}
               </p>
               {related.length ? (
-                <ul className="flex flex-col divide-y rounded-md border">
+                <ul className="rag:flex rag:flex-col rag:divide-y rag:rounded-md rag:border">
                   {related.map((item) => (
                     <li
                       key={item.edge.id}
-                      className="flex flex-col gap-1 px-3 py-2 text-sm"
+                      className="rag:flex rag:flex-col rag:gap-1 rag:px-3 rag:py-2 rag:text-sm"
                     >
-                      <span className="text-muted-foreground break-all">
+                      <span className="rag:text-muted-foreground rag:break-all">
                         {item.edge.label || item.edge.type}
                       </span>
                       {item.node ? (
                         endpoint(item.node.id)
                       ) : (
-                        <span className="text-muted-foreground">
+                        <span className="rag:text-muted-foreground">
                           {t('graph.details.outsideResult')}
                         </span>
                       )}
@@ -204,7 +209,7 @@ export function GraphDetails({
               )}
             </>
           ) : edge ? (
-            <div className="flex flex-col items-start gap-1">
+            <div className="rag:flex rag:flex-col rag:items-start rag:gap-1">
               {endpoint(edge.source)}
               {endpoint(edge.target)}
             </div>

@@ -66,7 +66,9 @@ function Frame({
     );
   return (
     <PageContainer title={title} extra={extra}>
-      <p className="-mt-2 text-sm text-muted-foreground">{description}</p>
+      <p className="ai:-mt-2 ai:text-sm ai:text-muted-foreground">
+        {description}
+      </p>
       {children}
     </PageContainer>
   );
@@ -138,7 +140,7 @@ export function ModelRouteWorkbench({
     >
       <RefreshCw
         aria-hidden="true"
-        className={busy ? 'animate-spin' : undefined}
+        className={busy ? 'ai:animate-spin' : undefined}
       />
       {uncertain ? t('model.readback') : t('model.refresh')}
     </Button>
@@ -205,10 +207,10 @@ export function ModelRouteWorkbench({
           level={level}
         />
       ) : busy ? (
-        <div className="flex flex-col gap-3 rounded-xl border p-6">
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-full" />
+        <div className="ai:flex ai:flex-col ai:gap-3 ai:rounded-xl ai:border ai:p-6">
+          <Skeleton className="ai:h-4 ai:w-32" />
+          <Skeleton className="ai:h-8 ai:w-48" />
+          <Skeleton className="ai:h-4 ai:w-full" />
         </div>
       ) : null}
       {canChange ? (
@@ -217,7 +219,7 @@ export function ModelRouteWorkbench({
           level={level}
           description={t('model.changeDescription')}
           extra={
-            <span className="text-sm text-muted-foreground">
+            <span className="ai:text-sm ai:text-muted-foreground">
               {t('model.changeScope')}
             </span>
           }
@@ -229,7 +231,7 @@ export function ModelRouteWorkbench({
               onValueChange={setCandidate}
               disabled={!canEdit}
             >
-              <SelectTrigger id={targetId} className="w-full sm:w-80">
+              <SelectTrigger id={targetId} className="ai:w-full ai:sm:w-80">
                 <SelectValue placeholder={t('model.targetPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -252,7 +254,7 @@ export function ModelRouteWorkbench({
               <FieldDescription>{t('model.needSupport')}</FieldDescription>
             ) : null}
           </Field>
-          <div className="flex flex-wrap gap-2">
+          <div className="ai:flex ai:flex-wrap ai:gap-2">
             <Button
               disabled={!canSubmit}
               aria-busy={state.phase === 'saving'}
@@ -297,7 +299,7 @@ export function ModelRouteWorkbench({
               {
                 label: t('model.currentModel'),
                 value: (
-                  <span className="break-all">
+                  <span className="ai:break-all">
                     {selection?.model || t('model.modelMissing')}
                   </span>
                 ),

@@ -176,7 +176,7 @@ RAG 与统一配置的权限见 `README.md`「权限模型」。权限判断统�
 - 跨应用共用的接口类型与会话类型放共享包（`@admin-web/auth`、`@admin-web/api`），不复制。
 - 界面优先用 `@admin-web/ui` 的物料与业务组件：数据表用 `DataTable`，表单弹窗与侧边面板用 `FormDialog`，确认操作用 `ConfirmAction`，编码输入用 `GeneratedCodeInput`，树形选择用 `TreeSelect`。
 - 界面文案一律走 i18n 键（`@admin-web/i18n` 的命名空间），不在应用源码里写死中日韩文字（ESLint 规则拦截）；后端返回的提示原样显示。
-- 样式用 Tailwind 工具类与主题变量（`--primary`、`--background` 等），不写死颜色；需要新令牌时改 `packages/theme/tokens`。
+- 样式用 Tailwind 工具类与主题变量（`--primary`、`--background` 等），不写死颜色；需要新令牌时改 `packages/theme/tokens`。子应用的类名都带子应用前缀（如 `rag:flex`，写在它的 `src/styles.css`，ESLint 规则 `admin-web/tailwind-prefix` 拦截、可自动修复），任意值里引用主题用设计令牌（`var(--border)`），不用 Tailwind 内部的 `--color-*`。
 - 不得凭空新增后端字段，必须匹配后端 `BO`、`Query` 和 `VO`。
 - 展示租户时使用租户名称，`tenantId` 只作为接口内部字段使用。
 - 业务编码必须调用后端编码生成接口，不允许浏览器随机生成业务编码。

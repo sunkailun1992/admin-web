@@ -198,7 +198,7 @@ export function StorageSettingsPanel({
           {
             label: t('storage.settings.defaultPlatform'),
             value: (
-              <span className="break-all">
+              <span className="ai:break-all">
                 {settings.defaultPlatform ||
                   t('storage.settings.defaultPlatformMissing')}
               </span>
@@ -208,7 +208,7 @@ export function StorageSettingsPanel({
           {
             label: t('storage.settings.legacy'),
             value: (
-              <span className="break-all">
+              <span className="ai:break-all">
                 {settings.legacyNullPlatform ||
                   t('storage.settings.notConfigured')}
               </span>
@@ -217,7 +217,7 @@ export function StorageSettingsPanel({
           {
             label: t('storage.settings.baseDir'),
             value: (
-              <span className="break-all">
+              <span className="ai:break-all">
                 {settings.baseDir || t('storage.settings.notSet')}
               </span>
             ),
@@ -226,7 +226,7 @@ export function StorageSettingsPanel({
       />
       <form
         noValidate
-        className="flex flex-col gap-4"
+        className="ai:flex ai:flex-col ai:gap-4"
         onSubmit={form.handleSubmit((values) => {
           if (!disabled) setConfirmation(values);
         })}
@@ -244,7 +244,7 @@ export function StorageSettingsPanel({
                 onValueChange={field.onChange}
                 disabled={disabled}
               >
-                <SelectTrigger id={platformId} className="w-full">
+                <SelectTrigger id={platformId} className="ai:w-full">
                   <SelectValue
                     placeholder={t('storage.settings.defaultPlaceholder')}
                   />
@@ -267,7 +267,7 @@ export function StorageSettingsPanel({
             </Field>
           )}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="ai:grid ai:gap-4 ai:sm:grid-cols-2">
           <NumberField
             control={form.control}
             name="uploadTtlSeconds"
@@ -298,7 +298,7 @@ export function StorageSettingsPanel({
             max: size(limits.maxUploadBytes.max),
           })}
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="ai:flex ai:flex-wrap ai:items-center ai:gap-2">
           <Button type="submit" disabled={disabled || !dirty}>
             {t('storage.settings.save')}
           </Button>
@@ -310,7 +310,7 @@ export function StorageSettingsPanel({
           >
             {t('storage.settings.reset')}
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="ai:text-sm ai:text-muted-foreground">
             {t('storage.settings.privateNote')}
           </span>
         </div>

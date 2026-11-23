@@ -404,7 +404,7 @@ function KnowledgeGraphWorkbench() {
           >
             <RefreshCw
               aria-hidden="true"
-              className={loading ? 'animate-spin' : undefined}
+              className={loading ? 'rag:animate-spin' : undefined}
             />
             {t('graph.refresh')}
           </Button>
@@ -428,7 +428,7 @@ function KnowledgeGraphWorkbench() {
         </>
       }
     >
-      <p className="-mt-2 text-sm text-muted-foreground">
+      <p className="rag:-mt-2 rag:text-sm rag:text-muted-foreground">
         {graph?.backend === 'neo4j'
           ? t('graph.subtitleNeo4j')
           : t('graph.subtitle')}
@@ -436,7 +436,7 @@ function KnowledgeGraphWorkbench() {
       <form
         noValidate
         onSubmit={(event) => void form.handleSubmit(query)(event)}
-        className="flex flex-wrap items-end gap-3 rounded-lg border p-3"
+        className="rag:flex rag:flex-wrap rag:items-end rag:gap-3 rag:rounded-lg rag:border rag:p-3"
       >
         <Controller
           control={form.control}
@@ -447,7 +447,7 @@ function KnowledgeGraphWorkbench() {
               t('retrieval.knowledgeBaseRule'),
           }}
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid} className="w-48">
+            <Field data-invalid={fieldState.invalid} className="rag:w-48">
               <FieldLabel htmlFor={ids.kb}>
                 {t('graph.knowledgeBase')}
               </FieldLabel>
@@ -471,7 +471,7 @@ function KnowledgeGraphWorkbench() {
           control={form.control}
           name="query"
           render={({ field }) => (
-            <Field className="w-56">
+            <Field className="rag:w-56">
               <FieldLabel htmlFor={ids.query}>{t('graph.search')}</FieldLabel>
               <Input
                 id={ids.query}
@@ -488,7 +488,7 @@ function KnowledgeGraphWorkbench() {
             control={form.control}
             name="viewMode"
             render={({ field }) => (
-              <Field className="w-36">
+              <Field className="rag:w-36">
                 <FieldLabel htmlFor={ids.view}>{t('graph.view')}</FieldLabel>
                 <Select
                   value={field.value}
@@ -497,7 +497,7 @@ function KnowledgeGraphWorkbench() {
                     field.onChange(value);
                   }}
                 >
-                  <SelectTrigger id={ids.view} className="w-full">
+                  <SelectTrigger id={ids.view} className="rag:w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -517,7 +517,7 @@ function KnowledgeGraphWorkbench() {
           control={form.control}
           name="nodeType"
           render={({ field }) => (
-            <Field className="w-36">
+            <Field className="rag:w-36">
               <FieldLabel htmlFor={ids.type}>{t('graph.nodeType')}</FieldLabel>
               <Select
                 value={field.value || ALL}
@@ -525,7 +525,7 @@ function KnowledgeGraphWorkbench() {
                   field.onChange(value === ALL ? '' : value)
                 }
               >
-                <SelectTrigger id={ids.type} className="w-full">
+                <SelectTrigger id={ids.type} className="rag:w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -549,7 +549,7 @@ function KnowledgeGraphWorkbench() {
               t('graph.limitRule'),
           }}
           render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid} className="w-28">
+            <Field data-invalid={fieldState.invalid} className="rag:w-28">
               <FieldLabel htmlFor={ids.limit}>{t('graph.limit')}</FieldLabel>
               <Input
                 id={ids.limit}
@@ -612,14 +612,15 @@ function KnowledgeGraphWorkbench() {
         aria-label={t('graph.workspace')}
         data-fullscreen={fullscreen || undefined}
         className={cn(
-          'flex flex-col overflow-hidden rounded-lg border bg-background',
-          fullscreen && 'fixed inset-0 z-50 rounded-none border-0',
+          'rag:flex rag:flex-col rag:overflow-hidden rag:rounded-lg rag:border rag:bg-background',
+          fullscreen &&
+            'rag:fixed rag:inset-0 rag:z-50 rag:rounded-none rag:border-0',
         )}
       >
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
-          <span className="flex flex-wrap items-baseline gap-2 text-sm">
-            <span className="font-medium">{t('graph.network')}</span>
-            <span className="text-muted-foreground">
+        <div className="rag:flex rag:flex-wrap rag:items-center rag:justify-between rag:gap-2 rag:border-b rag:px-3 rag:py-2">
+          <span className="rag:flex rag:flex-wrap rag:items-baseline rag:gap-2 rag:text-sm">
+            <span className="rag:font-medium">{t('graph.network')}</span>
+            <span className="rag:text-muted-foreground">
               {t('graph.resultCount', {
                 nodes: graph?.nodes.length ?? 0,
                 edges: graph?.edges.length ?? 0,
@@ -636,11 +637,14 @@ function KnowledgeGraphWorkbench() {
         </div>
         <div
           className={cn(
-            'grid min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem]',
-            fullscreen ? 'flex-1' : 'h-[36rem]',
+            'rag:grid rag:min-h-0 rag:grid-cols-1 rag:lg:grid-cols-[minmax(0,1fr)_22rem]',
+            fullscreen ? 'rag:flex-1' : 'rag:h-[36rem]',
           )}
         >
-          <div aria-busy={loading} className="relative flex min-h-0 flex-col">
+          <div
+            aria-busy={loading}
+            className="rag:relative rag:flex rag:min-h-0 rag:flex-col"
+          >
             <GraphCanvas
               ref={canvasRef}
               graph={graph}
@@ -650,7 +654,7 @@ function KnowledgeGraphWorkbench() {
               onFullscreenChange={setFullscreen}
             />
           </div>
-          <aside className="min-h-0 overflow-y-auto border-t p-3 lg:border-t-0 lg:border-l">
+          <aside className="rag:min-h-0 rag:overflow-y-auto rag:border-t rag:p-3 rag:lg:border-t-0 rag:lg:border-l">
             <GraphDetails
               graph={graph}
               selection={selection}
@@ -660,8 +664,11 @@ function KnowledgeGraphWorkbench() {
             />
           </aside>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2">
-          <ul aria-label={t('graph.legend')} className="flex flex-wrap gap-1">
+        <div className="rag:flex rag:flex-wrap rag:items-center rag:justify-between rag:gap-2 rag:border-t rag:px-3 rag:py-2">
+          <ul
+            aria-label={t('graph.legend')}
+            className="rag:flex rag:flex-wrap rag:gap-1"
+          >
             {legend.map((item) => (
               <li key={item.type}>
                 <Badge
@@ -677,7 +684,7 @@ function KnowledgeGraphWorkbench() {
             ))}
           </ul>
           {graph?.truncated ? (
-            <span className="text-sm text-amber-700 dark:text-amber-300">
+            <span className="rag:text-sm rag:text-amber-700 rag:dark:text-amber-300">
               {t('graph.truncated')}
             </span>
           ) : null}

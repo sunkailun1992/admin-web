@@ -433,6 +433,9 @@ importers:
       '@admin-web/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@admin-web/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@admin-web/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -548,6 +551,9 @@ importers:
       '@admin-web/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@admin-web/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@admin-web/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -660,6 +666,9 @@ importers:
       '@admin-web/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@admin-web/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@admin-web/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -893,6 +902,9 @@ importers:
       '@admin-web/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@admin-web/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@admin-web/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -320,20 +320,20 @@ export const GraphCanvas = forwardRef<
 
   const empty = !data?.nodes.length || failed;
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col">
+    <div className="rag:relative rag:flex rag:h-full rag:min-h-0 rag:flex-1 rag:flex-col">
       <div
         ref={containerRef}
         role="img"
         aria-label={t('graph.canvas.label')}
         aria-describedby={empty ? undefined : summaryId}
         data-testid="graph-canvas"
-        className="h-full min-h-[24rem] w-full flex-1 bg-[radial-gradient(circle,var(--color-border)_1px,transparent_1px)] [background-size:16px_16px]"
+        className="rag:h-full rag:min-h-[24rem] rag:w-full rag:flex-1 rag:bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] rag:[background-size:16px_16px]"
       />
-      <p id={summaryId} className="sr-only" aria-live="polite">
+      <p id={summaryId} className="rag:sr-only" aria-live="polite">
         {ready ? t('graph.canvas.summary', rendered) : ''}
       </p>
       {empty ? (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="rag:absolute rag:inset-0 rag:flex rag:items-center rag:justify-center">
           <EmptyState
             title={failed ? t('graph.canvas.failed') : t('graph.canvas.empty')}
           />
@@ -342,7 +342,7 @@ export const GraphCanvas = forwardRef<
       <div
         role="toolbar"
         aria-label={t('graph.canvas.controls')}
-        className="absolute top-2 right-2 flex items-center gap-0.5 rounded-md border bg-background/95 p-0.5 shadow-sm"
+        className="rag:absolute rag:top-2 rag:right-2 rag:flex rag:items-center rag:gap-0.5 rag:rounded-md rag:border rag:bg-background/95 rag:p-0.5 rag:shadow-sm"
       >
         {control({
           label: t('graph.canvas.zoomOut'),
@@ -353,7 +353,7 @@ export const GraphCanvas = forwardRef<
         })}
         <span
           aria-live="polite"
-          className="w-12 text-center text-xs tabular-nums"
+          className="rag:w-12 rag:text-center rag:text-xs rag:tabular-nums"
         >
           {zoom}%
         </span>

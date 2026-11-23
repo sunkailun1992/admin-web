@@ -18,12 +18,12 @@ export function RowActions({
 }) {
   const { t } = useTranslation('common');
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="system:flex system:flex-wrap system:gap-1">
       <Button
         type="button"
         variant="link"
         size="sm"
-        className="h-auto px-1"
+        className="system:h-auto system:px-1"
         onClick={onEdit}
       >
         {t('actions.edit')}
@@ -39,7 +39,7 @@ export function RowActions({
           type="button"
           variant="link"
           size="sm"
-          className="h-auto px-1 text-destructive"
+          className="system:h-auto system:px-1 system:text-destructive"
         >
           {t('actions.delete')}
         </Button>
@@ -61,7 +61,7 @@ export function RowAction({
       type="button"
       variant="link"
       size="sm"
-      className="h-auto px-1"
+      className="system:h-auto system:px-1"
       onClick={onClick}
     >
       {children}

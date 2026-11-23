@@ -193,15 +193,15 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
     helper.accessor('title', {
       header: t('documents.columns.document'),
       cell: ({ row: { original: record } }) => (
-        <div className="flex flex-col items-start">
+        <div className="rag:flex rag:flex-col rag:items-start">
           <Button
             variant="link"
-            className="h-auto p-0 text-left break-all whitespace-normal"
+            className="rag:h-auto rag:p-0 rag:text-left rag:break-all rag:whitespace-normal"
             onClick={() => openDocument(record)}
           >
             {record.title || record.sourceName}
           </Button>
-          <span className="text-xs text-muted-foreground break-all">
+          <span className="rag:text-xs rag:text-muted-foreground rag:break-all">
             {record.sourceName}
           </span>
         </div>
@@ -217,7 +217,9 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
     helper.accessor('chunkCount', {
       header: t('documents.columns.chunks'),
       cell: (info) => (
-        <span className="block text-right tabular-nums">{info.getValue()}</span>
+        <span className="rag:block rag:text-right rag:tabular-nums">
+          {info.getValue()}
+        </span>
       ),
     }),
     helper.accessor('status', {
@@ -239,7 +241,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
       id: 'actions',
       header: t('documents.columns.actions'),
       cell: ({ row: { original: record } }) => (
-        <div className="flex gap-1">
+        <div className="rag:flex rag:gap-1">
           <Button
             variant="link"
             size="sm"
@@ -280,7 +282,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
                 await loadDocuments();
               }}
             >
-              <Button variant="link" size="sm" className="text-destructive">
+              <Button variant="link" size="sm" className="rag:text-destructive">
                 {t('documents.deactivate')}
               </Button>
             </ConfirmAction>
@@ -317,10 +319,10 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         </>
       }
     >
-      <p className="-mt-2 text-sm text-muted-foreground">
+      <p className="rag:-mt-2 rag:text-sm rag:text-muted-foreground">
         {t('documents.subtitle')}
       </p>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="rag:flex rag:flex-wrap rag:items-center rag:gap-2">
         <Select
           value={knowledgeBase ?? ALL}
           onValueChange={(value) =>
@@ -329,7 +331,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         >
           <SelectTrigger
             aria-label={t('documents.knowledgeBaseFilter')}
-            className="w-full sm:w-48"
+            className="rag:w-full rag:sm:w-48"
           >
             <SelectValue />
           </SelectTrigger>
@@ -354,7 +356,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
             setSearch(event.target.value);
             setPage(1);
           }}
-          className="w-full sm:w-64"
+          className="rag:w-full rag:sm:w-64"
         />
         <Select
           value={status ?? ALL}
@@ -365,7 +367,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         >
           <SelectTrigger
             aria-label={t('documents.statusFilter')}
-            className="w-full sm:w-36"
+            className="rag:w-full rag:sm:w-36"
           >
             <SelectValue />
           </SelectTrigger>
@@ -387,7 +389,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         >
           <SelectTrigger
             aria-label={t('documents.formatFilter')}
-            className="w-full sm:w-36"
+            className="rag:w-full rag:sm:w-36"
           >
             <SelectValue />
           </SelectTrigger>
@@ -421,7 +423,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         >
           <RefreshCw
             aria-hidden="true"
-            className={loading ? 'animate-spin' : undefined}
+            className={loading ? 'rag:animate-spin' : undefined}
           />
           {t('documents.refresh')}
         </Button>
@@ -455,11 +457,11 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
             : undefined
         }
         toolbar={
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-2 text-sm">
-              <span className="font-medium">{t('documents.list')}</span>
+          <div className="rag:flex rag:flex-wrap rag:items-center rag:justify-between rag:gap-2">
+            <span className="rag:flex rag:items-center rag:gap-2 rag:text-sm">
+              <span className="rag:font-medium">{t('documents.list')}</span>
               <Badge variant="secondary">{filtered.length}</Badge>
-              <span className="text-muted-foreground">
+              <span className="rag:text-muted-foreground">
                 {t('documents.loaded', { count: documents.length })}
               </span>
             </span>
@@ -518,7 +520,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="break-all">
+            <DialogTitle className="rag:break-all">
               {t('documents.validationTitle', {
                 title: selectedValidation?.title ?? '',
               })}

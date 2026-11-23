@@ -35,14 +35,14 @@ export function Notice({
       variant={tone === 'error' ? 'destructive' : 'default'}
       className={cn(
         tone === 'warning' &&
-          'border-amber-500/50 text-amber-900 dark:text-amber-200',
-        tone === 'success' && 'border-emerald-600/40',
+          'ai:border-amber-500/50 ai:text-amber-900 ai:dark:text-amber-200',
+        tone === 'success' && 'ai:border-emerald-600/40',
       )}
     >
       <Icon aria-hidden="true" />
       <AlertTitle id={titleId}>{title}</AlertTitle>
       {description ? <AlertDescription>{description}</AlertDescription> : null}
-      {action ? <div className="col-start-2 mt-2">{action}</div> : null}
+      {action ? <div className="ai:col-start-2 ai:mt-2">{action}</div> : null}
     </Alert>
   );
 }

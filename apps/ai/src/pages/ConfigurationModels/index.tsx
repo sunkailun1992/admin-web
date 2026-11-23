@@ -29,13 +29,13 @@ function ModelConfigurationWorkbench({
         >
           <RefreshCw
             aria-hidden="true"
-            className={catalogue.isFetching ? 'animate-spin' : undefined}
+            className={catalogue.isFetching ? 'ai:animate-spin' : undefined}
           />
           {t('controlPlane.refresh')}
         </Button>
       }
     >
-      <p className="-mt-2 text-sm text-muted-foreground">
+      <p className="ai:-mt-2 ai:text-sm ai:text-muted-foreground">
         {t('controlPlane.subtitle')}
       </p>
       {catalogue.isError ? (
@@ -56,10 +56,10 @@ function ModelConfigurationWorkbench({
         />
       ) : null}
       {catalogue.isPending ? (
-        <div className="flex flex-col gap-3 rounded-xl border p-6">
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
+        <div className="ai:flex ai:flex-col ai:gap-3 ai:rounded-xl ai:border ai:p-6">
+          <Skeleton className="ai:h-4 ai:w-48" />
+          <Skeleton className="ai:h-4 ai:w-full" />
+          <Skeleton className="ai:h-4 ai:w-full" />
         </div>
       ) : null}
       {catalogue.data && !catalogue.isError ? (

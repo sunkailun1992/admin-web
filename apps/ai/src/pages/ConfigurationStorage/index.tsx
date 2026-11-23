@@ -298,7 +298,7 @@ function StorageWorkbench({
           >
             <RefreshCw
               aria-hidden="true"
-              className={busy ? 'animate-spin' : undefined}
+              className={busy ? 'ai:animate-spin' : undefined}
             />
             {state.pending ? t('storage.readback') : t('storage.refresh')}
           </Button>
@@ -315,7 +315,7 @@ function StorageWorkbench({
         </>
       }
     >
-      <p className="-mt-2 text-sm text-muted-foreground">
+      <p className="ai:-mt-2 ai:text-sm ai:text-muted-foreground">
         {t('storage.subtitle')}
       </p>
       <Notice
@@ -391,10 +391,10 @@ function StorageWorkbench({
         />
       ) : null}
       {!snapshot && busy ? (
-        <div className="flex flex-col gap-3 rounded-xl border p-6">
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
+        <div className="ai:flex ai:flex-col ai:gap-3 ai:rounded-xl ai:border ai:p-6">
+          <Skeleton className="ai:h-4 ai:w-48" />
+          <Skeleton className="ai:h-4 ai:w-full" />
+          <Skeleton className="ai:h-4 ai:w-full" />
         </div>
       ) : null}
       {snapshot ? (
@@ -420,10 +420,10 @@ function StorageWorkbench({
               ) : null
             }
           >
-            <div className="flex flex-wrap gap-2">
+            <div className="ai:flex ai:flex-wrap ai:gap-2">
               <form
                 role="search"
-                className="flex gap-2"
+                className="ai:flex ai:gap-2"
                 onSubmit={(event) => {
                   event.preventDefault();
                   filtered({});
@@ -436,7 +436,7 @@ function StorageWorkbench({
                   value={search}
                   disabled={!writable}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="w-full sm:w-64"
+                  className="ai:w-full ai:sm:w-64"
                 />
                 <Button type="submit" variant="outline" disabled={!writable}>
                   {t('storage.list.searchAction')}
@@ -454,7 +454,7 @@ function StorageWorkbench({
               >
                 <SelectTrigger
                   aria-label={t('storage.list.provider')}
-                  className="w-full sm:w-44"
+                  className="ai:w-full ai:sm:w-44"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -484,7 +484,7 @@ function StorageWorkbench({
               >
                 <SelectTrigger
                   aria-label={t('storage.list.upload')}
-                  className="w-full sm:w-44"
+                  className="ai:w-full ai:sm:w-44"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -543,7 +543,7 @@ function StorageWorkbench({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{intentTitle}</AlertDialogTitle>
-            <AlertDialogDescription className="break-all">
+            <AlertDialogDescription className="ai:break-all">
               {intent?.row.name}
             </AlertDialogDescription>
           </AlertDialogHeader>

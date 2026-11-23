@@ -19,7 +19,7 @@ export function TreeNameCell({
   const { t } = useTranslation('system');
   return (
     <div
-      className="flex items-center gap-1"
+      className="system:flex system:items-center system:gap-1"
       style={{ paddingLeft: `${depth * 1.25}rem` }}
     >
       {expandable ? (
@@ -27,7 +27,7 @@ export function TreeNameCell({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-6"
+          className="system:size-6"
           aria-expanded={expanded}
           aria-label={`${expanded ? t('common.collapse') : t('common.expand')} ${name}`}
           onClick={onToggle}
@@ -36,13 +36,13 @@ export function TreeNameCell({
             aria-hidden
             className={
               expanded
-                ? 'rotate-90 transition-transform'
-                : 'transition-transform'
+                ? 'system:rotate-90 system:transition-transform'
+                : 'system:transition-transform'
             }
           />
         </Button>
       ) : (
-        <span className="inline-block size-6" />
+        <span className="system:inline-block system:size-6" />
       )}
       <span>{name}</span>
     </div>

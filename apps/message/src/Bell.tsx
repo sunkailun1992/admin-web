@@ -108,14 +108,14 @@ export function Bell({ userId, tenantId }: BellProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="message:relative"
             aria-label={t('bell.label', { count: unread })}
           >
             <BellIcon aria-hidden />
             {unread > 0 ? (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-destructive px-1 text-[10px] leading-4 text-white"
+                className="message:absolute message:-top-0.5 message:-right-0.5 message:min-w-4 message:rounded-full message:bg-destructive message:px-1 message:text-[10px] message:leading-4 message:text-white"
               >
                 {unread}
               </span>
@@ -124,10 +124,10 @@ export function Bell({ userId, tenantId }: BellProps) {
         </PopoverTrigger>
         <PopoverContent
           align="end"
-          className="w-90 p-0"
+          className="message:w-90 message:p-0"
           aria-label={t('bell.normal')}
         >
-          <h2 className="border-b px-4 py-2 text-sm font-medium">
+          <h2 className="message:border-b message:px-4 message:py-2 message:text-sm message:font-medium">
             {t('bell.normal')}
           </h2>
           {messages.length === 0 ? (
@@ -140,15 +140,15 @@ export function Bell({ userId, tenantId }: BellProps) {
               renderItem={(item) => (
                 <ListRow
                   title={
-                    <span className="flex flex-col">
+                    <span className="message:flex message:flex-col">
                       <span>{item.title}</span>
-                      <span className="text-xs font-normal text-muted-foreground">
+                      <span className="message:text-xs message:font-normal message:text-muted-foreground">
                         {item.sendDateTime || '-'}
                       </span>
                     </span>
                   }
                   description={
-                    <span className="line-clamp-2">{item.content}</span>
+                    <span className="message:line-clamp-2">{item.content}</span>
                   }
                   extra={
                     <Button
@@ -175,7 +175,7 @@ export function Bell({ userId, tenantId }: BellProps) {
             <DialogTitle>
               {systemNotice?.title || t('bell.systemNotice')}
             </DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap">
+            <DialogDescription className="message:whitespace-pre-wrap">
               {systemNotice?.content}
             </DialogDescription>
           </DialogHeader>

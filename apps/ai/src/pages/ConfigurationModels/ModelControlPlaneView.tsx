@@ -81,17 +81,19 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
       catalogColumns.columns([
         catalogColumns.accessor('modelName', {
           header: t('controlPlane.columns.modelName'),
-          cell: (info) => <span className="break-all">{info.getValue()}</span>,
+          cell: (info) => (
+            <span className="ai:break-all">{info.getValue()}</span>
+          ),
         }),
         catalogColumns.display({
           id: 'physical',
           header: t('controlPlane.columns.physical'),
           cell: ({ row }) => (
-            <div className="break-all">
+            <div className="ai:break-all">
               <div>
                 {row.original.provider || t('controlPlane.providerUnknown')}
               </div>
-              <div className="text-muted-foreground">
+              <div className="ai:text-muted-foreground">
                 {row.original.model || t('controlPlane.modelUnknown')}
               </div>
             </div>
@@ -101,7 +103,7 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
           id: 'capabilities',
           header: t('controlPlane.columns.capabilities'),
           cell: ({ row }) => (
-            <span className="flex flex-wrap gap-1">
+            <span className="ai:flex ai:flex-wrap ai:gap-1">
               {row.original.capabilities.map((item) => (
                 <Badge key={item} variant="secondary">
                   {t(`controlPlane.capabilities.${item}`)}
@@ -123,13 +125,13 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
           id: 'verification',
           header: t('controlPlane.columns.verification'),
           cell: ({ row }) => (
-            <div className="flex flex-col items-start gap-1">
+            <div className="ai:flex ai:flex-col ai:items-start ai:gap-1">
               <StatusBadge
                 value={row.original.verificationStatus}
                 options={verification}
               />
               {row.original.verifiedAt ? (
-                <span className="text-xs text-muted-foreground">
+                <span className="ai:text-xs ai:text-muted-foreground">
                   {isoText(
                     row.original.verifiedAt,
                     t('controlPlane.notProvided'),
@@ -156,7 +158,7 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
         bindingColumns.accessor('modelName', {
           header: t('controlPlane.bindingColumns.model'),
           cell: (info) => (
-            <span className="break-all">
+            <span className="ai:break-all">
               {info.getValue() || t('controlPlane.bindingModelMissing')}
             </span>
           ),
@@ -170,11 +172,11 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
                 {t(`controlPlane.bindingStatus.${row.original.status}`)}
               </div>
               {row.original.reasonCode === 'RAG_INDEX_BOUND' ? (
-                <div className="text-muted-foreground">
+                <div className="ai:text-muted-foreground">
                   {t('controlPlane.indexBound')}
                 </div>
               ) : row.original.readOnly ? (
-                <div className="text-muted-foreground">
+                <div className="ai:text-muted-foreground">
                   {t('controlPlane.businessManaged')}
                 </div>
               ) : null}
@@ -223,20 +225,23 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
         />
         {links.length ? (
           <nav aria-label={t('controlPlane.consoleNav')}>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="ai:grid ai:gap-3 ai:sm:grid-cols-2 ai:lg:grid-cols-3">
               {links.map((link) => (
                 <li key={link.key}>
                   <a
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-full flex-col gap-1 rounded-lg border p-4 text-sm transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                    className="ai:flex ai:h-full ai:flex-col ai:gap-1 ai:rounded-lg ai:border ai:p-4 ai:text-sm ai:transition-colors ai:hover:bg-accent ai:focus-visible:ring-[3px] ai:focus-visible:ring-ring/50 ai:focus-visible:outline-none"
                   >
-                    <span className="flex items-center gap-1 font-medium">
+                    <span className="ai:flex ai:items-center ai:gap-1 ai:font-medium">
                       {t(`controlPlane.links.${link.key}.title`)}
-                      <ExternalLink aria-hidden="true" className="size-3.5" />
+                      <ExternalLink
+                        aria-hidden="true"
+                        className="ai:size-3.5"
+                      />
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="ai:text-muted-foreground">
                       {t(`controlPlane.links.${link.key}.description`)}
                     </span>
                   </a>
@@ -245,18 +250,18 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
             </ul>
           </nav>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="ai:text-sm ai:text-muted-foreground">
             {t('controlPlane.consoleMissing')}
           </p>
         )}
-        <p className="text-sm text-muted-foreground">
+        <p className="ai:text-sm ai:text-muted-foreground">
           {t('controlPlane.consoleHint')}
         </p>
       </Section>
       <Section
         title={t('controlPlane.catalogTitle')}
         extra={
-          <span className="text-sm text-muted-foreground">
+          <span className="ai:text-sm ai:text-muted-foreground">
             {data.available
               ? t('controlPlane.catalogCount', {
                   deployments: new Set(data.modelCatalog.map((row) => row.id))
@@ -291,14 +296,14 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
               : undefined
           }
           toolbar={
-            <div className="flex flex-wrap gap-2">
+            <div className="ai:flex ai:flex-wrap ai:gap-2">
               <Input
                 type="search"
                 aria-label={t('controlPlane.search')}
                 placeholder={t('controlPlane.searchPlaceholder')}
                 value={query}
                 onChange={(event) => filter({ query: event.target.value })}
-                className="w-full sm:w-72"
+                className="ai:w-full ai:sm:w-72"
               />
               <Select
                 value={capability ?? ALL}
@@ -311,7 +316,7 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
               >
                 <SelectTrigger
                   aria-label={t('controlPlane.capabilityFilter')}
-                  className="w-full sm:w-48"
+                  className="ai:w-full ai:sm:w-48"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -329,7 +334,7 @@ export function ModelControlPlaneView({ data }: { data: ModelControlPlaneVO }) {
             </div>
           }
         />
-        <p className="text-sm text-muted-foreground">
+        <p className="ai:text-sm ai:text-muted-foreground">
           {t('controlPlane.catalogHint')}
         </p>
       </Section>

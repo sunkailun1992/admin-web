@@ -30,13 +30,13 @@ export function RetrievalSourceContent({
 }: SourceProps) {
   const { t } = useTranslation('rag');
   return (
-    <div className="flex flex-col gap-5">
+    <div className="rag:flex rag:flex-col rag:gap-5">
       <DescriptionList
         items={[
           {
             label: t('retrieval.source.location'),
             value: (
-              <span className="break-all">
+              <span className="rag:break-all">
                 {chunk.source || t('notProvided')}
               </span>
             ),
@@ -54,8 +54,10 @@ export function RetrievalSourceContent({
           {
             label: t('retrieval.source.chunkId'),
             value: (
-              <span className="flex items-center gap-1 break-all">
-                <code className="font-mono text-xs">{chunk.chunkId}</code>
+              <span className="rag:flex rag:items-center rag:gap-1 rag:break-all">
+                <code className="rag:font-mono rag:text-xs">
+                  {chunk.chunkId}
+                </code>
                 <CopyButton
                   value={chunk.chunkId}
                   label={t('retrieval.source.copyChunkId')}
@@ -65,9 +67,9 @@ export function RetrievalSourceContent({
           },
         ]}
       />
-      <section className="flex flex-col gap-2">
-        <h3 className="font-semibold">{t('retrieval.source.content')}</h3>
-        <div className="max-h-[50vh] overflow-auto rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words">
+      <section className="rag:flex rag:flex-col rag:gap-2">
+        <h3 className="rag:font-semibold">{t('retrieval.source.content')}</h3>
+        <div className="rag:max-h-[50vh] rag:overflow-auto rag:rounded-md rag:border rag:bg-muted/40 rag:p-3 rag:text-sm rag:whitespace-pre-wrap rag:break-words">
           {chunk.content}
         </div>
       </section>
@@ -103,16 +105,16 @@ export function RetrievalSourceSheet({
         if (!open) onClose();
       }}
     >
-      <SheetContent className="overflow-y-auto sm:max-w-2xl">
+      <SheetContent className="rag:overflow-y-auto rag:sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle className="break-all">
+          <SheetTitle className="rag:break-all">
             {props.chunk.title || t('retrieval.source.fallbackTitle')}
           </SheetTitle>
           <SheetDescription>
             {t('retrieval.source.description')}
           </SheetDescription>
         </SheetHeader>
-        <div className="px-4 pb-6">
+        <div className="rag:px-4 rag:pb-6">
           <RetrievalSourceContent {...props} />
         </div>
       </SheetContent>

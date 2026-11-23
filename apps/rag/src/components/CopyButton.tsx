@@ -10,7 +10,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       type="button"
       variant="ghost"
       size="icon"
-      className="size-7"
+      className="rag:size-7"
       aria-label={label}
       onClick={async () => {
         try {

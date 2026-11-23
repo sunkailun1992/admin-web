@@ -35,7 +35,7 @@ export function NodeLocator({
   const [open, setOpen] = useState(false);
   const selected = nodes.find((node) => node.id === value);
   return (
-    <div className="flex items-center gap-1">
+    <div className="rag:flex rag:items-center rag:gap-1">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -44,17 +44,17 @@ export function NodeLocator({
             aria-expanded={open}
             aria-label={t('graph.locate')}
             disabled={!nodes.length}
-            className="w-56 justify-between"
+            className="rag:w-56 rag:justify-between"
           >
-            <span className="truncate">
+            <span className="rag:truncate">
               {selected ? selected.name || selected.id : t('graph.locate')}
             </span>
-            <ChevronsUpDown aria-hidden="true" className="opacity-50" />
+            <ChevronsUpDown aria-hidden="true" className="rag:opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
           container={container}
-          className="w-72 p-0"
+          className="rag:w-72 rag:p-0"
           aria-label={t('graph.locate')}
         >
           <Command>
@@ -70,7 +70,7 @@ export function NodeLocator({
                     onLocate(node.id);
                   }}
                 >
-                  <span className="truncate">{node.name || node.id}</span>
+                  <span className="rag:truncate">{node.name || node.id}</span>
                 </CommandItem>
               ))}
             </CommandList>
