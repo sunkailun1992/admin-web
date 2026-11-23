@@ -3,17 +3,20 @@ import { setupMsw } from '@admin-web/test-utils';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
+import * as rules from '../../src/access.ts';
 import { client } from '../../src/http.ts';
 import routes from '../../src/routes.tsx';
+import { texts } from '../../src/texts.ts';
 
 const server = setupMsw();
 
 test('./routes default-exports the send page under 消息管理', () => {
+  expect(routes.texts).toBe(texts);
   expect(routes.menu).toStrictEqual([
     {
       path: '/message/send',
       labelKey: 'message:menu.send',
-      access: 'canSeeMessageSend',
+      access: rules.canSeeMessageSend,
       group: { key: 'message', labelKey: 'message:menu.group' },
     },
   ]);

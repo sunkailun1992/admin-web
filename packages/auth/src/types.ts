@@ -1,5 +1,6 @@
+import type { RemoteTexts } from '@admin-web/i18n';
 import type { RouteObject } from 'react-router';
-import type { Access } from './access.ts';
+import type { AccessRule } from './access.ts';
 
 // 会话相关的接口类型，照 1.2.4 的 src/services/auth/types.d.ts。
 /** 后端的状态取值（中文字符串，照后端枚举）；应用里用这里的常量，不在应用源码里写死。 */
@@ -86,13 +87,20 @@ export type SessionState = {
   sessionRecovery?: { reason: 'resources-unavailable' };
 };
 
-/** 子应用的菜单元数据：路径、文案键、所需权限；同组的菜单在侧边栏里放在一起。 */
+/** 子应用的菜单元数据：路径、文案键、所需权限（子应用自己的规则）；同组的菜单在侧边栏里放在一起。 */
 export type MenuEntry = {
   path: string;
   labelKey: string;
-  access?: keyof Access;
+  access?: AccessRule;
   group?: { key: string; labelKey: string };
 };
 
-/** 子应用经 Module Federation 暴露的 ./routes。 */
-export type RemoteRoutes = { routes: RouteObject[]; menu: MenuEntry[] };
+/**
+ * 子应用经 Module Federation 暴露的 ./routes：路由、菜单，以及它自带的文案（命名空间与各语言资源）。
+ * 文案与权限规则都在子应用里，改它们只需重建并上线这个子应用。
+ */
+export type RemoteRoutes = {
+  routes: RouteObject[];
+  menu: MenuEntry[];
+  texts?: RemoteTexts;
+};

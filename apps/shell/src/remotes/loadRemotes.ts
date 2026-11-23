@@ -1,4 +1,5 @@
 import type { RemoteRoutes } from '@admin-web/auth';
+import { addTexts, type RemoteTexts } from '@admin-web/i18n';
 import { RetryPlugin } from '@module-federation/retry-plugin';
 import {
   loadRemote,
@@ -36,10 +37,29 @@ export function federationRuntime(): FederationRuntime {
   };
 }
 
+/** 子应用自带的文案：命名空间与各语言的资源（对象）。 */
+export function isRemoteTexts(value: unknown): value is RemoteTexts {
+  if (!value || typeof value !== 'object') return false;
+  const { namespace, resources } = value as Partial<RemoteTexts>;
+  return (
+    typeof namespace === 'string' &&
+    namespace.length > 0 &&
+    !!resources &&
+    typeof resources === 'object' &&
+    Object.values(resources).every(
+      (resource) => !!resource && typeof resource === 'object',
+    )
+  );
+}
+
 function isRemoteRoutes(value: unknown): value is RemoteRoutes {
   if (!value || typeof value !== 'object') return false;
-  const { routes, menu } = value as Partial<RemoteRoutes>;
-  return Array.isArray(routes) && Array.isArray(menu);
+  const { routes, menu, texts } = value as Partial<RemoteRoutes>;
+  return (
+    Array.isArray(routes) &&
+    Array.isArray(menu) &&
+    (texts === undefined || isRemoteTexts(texts))
+  );
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -61,7 +81,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-/** 加载一个子应用的 ./routes（默认导出 RemoteRoutes）；失败只记下，不影响别的子应用。 */
+/**
+ * 加载一个子应用的 ./routes（默认导出 RemoteRoutes）：它自带的文案先注册，再算加载好（菜单与页面渲染时文案已在）；
+ * 失败只记下，不影响别的子应用。
+ */
 export async function loadRemoteRoutes(
   app: RemoteApp,
   load: (id: string) => Promise<unknown>,
@@ -72,6 +95,7 @@ export async function loadRemoteRoutes(
     const routes = (module as { default?: unknown } | null)?.default;
     if (!isRemoteRoutes(routes))
       throw new Error('./routes does not default-export RemoteRoutes');
+    if (routes.texts) addTexts(routes.texts);
     return { app, status: 'ready', module: routes };
   } catch (error) {
     console.error(`[shell] remote ${app.name} failed to load`, error);

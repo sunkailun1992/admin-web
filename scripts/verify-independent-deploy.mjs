@@ -1,14 +1,14 @@
 // 独立部署验证：只重建一个子应用、主应用不动，运行中的主应用就用上新版子应用。
 //   1. 全部按开发配置构建，记下主应用 dist 的哈希；
-//   2. 只用 VITE_RELEASE_VERSION=verify-<时间戳> 重建 system；
+//   2. 改 system 自己的一条文案（侧边栏分组名），用 VITE_RELEASE_VERSION=verify-<时间戳> 只重建 system；
 //   3. 主应用 dist 的哈希不变；
 //   4. 起预览服务，在浏览器里打开 /system/tenant（接口按 e2e/fixtures 回）：
-//      system 发出的请求带新的 X-Release-Version，主应用自己的请求仍是原值。
-// 结束时按原配置重建 system。运行：node scripts/verify-independent-deploy.mjs
+//      侧边栏显示新文案；system 发出的请求带新的 X-Release-Version，主应用自己的请求仍是原值。
+// 结束时还原文案、按原配置重建 system。运行：node scripts/verify-independent-deploy.mjs
 import { chromium, expect } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepare, settled } from '../e2e/support/setup.ts';
@@ -17,6 +17,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shellDist = join(root, 'apps/shell/dist');
 const ports = [8001, 8201, 8202, 8203, 8204];
 const version = `verify-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
+// system 自己的文案（随子应用上线，不在共享的 @admin-web/i18n 里）。
+const systemTexts = join(root, 'apps/system/src/locales/zh-CN.json');
+const originalTexts = readFileSync(systemTexts, 'utf8');
+const groupLabel = `系统管理（${version}）`;
 
 const run = (command, args, env = {}) =>
   execFileSync(command, args, {
@@ -74,6 +78,9 @@ let browser;
 try {
   run('pnpm', ['build:dev']);
   const before = hashDir(shellDist);
+  const texts = JSON.parse(originalTexts);
+  texts.menu.group = groupLabel;
+  writeFileSync(systemTexts, `${JSON.stringify(texts, null, 2)}\n`);
   run('pnpm', ['--filter', '@admin-web/system', 'build:dev'], {
     VITE_RELEASE_VERSION: version,
   });
@@ -109,15 +116,20 @@ try {
   });
   await page.goto('/system/tenant');
   await settled(page, '租户管理');
+  await expect(
+    page.getByRole('navigation').getByText(groupLabel),
+    '侧边栏显示 system 新版的文案',
+  ).toBeVisible();
   api.verify();
   expect([...seen.system], 'system 的请求带新版本').toStrictEqual([version]);
   expect([...seen.shell], '主应用的请求仍是原版本').toStrictEqual(['1.0.0']);
   console.log(
-    `独立部署验证通过：system 的请求头 X-Release-Version=${version}，主应用未重建`,
+    `独立部署验证通过：system 的新文案已显示，请求头 X-Release-Version=${version}，主应用未重建`,
   );
 } finally {
   await browser?.close();
   // 结束整个进程组：预览服务是 e2e-serve 起的子进程。
   if (server?.pid) process.kill(-server.pid, 'SIGTERM');
+  writeFileSync(systemTexts, originalTexts);
   run('pnpm', ['--filter', '@admin-web/system', 'build:dev']);
 }

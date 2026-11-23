@@ -1,8 +1,13 @@
-import type { Access } from '@admin-web/auth';
-import { RequireAccess, type RemoteRoutes } from '@admin-web/auth';
+import {
+  RequireAccess,
+  type AccessRule,
+  type RemoteRoutes,
+} from '@admin-web/auth';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Navigate } from 'react-router';
+import { canManageConfiguration, canSeeAiModel } from './access.ts';
 import './styles.css';
+import { texts } from './texts.ts';
 
 const AiModelPage = lazy(() => import('./pages/Model/index.tsx'));
 const ModelConfigurationPage = lazy(
@@ -12,8 +17,8 @@ const StorageConfigurationPage = lazy(
   () => import('./pages/ConfigurationStorage/index.tsx'),
 );
 
-const guarded = (flag: keyof Access, page: ReactNode) => (
-  <RequireAccess flag={flag}>
+const guarded = (rule: AccessRule, page: ReactNode) => (
+  <RequireAccess rule={rule}>
     <Suspense fallback={null}>{page}</Suspense>
   </RequireAccess>
 );
@@ -26,39 +31,40 @@ const configuration = {
 
 /** AI 子应用的接入契约：AI管理（模型路由）与统一配置（模型与能力、文件存储），权限照 1.2.4 的路由。 */
 const routes: RemoteRoutes = {
+  texts,
   routes: [
     { path: '/ai', element: <Navigate to="/ai/model" replace /> },
-    { path: '/ai/model', element: guarded('canSeeAiModel', <AiModelPage />) },
+    { path: '/ai/model', element: guarded(canSeeAiModel, <AiModelPage />) },
     {
       path: '/configuration',
       element: <Navigate to="/configuration/models" replace />,
     },
     {
       path: '/configuration/models',
-      element: guarded('canManageConfiguration', <ModelConfigurationPage />),
+      element: guarded(canManageConfiguration, <ModelConfigurationPage />),
     },
     {
       path: '/configuration/storage',
-      element: guarded('canManageConfiguration', <StorageConfigurationPage />),
+      element: guarded(canManageConfiguration, <StorageConfigurationPage />),
     },
   ],
   menu: [
     {
       path: '/ai/model',
       labelKey: 'ai:menu.model',
-      access: 'canSeeAiModel',
+      access: canSeeAiModel,
       group: ai,
     },
     {
       path: '/configuration/models',
       labelKey: 'ai:menu.configModels',
-      access: 'canManageConfiguration',
+      access: canManageConfiguration,
       group: configuration,
     },
     {
       path: '/configuration/storage',
       labelKey: 'ai:menu.configStorage',
-      access: 'canManageConfiguration',
+      access: canManageConfiguration,
       group: configuration,
     },
   ],

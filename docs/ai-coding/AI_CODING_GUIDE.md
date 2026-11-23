@@ -122,7 +122,7 @@ X-Release-Version / X-Traffic-Lane  # 灰度头，取本应用构建时的 VITE_
 
 ## 权限规范
 
-- 新增页面或管理入口时同步核对子应用菜单（`MenuEntry.access`）、路由守卫（`RequireAccess`）、`access.ts` 标志、后端菜单资源、接口权限与目标角色授权；页面可见不代表服务端已授权。
+- 新增页面或管理入口时同步核对子应用菜单（`MenuEntry.access`）、路由守卫（`RequireAccess`）、子应用 `src/access.ts` 的规则、后端菜单资源、接口权限与目标角色授权；页面可见不代表服务端已授权。
 - 后端权限码来自 `permissions`，前端菜单资源来自 `frontendResources`。
 - 后端管理权限码为 `user:auth:manage`；前端菜单资源码：
 
@@ -134,8 +134,8 @@ menu:role
 menu:resource
 ```
 
-- `packages/auth/src/access.ts` 只做布尔判断，不发请求、不写存储、不产生副作用。
-- 子应用菜单的 `access` 与 `RequireAccess` 的 `flag` 必须用 `access.ts` 里定义的标志名。
+- 权限规则（`AccessRule`，各子应用的 `src/access.ts`）只做布尔判断，不发请求、不写存储、不产生副作用；规则看 `AccessSubject` 的权限码、`menu:*` 资源编码与管理员分类。
+- 子应用菜单的 `access`、`RequireAccess` 的 `rule` 与按钮的 `useAllows` 都用本子应用 `src/access.ts` 里导出的规则，不在页面里另写判断。
 
 ## 会话规范
 
@@ -163,7 +163,7 @@ menu:resource
 
 ## 多语言规范
 
-- 每个应用一个命名空间（`shell`、`system`、`message`、`ai`、`rag`），共用词放 `common`；文案在 `packages/i18n/locales/zh-CN` 与 `en-US`，两份键必须一致（测试核对）。
+- 每个应用一个命名空间（`shell`、`system`、`message`、`ai`、`rag`），共用词放 `common`。子应用的文案在它自己的 `src/locales/zh-CN.json` 与 `en-US.json`（经 `src/texts.ts` 由 `./routes` 的 `texts` 带出，主应用加载时注册），`common`、`shell` 在 `packages/i18n/locales`；每处两份键必须一致（测试核对）。
 - 应用源码不写死中日韩文字（ESLint `admin-web/no-hardcoded-cjk`）；测试与故事文件除外。
 - 后端返回的提示原样显示，不翻译、不改写。
 

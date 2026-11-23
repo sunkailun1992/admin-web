@@ -9,7 +9,11 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { computeAccess, type Access } from './access.ts';
+import {
+  accessSubject,
+  type AccessRule,
+  type AccessSubject,
+} from './access.ts';
 import { bootstrapSession } from './bootstrap.ts';
 import { isLoginPage, redirectToLogin } from './login.ts';
 import { clearLegacyTokens } from './tenant.ts';
@@ -109,7 +113,13 @@ export function useSession(): SessionContextValue {
   return value;
 }
 
-export function useAccess(): Access {
+/** 当前用户（权限规则看的那一份），会话变了才重新计算。 */
+export function useAccessSubject(): AccessSubject {
   const { currentUser } = useSession();
-  return useMemo(() => computeAccess(currentUser), [currentUser]);
+  return useMemo(() => accessSubject(currentUser), [currentUser]);
+}
+
+/** 当前用户是否满足一条权限规则（按钮、区块的显示）。 */
+export function useAllows(rule: AccessRule): boolean {
+  return rule(useAccessSubject());
 }

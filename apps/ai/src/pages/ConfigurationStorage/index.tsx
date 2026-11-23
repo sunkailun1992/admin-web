@@ -1,4 +1,4 @@
-import { useAccess, useSession } from '@admin-web/auth';
+import { useAllows, useSession } from '@admin-web/auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +21,7 @@ import {
 import { Plus, RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import * as rules from '../../access.ts';
 import { Notice } from '../../components/Notice.tsx';
 import { Section } from '../../components/Section.tsx';
 import {
@@ -571,10 +572,10 @@ function StorageWorkbench({
 export default function StorageConfigurationPage() {
   const { t } = useTranslation('ai');
   const { currentUser, currentTenantId } = useSession();
-  const access = useAccess();
+  const canManageConfiguration = useAllows(rules.canManageConfiguration);
   const userId = currentUser?.userId;
   const tenantId = currentTenantId || currentUser?.tenantId;
-  const allowed = access.canManageConfiguration && !!userId && !!tenantId;
+  const allowed = canManageConfiguration && !!userId && !!tenantId;
   const scope = allowed ? JSON.stringify([userId, tenantId, true]) : '';
   const scopeRef = useRef(scope);
   const allowedRef = useRef(allowed);

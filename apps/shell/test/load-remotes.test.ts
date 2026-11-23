@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import { expect, test, vi } from 'vitest';
 import {
   createRemoteStore,
@@ -172,12 +173,45 @@ test('loadModule waits until apps.json is read, and refuses remotes it does not 
   expect(loadRemote).not.toHaveBeenCalledWith('message/Bell');
 });
 
+test('a remote brings its own texts: they are registered before it counts as ready', async () => {
+  const demo = app('demo', '/demo');
+  const texts = {
+    namespace: 'demo',
+    resources: {
+      'zh-CN': { menu: { home: '演示首页' } },
+      'en-US': { menu: { home: 'Demo home' } },
+    },
+  };
+  const store = createRemoteStore({
+    readRegistry: async () => [demo],
+    runtime: {
+      registerRemotes: vi.fn(),
+      loadRemote: vi.fn(async () => ({ default: { ...routes, texts } })),
+    },
+  });
+  let textWhenReady: string | undefined;
+  store.subscribe(() => {
+    if (store.getSnapshot().remotes[0]?.status === 'ready')
+      textWhenReady = i18next.t('demo:menu.home');
+  });
+  await store.start();
+  expect(textWhenReady).toBe('演示首页');
+  expect(i18next.getFixedT('en-US')('demo:menu.home')).toBe('Demo home');
+});
+
 test('a module that is not RemoteRoutes, or that takes too long, counts as failed', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   expect(
     (
       await loadRemoteRoutes(system, async () => ({
         default: { routes: 'x' },
+      }))
+    ).status,
+  ).toBe('failed');
+  expect(
+    (
+      await loadRemoteRoutes(system, async () => ({
+        default: { routes: [], menu: [], texts: { namespace: 1 } },
       }))
     ).status,
   ).toBe('failed');

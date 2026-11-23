@@ -39,7 +39,8 @@ permissions:
 mainFiles:
   shell: apps/shell/src
   remoteContract: packages/auth/src/types.ts（RemoteRoutes、MenuEntry）
-  access: packages/auth/src/access.ts
+  access: apps/<子应用>/src/access.ts（各子应用自己的权限规则；机制在 packages/auth/src/access.ts）
+  texts: apps/<子应用>/src/locales（各子应用自己的文案；共享的 common、shell 在 packages/i18n）
   http: packages/api/src/client.ts（createHttpClient）
   remotesRegistry: apps/shell/apps.<mode>.json
   viteConfig: packages/config-vite/src/index.ts（defineAppConfig）
@@ -62,8 +63,8 @@ packages/
   theme/             设计令牌（DTCG）→ theme.css、tokens.ts（Style Dictionary）
   theme-emerald/     额外主题包：换主题就是换包
   api/               createHttpClient（拦截器、灰度头）、统一响应解包、TanStack Query 与列表工具
-  auth/              会话（当前用户、资源、租户）、权限规则 access.ts、RequireAccess、子应用接入契约类型、单独运行外壳
-  i18n/              i18next 初始化与各命名空间文案（locales/zh-CN、locales/en-US）
+  auth/              会话（当前用户、资源、租户）、权限规则机制（AccessRule、RequireAccess、useAllows）、子应用接入契约类型、单独运行外壳
+  i18n/              i18next 初始化、共享文案（common、shell）与子应用文案的注册（addTexts）
   config-vite/       Vite 预设 defineAppConfig：React、Tailwind、Module Federation、代理、环境变量、共享单例
   config-eslint/     ESLint 扁平配置：子应用引用边界、界面不写死中文
   config-typescript/ tsconfig 基础配置
@@ -82,10 +83,10 @@ docs/ai-coding/    AI 编码规范
 ## 微前端接入契约
 
 - **子应用清单**：主应用启动时取运行时配置 `/apps.json`（来源 `apps/shell/apps.<mode>.json`，开发服务器直接给，构建时写进产物，部署时可按环境替换），每项是子应用名、`mf-manifest.json` 地址和负责的路由前缀。加子应用、换子应用地址都不用重新构建主应用。
-- **路由与菜单**：每个子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes` 是路由对象（页面懒加载），`menu` 是菜单元数据（路径、文案键 `labelKey`、所需权限标志 `access`、分组）。主应用先渲染布局与工作台，清单和各子应用的 `./routes` 在后台并行加载，谁好了谁的路由与菜单先挂上；路由器只建一次，子应用的页面由兜底路由按地址交给负责的子应用。
-- **共享单例**：react、react-dom、react-router、@tanstack/react-query、i18next、react-i18next、sonner 与 `@admin-web/{ui,api,auth,i18n}`，版本由 pnpm catalog 统一（`singleton` 加 `requiredVersion`），见 `packages/config-vite/src/shared.ts`。
+- **路由与菜单**：每个子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes` 是路由对象（页面懒加载），`menu` 是菜单元数据（路径、文案键 `labelKey`、所需权限规则 `access`、分组），`texts` 是子应用自带的文案（命名空间与简体中文、英文资源，主应用加载它时先注册再渲染）。权限规则写在子应用自己的 `src/access.ts`，文案在 `src/locales`，改它们只需重建并上线这个子应用。主应用先渲染布局与工作台，清单和各子应用的 `./routes` 在后台并行加载，谁好了谁的路由与菜单先挂上；路由器只建一次，子应用的页面由兜底路由按地址交给负责的子应用。
+- **共享单例**：react、react-dom、react-router、@tanstack/react-query、i18next、react-i18next、sonner 与 `@admin-web/{ui,api,auth,i18n}`，版本由 pnpm catalog 统一（`singleton` 加 `requiredVersion`），见 `packages/config-vite/src/shared.ts`。运行时用的是主应用那一份：改这些共享包只做向后兼容的改动（加导出、加可选参数，不改不删已有的），并先上线主应用，再上线用到新能力的子应用。
 - **故障隔离**：慢的、坏的子应用只影响它自己的域：还在加载时菜单与页面显示加载中，加载失败或 8 秒没加载好时菜单标为不可用、页面显示错误页与“重试”，其它域照常；清单读不到时页面显示“重试”，不当成页面不存在；清单里格式不对的一项记日志跳过，不连累别的子应用。加载用运行时插件 @module-federation/retry-plugin 重试；主应用里加载远程模块（如消息铃铛）等清单读到、子应用登记好再加载。
-- **独立部署**：只重建一个子应用，主应用 `dist` 不变，运行中的主应用就用上新版子应用；`pnpm test:deploy` 验证这一点（CI 也跑）。
+- **独立部署**：只重建一个子应用，主应用 `dist` 不变，运行中的主应用就用上新版子应用，包括它的页面、文案与权限规则；`pnpm test:deploy` 验证这一点（改 system 的一条文案并换版本号，CI 也跑）。
 - **单独运行**：每个子应用有一个只在开发时用的最小外壳（`index.html` → `src/dev/main.tsx`，经 `StandaloneShell`，带完整样式），配同样的代理；登录统一到主应用的 8000 端口完成，localhost 的 Cookie 不分端口。子应用的生产构建不打它：产物只有 `remoteEntry.js`、清单与暴露的模块。
 - **样式**：主题变量与 Tailwind 基础样式只由主应用加载一次；子应用只带自己用到的工具类，类名都加子应用名作前缀（Tailwind 的 `prefix`，如 `system:flex`、`rag:md:hidden`，写在子应用的 `src/styles.css`）。各应用单独构建的工具类会先后进同一个页面，同名的类后来的覆盖先来的，会打乱响应式等变体的先后；加了前缀，子应用之间、子应用与主应用之间没有同名的类。ESLint 规则 `admin-web/tailwind-prefix` 检查子应用源码里的类名（可自动补前缀），生成器建的新子应用自动带前缀；任意值里引用主题用设计令牌（如 `var(--border)`），不用 Tailwind 内部的 `--color-*` 变量。
 
@@ -138,7 +139,7 @@ interface ApiResponse<T> {
 
 `GET /auth/current/resources` 返回（按活动租户）`permissions`（后端权限码）、`frontendResources`（前端菜单/页面资源）、`backendResources`（后端接口资源，工作台展示）。
 
-权限判断只在 `packages/auth/src/access.ts`：同时看权限码、`menu:*` 资源编码和管理员分类，产出 `canSeeTenant`、`canSeeRagGraph` 等标志；路由经 `RequireAccess`，菜单经 `MenuEntry.access`。用户中心管理页需要 `user:auth:manage` 与对应的 `menu:tenant`、`menu:dept`、`menu:user`、`menu:role`、`menu:resource`。
+权限判断是各子应用自己的规则（`apps/<子应用>/src/access.ts`，如 system 的 `canSeeTenant`、rag 的 `canSeeRagGraph`，照 1.2.4 的 `src/access.ts`）：规则看当前用户的权限码、`menu:*` 资源编码和管理员分类（`@admin-web/auth` 的 `AccessSubject`）；路由经 `RequireAccess rule`，菜单经 `MenuEntry.access`，按钮经 `useAllows`。用户中心管理页需要 `user:auth:manage` 与对应的 `menu:tenant`、`menu:dept`、`menu:user`、`menu:role`、`menu:resource`。
 
 RAG 页面采用独立权限，不继承用户中心管理权限：
 
@@ -200,7 +201,7 @@ pnpm turbo gen remote                                  # 新建子应用
 - **注册表**：`registry.json` 按 shadcn 注册表格式列出业务组件、增删改查页模板 `crud-page` 与两个主题；裂变出去的项目用 `npx shadcn add <注册表地址>/<条目>.json` 取用（托管地址以后再定）。
 - **主题**：令牌源文件 `packages/theme/tokens/*.json`（DTCG 格式，浅色、暗色），Style Dictionary 生成 `theme.css`（变量名与 shadcn/ui 一致，经 Tailwind 4 的 `@theme inline` 映射）与 `tokens.ts`（图表、图谱等非 CSS 场景）。应用样式入口引入哪个主题包就用哪套主题；浅色、暗色、跟随系统只是个人偏好，记在本地存储。
 - **插件**：构建时由 `@admin-web/config-vite` 的 `defineAppConfig({ name, role, exposes, devPort, previewPort })` 组合 React、Tailwind、Module Federation、代理与环境变量；运行时用 Module Federation 运行时插件重试加载。
-- **加一个子应用**：`pnpm turbo gen remote` 生成骨架（Vite 与 Module Federation 配置、路由、文案、测试与增删改查页）；在 `apps/shell/apps.<mode>.json` 登记；需要按权限显示时，后端加资源编码或权限码，并在 `access.ts` 加标志。
+- **加一个子应用**：`pnpm turbo gen remote` 生成骨架（Vite 与 Module Federation 配置、路由、文案、测试与增删改查页）；在 `apps/shell/apps.<mode>.json` 登记；需要按权限显示时，后端加资源编码或权限码，并在新子应用的 `src/access.ts` 写权限规则。生成器不改任何共享包。
 
 ## 工具链与门禁
 

@@ -47,6 +47,24 @@ export async function initI18n(options: { lng?: Locale } = {}): Promise<i18n> {
   return i18next;
 }
 
+/** 子应用自带的文案：命名空间（一般就是子应用名）与各语言的资源。 */
+export type RemoteTexts = {
+  namespace: string;
+  resources: Partial<Record<Locale, Record<string, unknown>>>;
+};
+
+/**
+ * 把子应用的文案加进共用的 i18next（i18next 是 Module Federation 的共享单例）：同一命名空间整个换成这一版，
+ * 子应用重新上线后不留旧版的键。要在渲染用到这些文案的组件之前调用。
+ */
+export function addTexts({ namespace, resources }: RemoteTexts): void {
+  for (const [lng, resource] of Object.entries(resources)) {
+    if (!resource) continue;
+    i18next.removeResourceBundle(lng, namespace);
+    i18next.addResourceBundle(lng, namespace, resource);
+  }
+}
+
 /** 切换语言：记住偏好，并同步 <html lang>。 */
 export async function setLocale(lng: Locale): Promise<void> {
   try {

@@ -9,15 +9,12 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const NAME = 'gen-check';
 const app = join(root, 'apps', NAME);
-const touched = ['packages/i18n/src/resources.ts', 'pnpm-lock.yaml'];
-const created = [
-  `apps/${NAME}`,
-  `packages/i18n/locales/zh-CN/${NAME}.json`,
-  `packages/i18n/locales/en-US/${NAME}.json`,
-];
+// 生成器只新建 apps/gen-check，不改共享包；pnpm install 会改锁文件（结束时还原）。
+const touched = ['pnpm-lock.yaml'];
+const created = [`apps/${NAME}`];
 
-const status = () =>
-  execFileSync('git', ['status', '--porcelain'], {
+const status = (...paths) =>
+  execFileSync('git', ['status', '--porcelain', '--', ...paths], {
     cwd: root,
     encoding: 'utf8',
   });
@@ -31,6 +28,7 @@ function run(command, args, cwd = root) {
 
 if (existsSync(app)) throw new Error(`apps/${NAME} 已存在，先删掉再运行`);
 const before = status();
+const sharedBefore = status('packages');
 const backups = Object.fromEntries(
   touched.map((path) => [path, readFileSync(join(root, path), 'utf8')]),
 );
@@ -39,6 +37,12 @@ try {
   run('pnpm', ['turbo', 'gen', 'remote', '--args', NAME, '8199', '8299']);
   // 新子应用要登记进 pnpm-lock.yaml（结束时还原）。设了 CI 环境变量时 pnpm 默认冻结锁文件，这里明确放开。
   run('pnpm', ['install', '--no-frozen-lockfile', '--prefer-offline']);
+  // 文案在子应用自己的 src/locales，共享包（含 @admin-web/i18n）一个不动。
+  for (const locale of ['zh-CN', 'en-US'])
+    if (!existsSync(join(app, `src/locales/${locale}.json`)))
+      throw new Error(`生成的子应用没有 src/locales/${locale}.json`);
+  if (status('packages') !== sharedBefore)
+    throw new Error(`生成器改了共享包：\n${status('packages')}`);
   // 类名带子应用前缀：样式入口写了 prefix(gencheck)，复制来的 crud-page 已补上前缀，lint 通过。
   const styles = readFileSync(join(app, 'src/styles.css'), 'utf8');
   if (!styles.includes('prefix(gencheck)'))

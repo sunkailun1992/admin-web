@@ -1,10 +1,11 @@
-import type { RemoteRoutes } from '@admin-web/auth';
+import type { AccessRule, RemoteRoutes } from '@admin-web/auth';
 import { setupMswWorker } from '@admin-web/test-utils/browser';
 import { useQuery } from '@tanstack/react-query';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
 import { http, HttpResponse } from 'msw';
+import { useTranslation } from 'react-i18next';
 import { beforeAll, expect, test, vi } from 'vitest';
 import type { RemoteApp } from '../src/remotes/registry.ts';
 import { useShell } from '../src/shell.ts';
@@ -30,13 +31,19 @@ beforeAll(() => {
   );
 });
 
+// 示例规则（真实的规则在各子应用的 src/access.ts）。
+const canSeeRagGraph: AccessRule = (s) =>
+  s.hasPermission('rag:graph:view') && s.hasResource('menu:rag:graph');
+const canSeeTenant: AccessRule = (s) =>
+  s.hasPermission('user:auth:manage') && s.hasResource('menu:tenant');
+
 const rag: RemoteRoutes = {
   routes: [{ path: '/rag-knowledge/graph', element: <p>GRAPH_PAGE</p> }],
   menu: [
     {
       path: '/rag-knowledge/graph',
       labelKey: 'rag:menu.graph',
-      access: 'canSeeRagGraph',
+      access: canSeeRagGraph,
       group: { key: 'rag', labelKey: 'rag:menu.group' },
     },
   ],
@@ -47,7 +54,7 @@ const systemRoutes: RemoteRoutes = {
     {
       path: '/system/tenant',
       labelKey: 'system:menu.tenant',
-      access: 'canSeeTenant',
+      access: canSeeTenant,
       group: { key: 'system', labelKey: 'system:menu.group' },
     },
   ],
@@ -360,6 +367,33 @@ test('bell slot renders nothing when message/Bell fails to load', async () => {
 test('bell slot renders the message bell with the current user and tenant', async () => {
   renderApp({ apps: [message], session: manager, loadModule: messageModules });
   expect(await screen.findByTestId('bell')).toHaveTextContent('u1@t1');
+});
+
+test('the bell module brings its own texts', async () => {
+  function TextBell() {
+    const { t } = useTranslation('message');
+    return <span data-testid="bell">{t('bellProbe')}</span>;
+  }
+  renderApp({
+    apps: [message],
+    session: manager,
+    loadModule: async (id) => {
+      if (id === 'message/routes') return { default: { routes: [], menu: [] } };
+      if (id === 'message/Bell')
+        return {
+          Bell: TextBell,
+          texts: {
+            namespace: 'message',
+            resources: {
+              'zh-CN': { bellProbe: '铃铛文案' },
+              'en-US': { bellProbe: 'Bell text' },
+            },
+          },
+        };
+      throw new Error(id);
+    },
+  });
+  expect(await screen.findByTestId('bell')).toHaveTextContent('铃铛文案');
 });
 
 test('the message bell waits until apps.json is read, however late', async () => {

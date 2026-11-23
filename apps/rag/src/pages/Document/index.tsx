@@ -1,4 +1,4 @@
-import { useAccess, useSession } from '@admin-web/auth';
+import { useAllows, useSession } from '@admin-web/auth';
 import {
   Badge,
   Button,
@@ -24,6 +24,7 @@ import { FileBarChart, Plus, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import * as rules from '../../access.ts';
 import { Notice } from '../../components/Notice.tsx';
 import { DOCUMENT_FORMATS, DOCUMENT_STATUSES } from '../../lib/constants.ts';
 import {
@@ -66,7 +67,8 @@ const helper = createDataTableColumns<DocumentVO>();
 
 function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
   const { t, i18n } = useTranslation('rag');
-  const access = useAccess();
+  const canUseRagRetrieval = useAllows(rules.canUseRagRetrieval);
+  const canSeeRagDocument = useAllows(rules.canSeeRagDocument);
   const [knowledgeBase, setKnowledgeBase] = useState<string>();
   const scope = JSON.stringify([identityScope, knowledgeBase || '*']);
   const liveScope = useLatest(scope);
@@ -306,7 +308,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
         <>
           <Button
             variant="outline"
-            disabled={!access.canUseRagRetrieval}
+            disabled={!canUseRagRetrieval}
             onClick={() => setRetrievalScope(scope)}
           >
             <Search aria-hidden="true" />
@@ -497,7 +499,7 @@ function RagDocumentWorkbench({ identityScope }: { identityScope: string }) {
       {source?.scope === scope ? (
         <RetrievalSourceSheet
           chunk={source.chunk}
-          canViewDocument={access.canSeeRagDocument}
+          canViewDocument={canSeeRagDocument}
           onClose={() => setSource(undefined)}
           onOpenDocument={openDocument}
         />

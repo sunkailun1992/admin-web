@@ -1,7 +1,8 @@
-import { useAccess, useSession } from '@admin-web/auth';
+import { useAllows, useSession } from '@admin-web/auth';
 import { Button, PageContainer, Skeleton } from '@admin-web/ui';
 import { RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import * as rules from '../../access.ts';
 import { Notice } from '../../components/Notice.tsx';
 import { ModelRouteWorkbench } from '../../model/ModelRouteWorkbench.tsx';
 import { ModelControlPlaneView } from './ModelControlPlaneView.tsx';
@@ -81,10 +82,11 @@ function ModelConfigurationWorkbench({
 export default function ModelConfigurationPage() {
   const { t } = useTranslation('ai');
   const { currentUser, currentTenantId } = useSession();
-  const access = useAccess();
+  const canManageConfiguration = useAllows(rules.canManageConfiguration);
+  const canChangeAiModel = useAllows(rules.canChangeAiModel);
   const userId = currentUser?.userId;
   const tenantId = currentTenantId || currentUser?.tenantId;
-  if (!userId || !tenantId || !access.canManageConfiguration)
+  if (!userId || !tenantId || !canManageConfiguration)
     return (
       <PageContainer title={t('controlPlane.title')}>
         <Notice tone="warning" title={t('configurationForbidden')} />
@@ -95,7 +97,7 @@ export default function ModelConfigurationPage() {
     <ModelConfigurationWorkbench
       key={scope}
       scope={scope}
-      canChange={access.canChangeAiModel}
+      canChange={canChangeAiModel}
     />
   );
 }

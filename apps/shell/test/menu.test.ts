@@ -1,7 +1,21 @@
-import { computeAccess, type RemoteRoutes } from '@admin-web/auth';
+import {
+  accessSubject,
+  type AccessRule,
+  type RemoteRoutes,
+} from '@admin-web/auth';
 import { expect, test } from 'vitest';
 import type { LoadedRemote } from '../src/remotes/loadRemotes.ts';
 import { buildMenu } from '../src/remotes/menu.ts';
+
+// 示例规则（真实的规则在各子应用的 src/access.ts）。
+const manage: AccessRule = (s) => s.hasPermission('user:auth:manage');
+const canSeeTenant: AccessRule = (s) =>
+  manage(s) && s.hasResource('menu:tenant');
+const canSeeUser: AccessRule = (s) => manage(s) && s.hasResource('menu:user');
+const canSeeAiModel: AccessRule = (s) =>
+  manage(s) || s.hasPermission('ai:model:manage');
+const platformAdmin: AccessRule = (s) =>
+  manage(s) && s.adminType === 'PLATFORM_SUPER_ADMIN';
 
 const system: RemoteRoutes = {
   routes: [],
@@ -9,13 +23,13 @@ const system: RemoteRoutes = {
     {
       path: '/system/tenant',
       labelKey: 'system:menu.tenant',
-      access: 'canSeeTenant',
+      access: canSeeTenant,
       group: { key: 'system', labelKey: 'system:menu.group' },
     },
     {
       path: '/system/user',
       labelKey: 'system:menu.user',
-      access: 'canSeeUser',
+      access: canSeeUser,
       group: { key: 'system', labelKey: 'system:menu.group' },
     },
   ],
@@ -26,13 +40,13 @@ const ai: RemoteRoutes = {
     {
       path: '/ai/model',
       labelKey: 'ai:menu.model',
-      access: 'canSeeAiModel',
+      access: canSeeAiModel,
       group: { key: 'ai', labelKey: 'ai:menu.group' },
     },
     {
       path: '/configuration/models',
       labelKey: 'ai:menu.models',
-      access: 'canManageConfiguration',
+      access: platformAdmin,
       group: { key: 'configuration', labelKey: 'ai:menu.configuration' },
     },
     { path: '/ai/help', labelKey: 'ai:menu.help' },
@@ -54,7 +68,7 @@ const loaded = (
 });
 
 test('buildMenu hides entries the user cannot access', () => {
-  const access = computeAccess({
+  const access = accessSubject({
     userId: 'u',
     username: 'u',
     tenantId: 't',
@@ -119,7 +133,7 @@ test('a remote that is not ready gets one placeholder named after it, loading or
       ],
     },
   ];
-  const access = computeAccess(undefined);
+  const access = accessSubject(undefined);
   expect(buildMenu([{ app, status: 'failed' }], access)).toStrictEqual(
     placeholder(false),
   );

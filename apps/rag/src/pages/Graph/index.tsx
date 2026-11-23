@@ -1,4 +1,4 @@
-import { useAccess, useSession } from '@admin-web/auth';
+import { useAllows, useSession } from '@admin-web/auth';
 import {
   Badge,
   Button,
@@ -27,6 +27,7 @@ import {
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import * as rules from '../../access.ts';
 import { Notice } from '../../components/Notice.tsx';
 import {
   createGraphRequestGate,
@@ -94,7 +95,8 @@ function useLatest<T>(value: T) {
 
 function KnowledgeGraphWorkbench() {
   const { t } = useTranslation('rag');
-  const access = useAccess();
+  const canManageRagGraph = useAllows(rules.canManageRagGraph);
+  const canSeeRagDocument = useAllows(rules.canSeeRagDocument);
   const { currentUser, currentTenantId } = useSession();
   const userId = currentUser?.userId;
   const tenantId = currentTenantId;
@@ -408,7 +410,7 @@ function KnowledgeGraphWorkbench() {
             />
             {t('graph.refresh')}
           </Button>
-          {access.canManageRagGraph ? (
+          {canManageRagGraph ? (
             <ConfirmAction
               title={t('graph.rebuildConfirm')}
               description={t('graph.rebuildDescription')}
@@ -658,7 +660,7 @@ function KnowledgeGraphWorkbench() {
             <GraphDetails
               graph={graph}
               selection={selection}
-              canViewDocument={access.canSeeRagDocument}
+              canViewDocument={canSeeRagDocument}
               onOpenDocument={setChunkDocument}
               onFocus={(id) => canvasRef.current?.focusNode(id)}
             />
@@ -689,7 +691,7 @@ function KnowledgeGraphWorkbench() {
             </span>
           ) : null}
         </div>
-        {access.canSeeRagDocument && chunkDocument ? (
+        {canSeeRagDocument && chunkDocument ? (
           <DocumentChunksSheet
             key={chunkDocument.documentId}
             document={chunkDocument}

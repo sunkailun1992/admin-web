@@ -1,8 +1,11 @@
 import { expect, test } from 'vitest';
-import { computeAccess, type Access, type CurrentUser } from '../src/index.ts';
+import {
+  accessSubject,
+  type AccessRule,
+  type CurrentUser,
+} from '../src/index.ts';
 
-const MANAGE = 'user:auth:manage';
-
+// 权限规则由各子应用自己声明（随它的 ./routes 上线），这里只测规则看的“当前用户”。
 const user = (
   permissions: string[],
   menus: string[] = [],
@@ -21,82 +24,25 @@ const user = (
   })),
 });
 
-// 逐条对照 1.2.4 的 src/access.ts：[标志位, 应当放行的用户, 应当拦下的用户]。
-const cases: Array<[keyof Access, CurrentUser, CurrentUser]> = [
-  [
-    'canSeeTenant',
-    user([MANAGE], ['menu:tenant']),
-    user([MANAGE], ['menu:user']),
-  ],
-  ['canSeeDept', user([MANAGE], ['menu:dept']), user([], ['menu:dept'])],
-  ['canSeeUser', user([MANAGE], ['menu:user']), user([MANAGE])],
-  [
-    'canSeeRole',
-    user([MANAGE], ['menu:role']),
-    user(['message:user-message:send'], ['menu:role']),
-  ],
-  [
-    'canSeeResource',
-    user([MANAGE], ['menu:resource']),
-    user([MANAGE], ['menu:role']),
-  ],
-  [
-    'canSeeMessageSend',
-    user(['message:user-message:send']),
-    user(['ai:model:manage']),
-  ],
-  [
-    'canSeeAiModel',
-    user(['ai:model:manage']),
-    user(['message:user-message:send']),
-  ],
-  [
-    'canChangeAiModel',
-    user([MANAGE], [], 'PLATFORM_SUPER_ADMIN'),
-    user([MANAGE], [], 'TENANT_ADMIN'),
-  ],
-  [
-    'canManageConfiguration',
-    user([MANAGE], [], 'PLATFORM_SUPER_ADMIN'),
-    user(['ai:model:manage'], [], 'PLATFORM_SUPER_ADMIN'),
-  ],
-  [
-    'canSeeRagDocument',
-    user(['rag:document:manage'], ['menu:rag:document']),
-    user(['rag:document:manage']),
-  ],
-  ['canUseRagRetrieval', user(['rag:retrieval:use']), user(['rag:graph:view'])],
-  [
-    'canSeeRagGraph',
-    user(['rag:graph:view'], ['menu:rag:graph']),
-    user([], ['menu:rag:graph']),
-  ],
-  [
-    'canManageRagGraph',
-    user(['rag:graph:manage']),
-    user(['rag:graph:view'], ['menu:rag:graph']),
-  ],
-];
-
-for (const [flag, granted, denied] of cases) {
-  test(`${flag} is granted`, () =>
-    expect(computeAccess(granted)[flag]).toBe(true));
-  test(`${flag} is denied`, () =>
-    expect(computeAccess(denied)[flag]).toBe(false));
-}
-
-test('user:auth:manage also opens message sending and the AI model page', () => {
-  const access = computeAccess(user([MANAGE]));
-  expect([access.canSeeMessageSend, access.canSeeAiModel]).toStrictEqual([
-    true,
-    true,
-  ]);
+test('the access subject answers permissions, front-end resources and the admin type', () => {
+  const subject = accessSubject(
+    user(['user:auth:manage'], ['menu:tenant'], 'TENANT_ADMIN'),
+  );
+  expect([
+    subject.hasPermission('user:auth:manage'),
+    subject.hasPermission('rag:graph:view'),
+  ]).toStrictEqual([true, false]);
+  expect([
+    subject.hasResource('menu:tenant'),
+    subject.hasResource('menu:user'),
+  ]).toStrictEqual([true, false]);
+  expect(subject.adminType).toBe('TENANT_ADMIN');
 });
 
-test('no user means no access, and the flags are exactly the 1.2.4 set', () => {
-  const access = computeAccess(undefined);
-  expect(Object.keys(access).sort()).toStrictEqual(
-    cases.map(([flag]) => flag).sort(),
-  );
-  expect(Object.values(access).every((value) => value === false)).toBe(true);
+test('without a user no permission or resource is granted, so rules built on them deny', () => {
+  const subject = accessSubject(undefined);
+  const rule: AccessRule = (s) =>
+    s.hasPermission('user:auth:manage') || s.hasResource('menu:tenant');
+  expect(rule(subject)).toBe(false);
+  expect(subject.adminType).toBeUndefined();
 });

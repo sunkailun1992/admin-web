@@ -3,6 +3,7 @@ import { loadFixture, setupMsw } from '@admin-web/test-utils';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
+import * as rules from '../../src/access.ts';
 import { client } from '../../src/http.ts';
 import { decodeModelSelection } from '../../src/model/modelSelectionModel.ts';
 import { decodeControlPlane } from '../../src/pages/ConfigurationModels/controlPlane.ts';
@@ -12,6 +13,7 @@ import {
   decodeStorageSettings,
 } from '../../src/pages/ConfigurationStorage/storageModel.ts';
 import routes from '../../src/routes.tsx';
+import { texts } from '../../src/texts.ts';
 import { modelSelection } from '../fixtures.ts';
 
 const server = setupMsw();
@@ -22,24 +24,25 @@ const configuration = {
   labelKey: 'ai:menu.configurationGroup',
 };
 
-test('./routes default-exports AI管理 and 统一配置 with the 1.2.4 access flags', () => {
+test('./routes default-exports AI管理 and 统一配置 with their 1.2.4 access rules and own texts', () => {
+  expect(routes.texts).toBe(texts);
   expect(routes.menu).toStrictEqual([
     {
       path: '/ai/model',
       labelKey: 'ai:menu.model',
-      access: 'canSeeAiModel',
+      access: rules.canSeeAiModel,
       group: ai,
     },
     {
       path: '/configuration/models',
       labelKey: 'ai:menu.configModels',
-      access: 'canManageConfiguration',
+      access: rules.canManageConfiguration,
       group: configuration,
     },
     {
       path: '/configuration/storage',
       labelKey: 'ai:menu.configStorage',
-      access: 'canManageConfiguration',
+      access: rules.canManageConfiguration,
       group: configuration,
     },
   ]);

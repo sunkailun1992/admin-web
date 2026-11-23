@@ -5,8 +5,8 @@ import { copyFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // 新建 Module Federation 子应用（pnpm turbo gen remote --args <名称> <开发端口> <预览端口>）：
-// 生成 apps/<名称>（Vite + Module Federation，./routes 契约、示例增删改查页、单元测试），
-// 在 @admin-web/i18n 里加同名命名空间；示例页用物料注册表的 crud-page 模板（复制后类名补上子应用的 Tailwind 前缀）。
+// 生成 apps/<名称>（Vite + Module Federation，./routes 契约、自带的文案、示例增删改查页、单元测试），
+// 不改共享包；示例页用物料注册表的 crud-page 模板（复制后类名补上子应用的 Tailwind 前缀）。
 
 const NAME = /^[a-z][a-z0-9-]{1,30}$/;
 const PORT = /^\d{4,5}$/;
@@ -104,29 +104,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         await ESLint.outputFixes(await eslint.lintFiles([`apps/${name}/src`]));
         return `apps/${name}/src 的类名补上前缀 ${tailwindPrefixOf(name)}:`;
       },
-      ...(['zh-CN', 'en-US'] as const).map((locale) => ({
-        type: 'add' as const,
-        path: `{{ turbo.paths.root }}/packages/i18n/locales/${locale}/{{ name }}.json`,
-        templateFile: `templates/locales/${locale}.json.hbs`,
-      })),
-      ...(
-        [
-          [
-            'imports',
-            "import en{{ pascalCase name }} from '../locales/en-US/{{ name }}.json';\nimport zh{{ pascalCase name }} from '../locales/zh-CN/{{ name }}.json';",
-          ],
-          ['namespaces', "  '{{ name }}',"],
-          ['zh-CN', "    '{{ name }}': zh{{ pascalCase name }},"],
-          ['en-US', "    '{{ name }}': en{{ pascalCase name }},"],
-        ] as const
-      ).map(([marker, template]) => ({
-        type: 'append' as const,
-        path: '{{ turbo.paths.root }}/packages/i18n/src/resources.ts',
-        pattern: new RegExp(`^.*// turbo gen remote: ${marker}$`, 'm'),
-        template,
-      })),
       () =>
-        '下一步：pnpm install；在 apps/shell/public/apps.*.json 登记子应用与路由前缀；需要权限时在 @admin-web/auth 的 access.ts 加标志位。',
+        '下一步：pnpm install；在 apps/shell/apps.<mode>.json（dev、test、prod）登记子应用与路由前缀；文案在新子应用的 src/locales，需要权限时在它的 src/access.ts 写权限规则。',
     ],
   });
 }

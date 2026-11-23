@@ -1,6 +1,7 @@
 import { createHttpClient } from '@admin-web/api';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import { useTranslation } from 'react-i18next';
 import { afterEach, expect, test, vi } from 'vitest';
 import {
   getSelectedTenantId,
@@ -34,7 +35,7 @@ const remote: RemoteRoutes = {
     {
       path: '/system/tenant',
       labelKey: 'system:menu.tenant',
-      access: 'canSeeTenant',
+      access: (s) => s.hasPermission('user:auth:manage'),
     },
   ],
 };
@@ -103,4 +104,28 @@ test('a 401 from a later request of the standalone app shows the notice too', as
   );
   (await screen.findByRole('button', { name: 'LOAD' })).click();
   expect(await screen.findByText('请先在主应用登录')).toBeInTheDocument();
+});
+
+function DemoPage() {
+  const { t } = useTranslation('demo');
+  return <p>{t('title')}</p>;
+}
+
+test('standalone shell registers the remote texts before rendering its routes', async () => {
+  window.history.replaceState(null, '', '/demo');
+  server.use(
+    http.get('/auth/current/resources', () =>
+      HttpResponse.json({ success: true, data: resources }),
+    ),
+  );
+  const demo: RemoteRoutes = {
+    routes: [{ path: '/demo', element: <DemoPage /> }],
+    menu: [{ path: '/demo', labelKey: 'demo:title' }],
+    texts: {
+      namespace: 'demo',
+      resources: { 'zh-CN': { title: '演示页' }, 'en-US': { title: 'Demo' } },
+    },
+  };
+  render(<StandaloneShell remote={demo} client={remoteClient()} />);
+  expect(await screen.findByText('演示页')).toBeInTheDocument();
 });

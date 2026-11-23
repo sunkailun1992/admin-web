@@ -51,14 +51,14 @@
 | `packages/ui` | shadcn/ui 组件源码（`src/components`）、业务组件（`src/business`）、样式入口、Storybook、注册表。 |
 | `packages/theme`、`packages/theme-*` | 设计令牌源文件（`tokens/`）与生成的主题样式。 |
 | `packages/api` | 请求客户端、响应解包、错误分类、列表与查询工具。 |
-| `packages/auth` | 会话、权限规则、路由守卫、子应用接入契约类型、单独运行外壳。 |
-| `packages/i18n` | i18next 初始化与各命名空间文案。 |
+| `packages/auth` | 会话、权限规则机制（具体规则在各子应用的 `src/access.ts`）、路由守卫、子应用接入契约类型、单独运行外壳。 |
+| `packages/i18n` | i18next 初始化、共享文案（`common`、`shell`）与子应用文案的注册（`addTexts`）。 |
 | `packages/config-vite`、`config-eslint`、`config-typescript`、`config-vitest` | 共用的构建、代码检查、类型与测试配置。 |
 | `packages/test-utils` | MSW 处理器、按应用方式套好 Provider 的渲染。 |
 
 ## 目录规则
 
-- 新增页面放 `apps/<子应用>/src/pages/<页面>`，同时在该子应用的 `src/routes.tsx` 加路由与菜单（`labelKey`、`access`、分组），在 `@admin-web/i18n` 加文案，并同步 README 业务范围。
+- 新增页面放 `apps/<子应用>/src/pages/<页面>`，同时在该子应用的 `src/routes.tsx` 加路由与菜单（`labelKey`、`access`、分组），在它的 `src/locales` 加文案、需要时在 `src/access.ts` 加权限规则，并同步 README 业务范围。
 - 新增业务域优先新建子应用（`pnpm turbo gen remote`），在 `apps/shell/apps.<mode>.json` 登记，不把不相关的域塞进现有子应用。
 - 新增接口放所属应用的 `src/services`，页面不直接拼 `fetch`、`axios` 或裸 URL；多个应用都要用的类型进共享包。
 - 只服务单个页面的组件放页面目录内；同一应用多个页面复用的放应用内公共目录（如 `src/components`）；跨应用复用的进 `packages/ui`（带故事与测试），不在应用之间复制或互相引用源码。

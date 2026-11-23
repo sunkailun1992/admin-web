@@ -2,16 +2,18 @@ import type { RemoteRoutes } from '@admin-web/auth';
 import { lazy, Suspense } from 'react';
 import { Navigate } from 'react-router';
 import './styles.css';
+import { texts } from './texts.ts';
 
 const ExamplePage = lazy(() => import('./pages/Example.tsx'));
 
 const group = { key: '{{ name }}', labelKey: '{{ name }}:menu.group' };
 
 /**
- * {{ name }} 子应用的接入契约：路由与菜单。需要权限时在 @admin-web/auth 的 access.ts 加标志位，
- * 菜单项写 access，页面外包 RequireAccess（见其他子应用的 routes.tsx）。
+ * {{ name }} 子应用的接入契约：路由、菜单与自带的文案（src/locales）。需要权限时在本子应用的 src/access.ts
+ * 写权限规则（AccessRule），菜单项写 access，页面外包 RequireAccess（见 system 子应用的 access.ts 与 routes.tsx）。
  */
 const routes: RemoteRoutes = {
+  texts,
   routes: [
     { path: '/{{ name }}', element: <Navigate to="/{{ name }}/example" replace /> },
     {

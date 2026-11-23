@@ -1,4 +1,4 @@
-import { useAccess } from '@admin-web/auth';
+import { useAccessSubject } from '@admin-web/auth';
 import {
   Sidebar,
   SidebarContent,
@@ -59,8 +59,8 @@ function MenuItem({ item }: { item: SidebarItem }) {
 export function AppSidebar() {
   const { t } = useTranslation();
   const { remotes } = useShell();
-  const access = useAccess();
-  const groups = useMemo(() => buildMenu(remotes, access), [remotes, access]);
+  const subject = useAccessSubject();
+  const groups = useMemo(() => buildMenu(remotes, subject), [remotes, subject]);
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>

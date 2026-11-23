@@ -5,17 +5,24 @@ import { expect, test, vi } from 'vitest';
 import {
   RequireAccess,
   SessionProvider,
-  useAccess,
+  useAllows,
   useSession,
+  type AccessRule,
   type SessionState,
 } from '../src/index.ts';
 import { resources, startMswServer, testClient } from './support.ts';
 
 const server = startMswServer();
 
+// 两条示例规则（真实的规则在各子应用的 src/access.ts）。
+const canSeeGraph: AccessRule = (s) =>
+  s.hasPermission('rag:graph:view') && s.hasResource('menu:rag:graph');
+const canSeeTenant: AccessRule = (s) =>
+  s.hasPermission('user:auth:manage') && s.hasResource('menu:tenant');
+
 function Probe() {
   const session = useSession();
-  const access = useAccess();
+  const canGraph = useAllows(canSeeGraph);
   const status = session.loading
     ? 'LOADING'
     : session.currentUser
@@ -26,7 +33,7 @@ function Probe() {
   return (
     <>
       <p>{status}</p>
-      <p>{access.canSeeRagGraph ? 'CAN_GRAPH' : 'NO_GRAPH'}</p>
+      <p>{canGraph ? 'CAN_GRAPH' : 'NO_GRAPH'}</p>
       <button type="button" onClick={() => void session.refresh()}>
         REFRESH
       </button>
@@ -152,10 +159,10 @@ test('a preset session skips the request', () => {
   expect(screen.getByText('USER:PRESET')).toBeInTheDocument();
 });
 
-test('RequireAccess shows the page only with the flag and the 403 page otherwise', () => {
+test('RequireAccess shows the page only when its rule allows it and the 403 page otherwise', () => {
   const { unmount } = render(
     <SessionProvider client={testClient().client} session={signedIn}>
-      <RequireAccess flag="canSeeTenant">
+      <RequireAccess rule={canSeeTenant}>
         <p>PAGE</p>
       </RequireAccess>
     </SessionProvider>,
@@ -173,7 +180,7 @@ test('RequireAccess shows the page only with the flag and the 403 page otherwise
   };
   render(
     <SessionProvider client={testClient().client} session={manager}>
-      <RequireAccess flag="canSeeTenant">
+      <RequireAccess rule={canSeeTenant}>
         <p>PAGE</p>
       </RequireAccess>
     </SessionProvider>,
@@ -188,7 +195,7 @@ test('RequireAccess renders nothing while the session is loading', () => {
   });
   render(
     <SessionProvider client={testClient().client} onUnauthenticated={() => {}}>
-      <RequireAccess flag="canSeeTenant">
+      <RequireAccess rule={canSeeTenant}>
         <p>PAGE</p>
       </RequireAccess>
     </SessionProvider>,

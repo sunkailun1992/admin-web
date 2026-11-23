@@ -1,6 +1,7 @@
-import { useAccess, useSession } from '@admin-web/auth';
+import { useAllows, useSession } from '@admin-web/auth';
 import { PageContainer } from '@admin-web/ui';
 import { useTranslation } from 'react-i18next';
+import * as rules from '../../access.ts';
 import { Notice } from '../../components/Notice.tsx';
 import { ModelRouteWorkbench } from '../../model/ModelRouteWorkbench.tsx';
 
@@ -11,7 +12,7 @@ import { ModelRouteWorkbench } from '../../model/ModelRouteWorkbench.tsx';
 export default function AiModelPage() {
   const { t } = useTranslation('ai');
   const { currentUser, currentTenantId } = useSession();
-  const { canChangeAiModel } = useAccess();
+  const canChangeAiModel = useAllows(rules.canChangeAiModel);
   const userId = currentUser?.userId;
   const tenantId = currentTenantId || currentUser?.tenantId;
   if (!userId || !tenantId)

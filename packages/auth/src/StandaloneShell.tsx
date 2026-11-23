@@ -1,8 +1,9 @@
 import { createQueryClient } from '@admin-web/api';
+import { addTexts } from '@admin-web/i18n';
 import { Button, Toaster } from '@admin-web/ui';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { AxiosInstance } from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   createBrowserRouter,
@@ -60,10 +61,11 @@ export function StandaloneShell({
 }: StandaloneShellProps) {
   const [signedOut, setSignedOut] = useState(false);
   const [queryClient] = useState(createQueryClient);
-  const router = useMemo(
-    () => createBrowserRouter(standaloneRoutes(remote)),
-    [remote],
-  );
+  // 路由器只建一次；子应用自带的文案在渲染它的路由之前注册（与主应用加载子应用时一样）。
+  const [router] = useState(() => {
+    if (remote.texts) addTexts(remote.texts);
+    return createBrowserRouter(standaloneRoutes(remote));
+  });
 
   useEffect(() => setUnauthorizedHandler(() => setSignedOut(true)), []);
 

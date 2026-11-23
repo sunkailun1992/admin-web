@@ -3,24 +3,27 @@ import { loadFixture, setupMsw } from '@admin-web/test-utils';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
+import * as rules from '../../src/access.ts';
 import { client } from '../../src/http.ts';
 import routes from '../../src/routes.tsx';
+import { texts } from '../../src/texts.ts';
 
 const server = setupMsw();
 const group = { key: 'rag', labelKey: 'rag:menu.group' };
 
-test('./routes default-exports the document and graph pages with the 1.2.4 access flags', () => {
+test('./routes default-exports the document and graph pages with their 1.2.4 access rules and own texts', () => {
+  expect(routes.texts).toBe(texts);
   expect(routes.menu).toStrictEqual([
     {
       path: '/rag-knowledge/documents',
       labelKey: 'rag:menu.documents',
-      access: 'canSeeRagDocument',
+      access: rules.canSeeRagDocument,
       group,
     },
     {
       path: '/rag-knowledge/graph',
       labelKey: 'rag:menu.graph',
-      access: 'canSeeRagGraph',
+      access: rules.canSeeRagGraph,
       group,
     },
   ]);

@@ -3,8 +3,10 @@ import { setupMsw } from '@admin-web/test-utils';
 import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, test } from 'vitest';
+import * as rules from '../../src/access.ts';
 import { client } from '../../src/http.ts';
 import routes from '../../src/routes.tsx';
+import { texts } from '../../src/texts.ts';
 
 const server = setupMsw();
 
@@ -36,7 +38,8 @@ test('the standalone dev shell mounts the system routes and opens /system/tenant
   ).toBeInTheDocument();
 });
 
-test('./routes default-exports the five pages with their access flags', () => {
+test('./routes default-exports the five pages with their access rules and own texts', () => {
+  expect(routes.texts).toBe(texts);
   expect(
     routes.menu.map((entry) => [
       entry.path,
@@ -45,11 +48,16 @@ test('./routes default-exports the five pages with their access flags', () => {
       entry.group?.key,
     ]),
   ).toStrictEqual([
-    ['/system/tenant', 'system:menu.tenant', 'canSeeTenant', 'system'],
-    ['/system/dept', 'system:menu.dept', 'canSeeDept', 'system'],
-    ['/system/user', 'system:menu.user', 'canSeeUser', 'system'],
-    ['/system/role', 'system:menu.role', 'canSeeRole', 'system'],
-    ['/system/resource', 'system:menu.resource', 'canSeeResource', 'system'],
+    ['/system/tenant', 'system:menu.tenant', rules.canSeeTenant, 'system'],
+    ['/system/dept', 'system:menu.dept', rules.canSeeDept, 'system'],
+    ['/system/user', 'system:menu.user', rules.canSeeUser, 'system'],
+    ['/system/role', 'system:menu.role', rules.canSeeRole, 'system'],
+    [
+      '/system/resource',
+      'system:menu.resource',
+      rules.canSeeResource,
+      'system',
+    ],
   ]);
   expect(
     routes.menu.every((entry) => entry.group?.labelKey === 'system:menu.group'),

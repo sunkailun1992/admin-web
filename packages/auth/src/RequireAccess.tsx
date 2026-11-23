@@ -1,17 +1,17 @@
 import { EmptyState } from '@admin-web/ui';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Access } from './access.ts';
-import { useAccess, useSession } from './SessionProvider.tsx';
+import type { AccessRule } from './access.ts';
+import { useAllows, useSession } from './SessionProvider.tsx';
 
-export type RequireAccessProps = { flag: keyof Access; children: ReactNode };
+export type RequireAccessProps = { rule: AccessRule; children: ReactNode };
 
-/** 路由守卫：有权限才渲染页面，没有就显示 403；会话还在读取时什么都不渲染。 */
-export function RequireAccess({ flag, children }: RequireAccessProps) {
+/** 路由守卫：满足子应用声明的权限规则才渲染页面，否则显示 403；会话还在读取时什么都不渲染。 */
+export function RequireAccess({ rule, children }: RequireAccessProps) {
   const { loading } = useSession();
-  const access = useAccess();
+  const allowed = useAllows(rule);
   const { t } = useTranslation('common');
   if (loading) return null;
-  if (!access[flag]) return <EmptyState title={t('status.forbidden')} />;
+  if (!allowed) return <EmptyState title={t('status.forbidden')} />;
   return children;
 }

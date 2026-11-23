@@ -1,4 +1,4 @@
-import type { Access } from '@admin-web/auth';
+import type { AccessSubject } from '@admin-web/auth';
 import type { LoadedRemote } from './loadRemotes.ts';
 
 export type SidebarItem = {
@@ -17,12 +17,12 @@ export type SidebarGroup = {
 };
 
 /**
- * 侧边栏：按子应用的菜单元数据与权限标志位生成，没有权限的菜单不显示，空的分组整个不显示；
+ * 侧边栏：按子应用的菜单元数据与它声明的权限规则生成，没有权限的菜单不显示，空的分组整个不显示；
  * 还在加载或加载失败的子应用不知道它有哪些菜单，放一项以子应用命名的占位（加载中或不可用）。
  */
 export function buildMenu(
   remotes: LoadedRemote[],
-  access: Access,
+  subject: AccessSubject,
 ): SidebarGroup[] {
   const groups: SidebarGroup[] = [];
   const byKey = new Map<string, SidebarGroup>();
@@ -48,7 +48,7 @@ export function buildMenu(
       continue;
     }
     for (const entry of remote.module.menu) {
-      if (entry.access && !access[entry.access]) continue;
+      if (entry.access && !entry.access(subject)) continue;
       const key = entry.group?.key ?? `${remote.app.name}:${entry.path}`;
       add(key, entry.group?.labelKey ?? '', {
         path: entry.path,

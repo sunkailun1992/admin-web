@@ -191,3 +191,6 @@ export function Bell({ userId, tenantId }: BellProps) {
 }
 
 export default Bell;
+
+/** 铃铛用到的文案，主应用加载 ./Bell 时先注册它们。 */
+export { texts } from './texts.ts';

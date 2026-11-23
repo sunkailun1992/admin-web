@@ -52,7 +52,7 @@
 12. `docs/ai-coding/SECURITY_CODING_SPEC.md`
 13. `docs/ai-coding/TESTING_SPEC.md`
 14. 要改的应用：`apps/<应用>/src/routes.tsx`（子应用的路由与菜单）或 `apps/shell/src`（主应用），以及它的 `src/services`
-15. 涉及共享能力时：`packages/auth/src/access.ts`、`packages/auth/src/types.ts`、`packages/api/src/client.ts`、`packages/config-vite/src`
+15. 涉及共享能力时：`packages/auth/src/types.ts`、`packages/auth/src/access.ts`（权限规则机制）、`packages/api/src/client.ts`、`packages/config-vite/src`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -148,7 +148,8 @@ X-Release-Version / X-Traffic-Lane  # 灰度头，取本应用构建时的 VITE_
 - 子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes`（页面懒加载）与 `menu`（路径、`labelKey`、`access`、分组）。
 - 主应用按运行时配置 `apps/shell/apps.<mode>.json` 加载子应用；改子应用地址或加子应用不重新构建主应用。
 - 子应用之间不互相引用源码，只经 Module Federation 暴露的入口或共享包往来；共享包只从入口引用（ESLint 规则拦截）。
-- 共享单例的清单与版本只在 `packages/config-vite/src/shared.ts` 与 pnpm catalog 维护。
+- 共享单例的清单与版本只在 `packages/config-vite/src/shared.ts` 与 pnpm catalog 维护。运行时用主应用那一份：改共享包（`@admin-web/{ui,api,auth,i18n}`）只做向后兼容的改动，先上线主应用，再上线用到新能力的子应用。
+- 子应用自己的文案（`src/locales`，经 `./routes` 的 `texts` 注册）与权限规则（`src/access.ts`）随子应用上线，不放进共享包。
 
 ## 权限契约
 
@@ -168,14 +169,14 @@ menu:role
 menu:resource
 ```
 
-RAG 与统一配置的权限见 `README.md`「权限模型」。权限判断统一维护在 `packages/auth/src/access.ts`，路由用 `RequireAccess`，菜单用 `MenuEntry.access`。
+RAG 与统一配置的权限见 `README.md`「权限模型」。权限规则写在各子应用自己的 `src/access.ts`（`AccessRule`，机制在 `packages/auth/src/access.ts`），路由用 `RequireAccess rule`，菜单用 `MenuEntry.access`，按钮用 `useAllows`。
 
 ## 编码约束
 
 - 每个应用的接口只写在自己的 `src/services`，类型写在相邻的 `types.ts`；请求客户端只用本应用的 `src/http.ts`（`createHttpClient`），不另建 axios 实例。
 - 跨应用共用的接口类型与会话类型放共享包（`@admin-web/auth`、`@admin-web/api`），不复制。
 - 界面优先用 `@admin-web/ui` 的物料与业务组件：数据表用 `DataTable`，表单弹窗与侧边面板用 `FormDialog`，确认操作用 `ConfirmAction`，编码输入用 `GeneratedCodeInput`，树形选择用 `TreeSelect`。
-- 界面文案一律走 i18n 键（`@admin-web/i18n` 的命名空间），不在应用源码里写死中日韩文字（ESLint 规则拦截）；后端返回的提示原样显示。
+- 界面文案一律走 i18n 键，不在应用源码里写死中日韩文字（ESLint 规则拦截）；子应用的文案在它自己的 `src/locales`（命名空间为子应用名），共享的 `common`、`shell` 在 `@admin-web/i18n`；后端返回的提示原样显示。
 - 样式用 Tailwind 工具类与主题变量（`--primary`、`--background` 等），不写死颜色；需要新令牌时改 `packages/theme/tokens`。子应用的类名都带子应用前缀（如 `rag:flex`，写在它的 `src/styles.css`，ESLint 规则 `admin-web/tailwind-prefix` 拦截、可自动修复），任意值里引用主题用设计令牌（`var(--border)`），不用 Tailwind 内部的 `--color-*`。
 - 不得凭空新增后端字段，必须匹配后端 `BO`、`Query` 和 `VO`。
 - 展示租户时使用租户名称，`tenantId` 只作为接口内部字段使用。

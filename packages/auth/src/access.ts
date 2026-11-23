@@ -1,52 +1,27 @@
-import type { CurrentUser } from './types.ts';
+import type { AdminType, CurrentUser } from './types.ts';
 
-/** 页面与按钮的权限标志位，照 1.2.4 的 src/access.ts。 */
-export type Access = {
-  canSeeTenant: boolean;
-  canSeeDept: boolean;
-  canSeeUser: boolean;
-  canSeeRole: boolean;
-  canSeeResource: boolean;
-  canSeeMessageSend: boolean;
-  canSeeAiModel: boolean;
-  canChangeAiModel: boolean;
-  canManageConfiguration: boolean;
-  canSeeRagDocument: boolean;
-  canUseRagRetrieval: boolean;
-  canSeeRagGraph: boolean;
-  canManageRagGraph: boolean;
+/** 权限规则看的当前用户：权限码、前端资源编码（menu:*）与管理员分类。 */
+export type AccessSubject = {
+  hasPermission: (code: string) => boolean;
+  hasResource: (code: string) => boolean;
+  adminType?: AdminType;
 };
 
 /**
- * 同时看权限码、menu:* 资源编码与管理员分类；前端只决定显示，接口仍由各服务二次鉴权。
+ * 一条权限规则。各子应用在自己的 src/access.ts 里声明，用在菜单（MenuEntry.access）、路由（RequireAccess）
+ * 与按钮（useAllows），随子应用的 ./routes 一起上线；前端只决定显示，接口仍由各服务二次鉴权。
  */
-export function computeAccess(user?: CurrentUser): Access {
-  const resourceCodes = new Set(
+export type AccessRule = (subject: AccessSubject) => boolean;
+
+/** 当前用户的权限码与资源编码；没有用户时什么都没有，任何规则都不放行。 */
+export function accessSubject(user?: CurrentUser): AccessSubject {
+  const permissions = new Set(user?.permissions ?? []);
+  const resources = new Set(
     (user?.frontendResources ?? []).map((item) => item.code),
   );
-  const permissions = new Set(user?.permissions ?? []);
-  // 用户中心管理权限可进入后台管理类页面，也兼容平台管理员访问消息发送与 AI 模型。
-  const canManage = permissions.has('user:auth:manage');
-  const platformAdmin = canManage && user?.adminType === 'PLATFORM_SUPER_ADMIN';
   return {
-    canSeeTenant: canManage && resourceCodes.has('menu:tenant'),
-    canSeeDept: canManage && resourceCodes.has('menu:dept'),
-    canSeeUser: canManage && resourceCodes.has('menu:user'),
-    canSeeRole: canManage && resourceCodes.has('menu:role'),
-    canSeeResource: canManage && resourceCodes.has('menu:resource'),
-    // 消息发送页以后端接口权限为准，避免当前资源未返回消息菜单时误拦。
-    canSeeMessageSend:
-      canManage || permissions.has('message:user-message:send'),
-    canSeeAiModel: canManage || permissions.has('ai:model:manage'),
-    canChangeAiModel: platformAdmin,
-    canManageConfiguration: platformAdmin,
-    // 菜单与专用接口权限必须同时具备。
-    canSeeRagDocument:
-      permissions.has('rag:document:manage') &&
-      resourceCodes.has('menu:rag:document'),
-    canUseRagRetrieval: permissions.has('rag:retrieval:use'),
-    canSeeRagGraph:
-      permissions.has('rag:graph:view') && resourceCodes.has('menu:rag:graph'),
-    canManageRagGraph: permissions.has('rag:graph:manage'),
+    hasPermission: (code) => permissions.has(code),
+    hasResource: (code) => resources.has(code),
+    adminType: user?.adminType,
   };
 }
