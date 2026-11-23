@@ -6,23 +6,22 @@ import {
   toTreeNodes,
 } from '../../src/lib/trees.ts';
 
-// 同级按 sort 升序，没有 sort 的按 0（第三部分任务18 的用例）。
-test('buildDeptTree orders siblings by sort ascending', () => {
+// 部门没有 sort（后端 AuthDeptVO 不带）：同级保持后端返回的顺序。
+test('buildDeptTree keeps siblings in the order the backend returns them', () => {
   const tree = buildDeptTree([
     { id: 'root', name: '根部门', tenantId: 't' },
-    { id: 'c', name: '部门C', parentId: 'root', sort: 3, tenantId: 't' },
-    { id: 'a', name: '部门A', parentId: 'root', sort: 1, tenantId: 't' },
-    { id: 'b', name: '部门B', parentId: 'root', sort: 2, tenantId: 't' },
-    { id: 'z', name: '未排序', parentId: 'root', tenantId: 't' },
+    { id: 'c', name: '部门C', parentId: 'root', tenantId: 't' },
+    { id: 'a', name: '部门A', parentId: 'root', tenantId: 't' },
+    { id: 'b', name: '部门B', parentId: 'root', tenantId: 't' },
   ]);
   expect(tree[0]?.children?.map((node) => node.id)).toStrictEqual([
-    'z',
+    'c',
     'a',
     'b',
-    'c',
   ]);
 });
 
+// 权限资源同级按 sort 升序，没有 sort 的按 0（第三部分任务18 的用例）。
 test('buildResourceTree orders siblings by sort ascending', () => {
   const tree = buildResourceTree([
     { id: 'root', name: '根资源', code: 'menu:root', tenantId: 't' },

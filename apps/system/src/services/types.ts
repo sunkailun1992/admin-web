@@ -7,7 +7,8 @@ import type {
   ResourceCategory,
 } from '@admin-web/auth';
 
-// 管理接口的类型，字段照后端的 BO、Query、VO（1.2.4 的 src/services/auth/types.d.ts）。
+// 管理接口的类型，字段照后端 user 的 BO、Query、VO（../user 的 entity 包）。1.2.4 的 types.d.ts 里
+// 部门多一个后端没有的 sort（列表恒为空、提交被丢），这里不带。
 export type { AuthResourceVO, AuthTenantVO };
 
 /** 分页与通用查询参数（BaseQuery）。 */
@@ -77,7 +78,6 @@ export type AuthDeptVO = {
   ownerUserId?: string;
   state?: AuthState;
   stateDesc?: string;
-  sort?: number;
   version?: number;
 };
 export type AuthDeptQuery = BaseQuery & {
@@ -97,7 +97,6 @@ export type AuthDeptBO = {
   name?: string;
   parentId?: string;
   ownerUserId?: string;
-  sort?: number;
   state?: AuthState;
 };
 
