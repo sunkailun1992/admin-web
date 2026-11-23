@@ -168,7 +168,7 @@ pnpm dev     # 同时起主应用（8000）与四个子应用（8101–8104）
 | ai      | 8103     | 8203     |
 | rag     | 8104     | 8204     |
 
-只改一个子应用时可以单独跑它：`pnpm --filter @admin-web/system dev`，打开 `http://localhost:8101`；没有网关会话时页面提示先在主应用（8000）登录。
+只改一个子应用时可以单独跑它：`pnpm dev --filter=@admin-web/system`（经 Turborepo，先构建它依赖的主题包），打开 `http://localhost:8101`；没有网关会话时页面提示先在主应用（8000）登录。
 
 各应用的构建环境变量在自己的 `.env.dev`、`.env.test`、`.env.prod`：`ADMIN_WEB_GATEWAY_URL`（只给代理，不进前端代码）、`VITE_RELEASE_VERSION`、`VITE_TRAFFIC_LANE`，按需再有灰度标签与权重。规则见 [ENVIRONMENT_CONFIG_SPEC.md](docs/ai-coding/ENVIRONMENT_CONFIG_SPEC.md)。IDEA 的运行配置保留在本机，不纳入 Git；运行配置选根目录 `package.json` 的 `dev` 脚本。
 
@@ -181,14 +181,15 @@ pnpm check           # 全套门禁：格式、lint、类型（含 e2e）、单�
 pnpm format          # 格式化（format:check 只检查）
 pnpm lint            # ESLint，警告也算失败
 pnpm typecheck       # 各包 tsc 与 e2e 的类型检查
-pnpm test            # Vitest：单元、页面（浏览器模式）、物料故事
+pnpm test            # Vitest：单元、页面（浏览器模式）、物料故事；另跑仓库脚本测试（test:repo）
 pnpm test:e2e        # Playwright 固定数据一组（build:dev 后起预览服务，主应用 8001）
 pnpm test:deploy     # 独立部署验证：只重建 system，主应用不变也能用上新版
 pnpm test:generator  # 新建子应用生成器检查（生成、typecheck、test、build 后还原）
 bash scripts/check-secrets.sh
-pnpm --filter @admin-web/ui storybook        # 物料文档与交互测试（6006）
-pnpm --filter @admin-web/ui registry:build   # 产出 shadcn 注册表到 packages/ui/public/r
-pnpm turbo gen remote                        # 新建子应用
+pnpm turbo run storybook --filter=@admin-web/ui        # 物料文档与交互测试（6006），先构建主题包
+pnpm turbo run build-storybook --filter=@admin-web/ui  # 物料文档静态站（storybook-static）
+pnpm --filter @admin-web/ui registry:build             # 产出 shadcn 注册表到 packages/ui/public/r
+pnpm turbo gen remote                                  # 新建子应用
 ```
 
 真实网关一组浏览器测试（`pnpm test:e2e:test`）只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行：脚本把测试账号口令放进环境变量；后端服务要先起好；Playwright 先 `build:test`，主应用在 8000 端口（Keycloak 登记的回调地址）预览，8000 被占用时直接报错。

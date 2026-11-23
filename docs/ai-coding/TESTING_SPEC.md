@@ -20,6 +20,7 @@
 | 页面测试 | 列表、表单、弹层、按钮权限、错误提示、请求参数 | Vitest 浏览器模式（Playwright 驱动 Chromium）+ Testing Library + MSW（Service Worker） | 否 |
 | 物料测试 | 业务组件行为；每个 Storybook 故事的交互与无障碍检查 | Vitest 浏览器模式、Storybook Vitest 插件 | 否 |
 | 浏览器测试（固定数据） | 主应用与四个子应用一起：每个菜单页与它的弹层打开时控制台干净、没有漏拦截的接口；深链接、账户菜单、登录失败页、语言与主题、切换租户、权限、子应用不可用、图谱 | Playwright（`e2e/mock`，接口按 `e2e/fixtures` 回） | 否 |
+| 仓库脚本测试 | 工作区约定：开发服务与 Storybook 先构建依赖的包（新克隆后主题样式才解析得到）等 | Node 内置测试运行器（`scripts/test/`，`pnpm test:repo`） | 否 |
 | 独立部署验证 | 只重建一个子应用，主应用不变也用上新版 | `pnpm test:deploy` | 否 |
 | 浏览器测试（真实网关） | 登录、每个菜单页无错误警告与 5xx、部门新建后删除、登录失败页、退出后会话失效 | Playwright（`e2e/live`） | 只允许 test 环境 |
 
@@ -30,6 +31,7 @@
 - **固定数据一组**（`pnpm test:e2e`）：`build:dev` 后起五个预览服务（主应用 8001，子应用 8201–8204），`page.route` 拦截全部接口，返回 `e2e/fixtures/` 的合成数据；没有固定数据的接口回 501 并让用例失败；子应用清单改指预览端口。进 CI，失败时保留 trace、截图与 HTML 报告（`e2e-out/`）。
 - **真实网关一组**（`pnpm test:e2e:test`）：`build:test` 后预览，主应用在 8000 端口（已在 Keycloak 登记回调，被占用时直接报错，不复用别的服务），经真实网关与 Keycloak 登录一次后串行跑。只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行，账号口令由脚本放进 `ADMIN_WEB_E2E_USERNAME`、`ADMIN_WEB_E2E_PASSWORD`，不写进仓库与命令行；不留 trace 与截图。
 - **类型**：`e2e/` 与 `playwright.config.ts` 由根任务 `typecheck:repo` 检查（Playwright 运行器本身不做类型检查）。
+- **仓库脚本测试**：根任务 `test:repo` 用 Node 内置测试运行器跑 `scripts/test/*.test.mjs`，按 Turborepo 的任务图（`--dry=json`）核对开发服务与 Storybook 都先构建主题包；`pnpm test` 与 `pnpm check` 都含它。
 
 任何功能改动至少执行：
 
