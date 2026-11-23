@@ -71,3 +71,31 @@ test('a new user needs a username, a password and at least one tenant', async ()
   expect(await within(dialog).findByText('请输入用户名')).toBeVisible();
   expect(within(dialog).getByText('请输入密码')).toBeVisible();
 });
+
+test('editing a user sends the unchanged username with id and version, like 1.2.4', async () => {
+  const updated: Array<Record<string, unknown>> = [];
+  worker.use(
+    http.get('/auth/manage/users', () => HttpResponse.json(page([user]))),
+    http.get('/auth/manage/depts/options', () => HttpResponse.json(ok([]))),
+    http.put('/auth/manage/users/u1', async ({ request }) => {
+      updated.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json(ok(true));
+    }),
+  );
+  renderPage(<UserPage />);
+  await userEvent.click(await screen.findByRole('button', { name: '编辑' }));
+  const dialog = await screen.findByRole('dialog', { name: '编辑用户' });
+  // 用户名编辑时不能改，但照样随请求提交。
+  expect(
+    within(dialog).getByRole('textbox', { name: '用户名' }),
+  ).toBeDisabled();
+  await userEvent.click(within(dialog).getByRole('button', { name: '保存' }));
+  await closed();
+  expect(updated).toHaveLength(1);
+  expect(updated[0]).toMatchObject({
+    id: 'u1',
+    tenantId: 't1',
+    version: 2,
+    username: 'zhangsan',
+  });
+});

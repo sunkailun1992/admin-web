@@ -1,6 +1,7 @@
 import {
   CodeField,
   SelectField,
+  TextareaField,
   TextField,
   TreeSelectField,
 } from '@admin-web/ui';
@@ -105,5 +106,56 @@ test('fields feed typed values into react-hook-form', async () => {
     depts: ['d1'],
     code: 'CODE_1',
     sort: 3,
+  });
+});
+
+test('disabled fields still submit their values, like every other field kind', async () => {
+  const onSubmit = vi.fn();
+  function Disabled() {
+    const form = useForm<{
+      username: string;
+      note: string;
+      state: 'ON' | 'OFF';
+    }>({
+      defaultValues: { username: 'zhangsan', note: '原备注', state: 'ON' },
+    });
+    return (
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <TextField
+          control={form.control}
+          name="username"
+          label="用户名"
+          disabled
+        />
+        <TextareaField
+          control={form.control}
+          name="note"
+          label="备注"
+          disabled
+        />
+        <SelectField
+          control={form.control}
+          name="state"
+          label="状态"
+          disabled
+          options={[
+            { value: 'ON', label: '启用' },
+            { value: 'OFF', label: '停用' },
+          ]}
+        />
+        <button type="submit">提交</button>
+      </form>
+    );
+  }
+  render(<Disabled />);
+  expect(screen.getByRole('textbox', { name: '用户名' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: '备注' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: '提交' }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  // 编辑时禁用的字段（如用户名）照样随请求提交，与 1.2.4 一致。
+  expect(onSubmit.mock.calls[0]?.[0]).toStrictEqual({
+    username: 'zhangsan',
+    note: '原备注',
+    state: 'ON',
   });
 });

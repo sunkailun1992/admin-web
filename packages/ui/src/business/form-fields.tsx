@@ -23,6 +23,8 @@ import { TreeSelect } from './tree-select.tsx';
 import type { TreeNode } from './tree.ts';
 
 // 表单字段（shadcn 的 Field 写法：Controller 接 react-hook-form，标签、控件、错误信息成组），配合 FormDialog 用。
+// disabled 只禁用控件、不交给 Controller：react-hook-form 提交时会丢掉禁用 Controller 的值，
+// 而编辑时禁用的字段（如用户名、编码）要照样随请求提交（与 1.2.4 一致）。
 
 export type FormFieldProps<T extends FieldValues> = {
   control: Control<T, unknown, FieldValues>;
@@ -43,7 +45,6 @@ export function TextField<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      disabled={disabled}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
@@ -52,6 +53,7 @@ export function TextField<T extends FieldValues>({
             aria-invalid={fieldState.invalid}
             {...input}
             {...field}
+            disabled={disabled}
             value={(field.value as string | number | undefined) ?? ''}
             onChange={(event) =>
               field.onChange(
@@ -220,7 +222,6 @@ export function TextareaField<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      disabled={disabled}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
@@ -229,6 +230,7 @@ export function TextareaField<T extends FieldValues>({
             aria-invalid={fieldState.invalid}
             {...textarea}
             {...field}
+            disabled={disabled}
             value={(field.value as string | undefined) ?? ''}
           />
           {fieldState.invalid ? (
