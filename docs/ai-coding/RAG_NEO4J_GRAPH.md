@@ -27,12 +27,14 @@
 
 ## 文件与状态链路
 
-- `src/services/rag/`：统一网关接口、可选字段和取消信号，不增加 `/rag` 前缀或前端租户字段。
-- `src/pages/Rag/Graph/graphModel.ts`：类型安全兜底、证据白名单、任务响应检查、请求有效期和可取消轮询。
-- `src/pages/Rag/Graph/GraphSources.tsx`：节点与关系共享来源视图，保留文档切片权限判断。
-- `src/pages/Rag/Graph/index.tsx`：查询、关系选择、二次确认、构建状态、恢复轮询与失败提示。
-- `src/pages/Rag/Document/index.tsx`：向量上传结果和图谱结果分开提示。
-- `src/app.ts`：仅静默无 HTTP 状态的 `ERR_CANCELED/AbortError`；不按错误消息文字判断取消。
+（1.2.5 起在子应用 `apps/rag`，图谱画布用 Cytoscape.js。）
+
+- `src/services/rag.ts`、`src/services/types.ts`：统一网关接口、可选字段和取消信号，不增加 `/rag` 前缀或前端租户字段。
+- `src/lib/graphModel.ts`：类型安全兜底、证据白名单、任务响应检查、请求有效期和可取消轮询；`src/lib/submissionModel.ts`：提交键的生成、保存与查回；`src/lib/graphViewport.ts`、`graphFullscreen.ts`、`graphViewModel.ts`：画布视口、全屏与展示模型。
+- `src/pages/Graph/GraphSources.tsx`：节点与关系共享来源视图，保留文档切片权限判断；`GraphDetails.tsx`、`GraphBuildStatus.tsx`、`GraphCanvas.tsx`、`NodeLocator.tsx`：详情、构建状态、画布与节点定位。
+- `src/pages/Graph/index.tsx`：查询、关系选择、二次确认、构建状态、恢复轮询与失败提示。
+- `src/pages/Document/UploadSheet.tsx`：向量上传结果和图谱结果分开提示。
+- `@admin-web/api` 的 `isCanceled`：仅静默无 HTTP 状态的 `ERR_CANCELED/AbortError`；不按错误消息文字判断取消。
 
 轮询先读取完整任务，再每 2 秒续读未终结任务，失败或取消停止更新；成功后重查图谱。状态读取失败保留图与最后已知任务，可重试状态读取。来源的完整切片按钮复用已有分页窗口，不自动定位选中切片。
 
@@ -40,9 +42,9 @@
 
 图页仍要求 `menu:rag:graph + rag:graph:view`；重建要求 `rag:graph:manage`；完整切片入口仍要求 `menu:rag:document + rag:document:manage`。所有实际授权由 Java 执行。证据以 React 文本渲染，不使用 HTML 注入，不展示任意模型属性或原始后端异常。
 
-单元测试用 Vitest（第6阶段起；之前是 `node:test` 加 TypeScript 转译）。`rag-graph-model.test.ts` 覆盖未知类型、多来源、非法字段、异步状态、作用域、取消和上传结果；`rag-graph-sources.test.tsx` 使用已安装的 React/Ant Design 做真实服务端渲染，核对 XSS 转义、来源和完整切片按钮权限；service 测试验证路径、方法、知识库和 AbortSignal；request-auth 测试验证静默取消及未吞掉真实失败。
+测试用 Vitest（`apps/rag`）。单元测试 `test/unit/graphModel.test.ts` 覆盖未知类型、多来源、非法字段、异步状态、作用域、取消和上传结果；`submissionModel.test.ts` 覆盖提交键与查回；`graphViewport.test.ts`、`graphFullscreen.test.ts` 覆盖视口与全屏；`services.test.ts` 用 MSW 验证路径、方法、知识库、提交键请求头与 AbortSignal。页面测试 `test/pages/graph.test.tsx` 在真实浏览器里渲染：画布节点与关系数量、XSS 转义、来源与完整切片按钮权限、网络失败后只按原提交键查回、全屏时画布跟随容器。`@admin-web/api` 的测试验证静默取消及未吞掉真实失败。固定数据一组浏览器测试另核对图谱页的画布与样式。
 
-执行 `pnpm test`、`pnpm typecheck`、`pnpm build:dev`、`bash scripts/check-secrets.sh` 和 `git diff --check`。真实浏览器的画布点击、缩放、重建确认、知识库切换、登录失效及网关联调另行记录；离线测试与构建不替代这些验收。普通测试不访问真实后端。
+执行 `pnpm check`、`pnpm test:e2e`、`bash scripts/check-secrets.sh` 和 `git diff --check`。真实浏览器的画布交互、重建确认、知识库切换、登录失效及网关联调另行记录；离线测试与构建不替代这些验收。普通测试不访问真实后端。
 
 ## 回滚
 

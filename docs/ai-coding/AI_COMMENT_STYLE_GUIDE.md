@@ -1,10 +1,10 @@
 # AI 注释规范
 
-本规范约束 AI 在 `admin-web` 项目中新增或修改注释的方式。项目是 Ant Design Pro + Umi Max + React + TypeScript 前端，注释必须服务于组件维护、接口契约、权限边界和状态流转。
+本规范约束 AI 在 `admin-web` 项目中新增或修改注释的方式。项目是 React + TypeScript 的 Module Federation 单仓前端（shadcn/ui 与 Tailwind CSS），注释必须服务于组件维护、接口契约、权限边界、子应用接入和状态流转。
 
 ## 0. AI 执行流程
 
-- 修改注释前先识别文件类型和上下文，例如 TS、TSX、React 组件、Umi 配置、Less、JSON、YAML、Shell 或 Markdown。
+- 修改注释前先识别文件类型和上下文，例如 TS、TSX、React 组件、Vite 与 Module Federation 配置、CSS（Tailwind）、JSON、YAML、Shell 或 Markdown。
 - 优先阅读 `AGENTS.md`、`docs/ai-coding/AI_CODING_GUIDE.md`、`docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md`、`docs/ai-coding/SECURITY_CODING_SPEC.md`。
 - 本规范未覆盖的文件类型，先查官方或主流规范，补充规范来源和本项目落地规则后再改代码。
 - 不为了统一注释风格批量重排页面、路由、配置或生产地址。
@@ -29,8 +29,8 @@
 
 ## 3. 样式、配置和脚本注释
 
-- Less 注释只解释布局约束、响应式原因或与 Ant Design 默认样式的冲突，不解释普通颜色和间距。
-- Umi、路由、权限和 request 配置注释应解释运行边界、网关路径和登录态策略。
+- CSS 注释只解释布局约束、响应式原因或与物料默认样式的冲突，不解释普通颜色和间距（颜色用主题变量）。
+- Vite、Module Federation、路由、权限和请求客户端配置注释应解释运行边界、网关路径、共享单例和登录态策略。
 - JSON 不支持注释；需要说明时写入相邻 Markdown 文档或配置说明，不伪造注释字段。
 - Shell 注释解释安全边界、错误处理、密钥脱敏和退出码，不解释普通命令。
 - Markdown 文档把关键规则写成可见正文，不用隐藏注释承载规范。
@@ -55,7 +55,9 @@
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [React Docs](https://react.dev/learn)
-- [Ant Design Pro Components](https://procomponents.ant.design/)
-- [Umi Max](https://umijs.org/)
+- [TSDoc](https://tsdoc.org/)
+- [shadcn/ui](https://ui.shadcn.com/docs)
+- [Vite](https://vite.dev/guide/)
+- [Module Federation](https://module-federation.io/)
 - [CommonMark Specification](https://spec.commonmark.org/current/)
 - Robert C. Martin《Clean Code》第 4 章 Comments：注释是次优手段，优先让代码自解释；注释掉的代码应删除。

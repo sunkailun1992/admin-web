@@ -21,7 +21,7 @@ const pageNavigation = (req: IncomingMessage) =>
   req.headers.accept?.includes('text/html') ? req.url : undefined;
 
 /**
- * 开发与预览代理（照 1.2.4 的 .umirc.ts）：页面与接口同源，网关会话 Cookie 按主机共享。转给网关时保留 Host
+ * 开发与预览代理（照 1.2.4 的开发代理）：页面与接口同源，网关会话 Cookie 按主机共享。转给网关时保留 Host
  * （changeOrigin: false），网关据此生成 Keycloak 回调地址 http://localhost:8000/login/oauth2/code/keycloak；
  * 不加 X-Forwarded-*。
  */

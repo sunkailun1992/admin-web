@@ -1,30 +1,8 @@
 # Admin Web
 
-`admin-web` 是用户中心后台管理前端，基于 Ant Design Pro / Umi Max 构建，对接同级 `user` 后端项目。
+`admin-web` 是用户中心后台管理前端，对接同级 `user`、`message`、AI 与 RAG 后端，经同级 `gateway` 访问。它同时是一套可裂变的基础框架：各公司以后从这里裂变出自己的管理端，所以微前端、物料、主题、插件都按国际主流做法前期拆好。
 
-本项目负责登录认证、租户管理、部门管理、用户管理、角色管理、权限资源管理，以及用户角色、角色资源、角色数据范围授权操作；同时提供受独立权限控制的 RAG 文档向量管理、检索试查和知识图谱页面。
-
-`1.0.5` 的图谱手动同步为每次明确操作生成不透明提交键。结果不确定时保留同一身份/租户/KB 下的键，并先通过只读提交查询查回原任务；POST 丢响应只自动查回，不自动重复发送 POST。收到并验证原任务后结束该提交，下次明确重建才换键。重复上传复用该活动文档版本的后端图谱任务，图谱失败需到知识图谱页明确重新构建。配套接口要求 Java RAG `1.2.4` 与 Engine `0.2.7`；页面构建或合成测试不表示目标环境已部署。未新增业务日程或 Conductor 工作流。
-
-`1.0.6` 将知识文档页改为列表工作台：按知识库查询，搜索标题、来源文件或编码，筛选状态/格式；上传、检索测试和命中来源使用独立抽屉。列表分页与筛选作用于已载入数据，切片按后端 cursor 顺序读取并缓存上一页。检索必须明确提交，默认返回 6 条、可选 1–20 条；服务不可用不会显示成无匹配资料。上传文件和目标知识库配合“上传并校验”按钮构成确认，超时不自动重发。身份或知识库切换会中止旧页面等待并忽略迟到结果。
-
-图谱工作台提供当前结果节点定位、缩放、适配和全屏，节点/关系详情分为来源证据、属性和当前结果关联。图例与截断信息靠近画布，构建状态保持任务与已发布结果的区别。选择节点不重建画布，视图按钮不触发图谱构建；重新构建仍须明确确认，未知提交沿用原提交键只读查回。界面交互参考与真实 API 能力映射见[工作台设计](docs/superpowers/specs/2026-11-10-rag-workbench-design.md)。
-
-已认证 user/tenant 明确时，未确认键按 user/tenant/KB 写入同一标签页的 sessionStorage（只存 scope 和不透明键）。刷新或重新进入时优先只读查回，未找到也不自动 POST；用户确认重新构建才允许以原键重发。身份未知时仅在内存保留；存储不可用或内容损坏会阻止创建新提交，不能据此认定旧任务不存在。切换账号/租户会取消旧页面请求并清除旧图显示，旧响应不能覆盖当前身份。
-
-`1.0.7` 新增“统一配置”下的“模型与能力”“文件存储”，两页均要求平台超级管理员身份与 `user:auth:manage`。模型页只读 `GET /api/ai/model-control-plane` 返回的实际 deployment，按语言、向量、重排、OCR、语音、图片、视频分类；管理目录可读不等于模型健康，能力声明不等于业务接入。模型部署、供应商凭据、虚拟密钥、额度、用量及验证使用 LiteLLM 原生控制台的五个固定入口，不重做 CRUD、不携带 token 自动登录、不嵌 iframe。旧 `/ai/model` 路由及只读权限保留，新页面复用原业务默认切换 controller；RAG 索引绑定模型与维度不提供热切换。
-
-文件页按后端 capabilities 提供 OSS、COS、MinIO/S3 兼容配置；位置创建后固定，迁移通过新建和切默认进行。凭据 `KEEP` 完全不提交密钥字段，`REPLACE` 成对单向提交，关闭/提交/身份切换清空表单。停用上传不关闭旧文件读取；默认或有引用配置不能删除。保存版本、生效 revision 和实际读写探测分别显示，历史 revision 的成功不当作当前连接正常。默认指针、签名 TTL（秒）和最大文件字节数通过 settings 乐观锁更新，基础目录、旧空平台映射和私有访问只读。
-
-存储所有变更带不透明 requestId，未知结果只 `GET /api/ai/storage-operations/{requestId}` 查回，不自动重发。已知 user/tenant 的同标签页 sessionStorage 仅保存 scope、requestId、动作及配置 ID，不保存 endpoint、表单或凭据；恢复先 GET，404 也不生成新提交，存储损坏/失败阻止新写入。真实 `READ_WRITE` 探测需明确确认，步骤与清理失败保留，配置保存成功不冒充验证成功。分页、搜索和筛选来自真实服务端。自 `1.1.1` 起，默认平台候选独立读取所有允许新上传的配置页，仅列出当前 revision 已生效的候选。切换作用于各租户之后的新上传，历史文件继续按原平台读取。
-
-本批 UI 需要配套 AI 存储和模型控制台摘要接口；未连接时显示未配置或不可读，不使用演示数据填充。配置归属、接口边界和验收计划见[统一配置设计](docs/superpowers/specs/2026-11-11-unified-configuration-design.md)。回滚前端至 `1.0.6` 只撤下新管理入口，不删除后端配置、不回迁 Nacos，也不修改 LiteLLM 的原生模型源。
-
-`1.0.8` 兼容 LiteLLM 原生别名：多个调用名称可合法保留同一个 deployment ID，目录行按 `(id, modelName)` 稳定区分，只有完全相同的行身份重复才拒绝。页面分别显示去重的部署数与目录记录数，不把别名当作新建的物理部署；不修改真实 ID、不丢弃别名、不增加模型调用或配置写入。
-
-`1.0.9` 将存储新操作的 requestId 对齐后端 canonical UUID 合同：使用 16 字节加密随机数并设置 UUID v4/variant 位，不依赖安全上下文限定的 `randomUUID`。新写入在持久化或发送前验证 UUID；旧 pending 不透明键仍原样保留并仅只读查回，读取失败不会自动换键或重新写入。
-
-`1.1.0` 收紧存储编辑的无改动提交：名称和上传开关未变且保留凭据时禁止保存，修改后还原也恢复禁用；替换凭据仍需明确选择并成对输入。探测与操作时间按浏览器本地时间显示 UTC 偏移和时区，原始 ISO 保留在提示中，缺失时间不补造。文件策略同时展示当前输入与服务端上限的 MiB 和精确字节数，请求仍使用字节。
+`1.2.5` 起整个重写为国际主流方案（第6阶段，旧的 Umi / Ant Design 应用整体删除，不逐步淘汰）：pnpm 工作区加 Turborepo 单仓，Vite 8 与 React 19，Module Federation 2 微前端（一个主应用、四个子应用），shadcn/ui 与 Tailwind 4 物料包（Storybook、shadcn 注册表），DTCG 设计令牌经 Style Dictionary 生成主题，i18next 多语言。菜单、页面、接口契约、登录与权限规则与 1.2.4 对齐。每项选型都对照了 GitHub 上多个同类主流项目与官方文档，依据记在维护者的第6阶段设计文档里。
 
 ## AI 快速识别
 
@@ -32,20 +10,22 @@
 project:
   name: admin-web
   type: frontend-admin
-  framework: Ant Design Pro + Umi Max
+  layout: pnpm workspace + Turborepo（apps/* 与 packages/*）
   language: TypeScript
-  ui: Ant Design 6 + ProComponents 3
+  ui: shadcn/ui（Radix UI）+ Tailwind CSS 4，物料包 packages/ui
+  microFrontends: Module Federation 2（主应用 shell，子应用 system、message、ai、rag）
+  router: React Router 8（主应用唯一路由器，子应用经 ./routes 提供路由与菜单）
+  data: TanStack Query 5、TanStack Table、react-hook-form + zod、axios
+  i18n: i18next / react-i18next（zh-CN 默认，en-US 完整一份）
   runtime: Node 26
   packageManager: pnpm 12.21.0
-  tests: Vitest + Playwright
+  tests: Vitest（jsdom 与浏览器模式）+ Testing Library + MSW、Storybook 交互测试、Playwright
 backend:
   gatewayPath: ../gateway
-  gatewayBaseUrl: http://localhost:7100
-  localPath: ../user
-  serviceName: user
-  devProxyTarget: http://localhost:7100 # ADMIN_WEB_GATEWAY_URL，只给开发服务器
+  gatewayBaseUrl: http://localhost:7100 # ADMIN_WEB_GATEWAY_URL，只给开发与预览代理
+  userPath: ../user
   userDirectUrl: http://localhost:7500
-  requestMode: same-origin（baseURL 为空，开发时 Umi 代理转给网关）
+  requestMode: same-origin（开发与预览由 Vite 代理转给网关）
 auth:
   login: GET /oauth2/authorization/keycloak # 网关 BFF，跳 Keycloak 登录（授权码加 PKCE）
   logout: POST /logout # 网关回 202 与 Keycloak 注销地址
@@ -55,62 +35,82 @@ auth:
   tenant: X-Tenant-Id（选中的租户，能否访问由 user 核对）
 permissions:
   backendManage: user:auth:manage
-  frontendMenus:
-    - menu:tenant
-    - menu:dept
-    - menu:user
-    - menu:role
-    - menu:resource
+  frontendMenus: [menu:tenant, menu:dept, menu:user, menu:role, menu:resource]
 mainFiles:
-  runtime: src/app.ts
-  access: src/access.ts
-  api: src/services/auth/index.ts
-  types: src/services/auth/types.d.ts
-  routes: .umirc.ts
+  shell: apps/shell/src
+  remoteContract: packages/auth/src/types.ts（RemoteRoutes、MenuEntry）
+  access: packages/auth/src/access.ts
+  http: packages/api/src/client.ts（createHttpClient）
+  remotesRegistry: apps/shell/apps.<mode>.json
+  viteConfig: packages/config-vite/src/index.ts（defineAppConfig）
   aiGuide: docs/ai-coding/AI_CODING_GUIDE.md
 ```
 
-AI 处理本项目任务时，优先读取：
+AI 处理本项目任务时，优先读取 `AGENTS.md`、本文件、`docs/ai-coding/AI_CODING_GUIDE.md`，再读要改的子应用或共享包，以及后端 `../user/README.md`。
 
-1. `README.md`
-2. `AGENTS.md`
-3. `docs/ai-coding/AI_CODING_GUIDE.md`
-4. `.umirc.ts`
-5. `src/app.ts`
-6. `src/services/auth/index.ts`
-7. 后端 `../user/README.md`
+## 仓库结构
 
-## 技术栈
+```text
+apps/
+  shell/     主应用（宿主）：布局、侧边栏菜单、页头（租户切换、消息铃铛位、语言、主题、账户菜单）、工作台、登录失败页
+  system/    子应用：租户、部门、用户、角色、权限资源
+  message/   子应用：消息发送；另向主应用暴露消息铃铛组件 ./Bell
+  ai/        子应用：AI 模型路由（/ai/*）、统一配置的模型与能力、文件存储（/configuration/*）
+  rag/       子应用：知识文档（向量管理、检索测试）、知识图谱（Cytoscape.js）
+packages/
+  ui/                物料：shadcn/ui 组件源码、业务组件、Storybook、shadcn 注册表（registry.json）
+  theme/             设计令牌（DTCG）→ theme.css、tokens.ts（Style Dictionary）
+  theme-emerald/     额外主题包：换主题就是换包
+  api/               createHttpClient（拦截器、灰度头）、统一响应解包、TanStack Query 与列表工具
+  auth/              会话（当前用户、资源、租户）、权限规则 access.ts、RequireAccess、子应用接入契约类型、单独运行外壳
+  i18n/              i18next 初始化与各命名空间文案（locales/zh-CN、locales/en-US）
+  config-vite/       Vite 预设 defineAppConfig：React、Tailwind、Module Federation、代理、环境变量、共享单例
+  config-eslint/     ESLint 扁平配置：子应用引用边界、界面不写死中文
+  config-typescript/ tsconfig 基础配置
+  config-vitest/     各包测试共用的时限（用例上限、Testing Library 等待）
+  test-utils/        MSW 处理器、按应用方式套好 Provider 的渲染
+e2e/
+  mock/      Playwright 固定数据一组（接口按 e2e/fixtures 回，进 CI）
+  live/      Playwright 真实网关一组（只经维护者本机的全链路脚本运行）
+  fixtures/  接口固定数据（与界面无关）
+  support/   浏览器测试的公共准备：子应用清单、接口拦截、控制台收集
+scripts/     e2e-serve.mjs、verify-independent-deploy.mjs、test-generator.mjs、check-secrets.sh
+turbo/generators/  turbo gen remote：新建子应用的模板
+docs/ai-coding/    AI 编码规范
+```
 
-- React 19
-- TypeScript
-- Umi Max 4.7
-- Ant Design 6
-- Ant Design ProComponents 3
-- pnpm
+## 微前端接入契约
 
-工具链见下文「工具链与门禁」。
+- **子应用清单**：主应用启动时取运行时配置 `/apps.json`（来源 `apps/shell/apps.<mode>.json`，开发服务器直接给，构建时写进产物，部署时可按环境替换），每项是子应用名、`mf-manifest.json` 地址和负责的路由前缀。加子应用、换子应用地址都不用重新构建主应用。
+- **路由与菜单**：每个子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes` 是路由对象（页面懒加载），`menu` 是菜单元数据（路径、文案键 `labelKey`、所需权限标志 `access`、分组）。主应用并行加载各子应用的 `./routes`，建出唯一的路由器和侧边栏。
+- **共享单例**：react、react-dom、react-router、@tanstack/react-query、i18next、react-i18next、sonner 与 `@admin-web/{ui,api,auth,i18n}`，版本由 pnpm catalog 统一（`singleton` 加 `requiredVersion`），见 `packages/config-vite/src/shared.ts`。
+- **故障隔离**：某个子应用加载失败时只有它的域不可用（菜单标为不可用，路由显示错误页与“重试”），其它域照常；加载用运行时插件 @module-federation/retry-plugin 重试。
+- **独立部署**：只重建一个子应用，主应用 `dist` 不变，运行中的主应用就用上新版子应用；`pnpm test:deploy` 验证这一点（CI 也跑）。
+- **单独运行**：每个子应用有一个只在开发时用的最小外壳（`src/dev/main.tsx`，经 `StandaloneShell`），配同样的代理；登录统一到主应用的 8000 端口完成，localhost 的 Cookie 不分端口。
+- **样式**：主题变量与 Tailwind 基础样式只由主应用加载一次；子应用只带自己用到的工具类，配置相同，重复不冲突。
 
 ## 业务范围
 
-| 功能 | 前端页面 | 后端接口 |
-| --- | --- | --- |
-| 登录 | 网关 `/oauth2/authorization/keycloak` | Keycloak 登录页（前端只有登录失败页 `/login`，见下） |
-| 当前资源 | 运行时初始化 | `GET /auth/current/resources` |
-| 工作台 | `/dashboard` | 登录态与资源数据 |
-| 租户管理 | `/system/tenant` | `GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT/DELETE /auth/manage/tenants/{id}` |
-| 部门管理 | `/system/dept` | `GET /auth/manage/depts`、`GET /auth/manage/depts/options`、`POST /auth/manage/depts`、`PUT/DELETE /auth/manage/depts/{id}` |
-| 用户管理 | `/system/user` | `GET /auth/manage/users`、`GET /auth/manage/users/options`、`POST /auth/manage/users`、`PUT/DELETE /auth/manage/users/{id}` |
-| 角色管理 | `/system/role` | `GET /auth/manage/roles`、`GET /auth/manage/roles/options`、`POST /auth/manage/roles`、`PUT/DELETE /auth/manage/roles/{id}` |
-| 权限资源 | `/system/resource` | `GET /auth/manage/resources`、`GET /auth/manage/resources/options`、`POST /auth/manage/resources`、`PUT/DELETE /auth/manage/resources/{id}` |
-| 用户绑定角色 | 用户管理弹窗 | `GET/PUT /auth/manage/users/{userId}/roles` |
-| 角色绑定资源 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/resources` |
-| 角色数据范围 | 角色管理弹窗 | `GET/PUT /auth/manage/roles/{roleId}/data-scope-depts` |
-| 编码生成 | 租户/部门/角色/资源表单 | `POST /auth/manage/codes` |
-| RAG 文档管理 | `/rag-knowledge/documents` | `POST/GET /api/rag/documents`、校验、停用与检索接口 |
-| RAG 知识图谱 | `/rag-knowledge/graph` | `GET /api/rag/graphs`、`POST /api/rag/graphs/sync` |
-| 模型与能力 | `/configuration/models` | `GET /api/ai/model-control-plane`；复用 `GET/PUT /api/ai/model-selection` |
-| 文件存储 | `/configuration/storage` | `GET /api/ai/storage-capabilities`、`GET/POST /api/ai/storage-configurations`、`PUT/DELETE /{id}`、`GET/PUT /api/ai/storage-settings`、显式 probes 与操作只读查询 |
+| 功能 | 页面 | 子应用 | 后端接口 |
+| --- | --- | --- | --- |
+| 登录 | 网关 `/oauth2/authorization/keycloak` | — | Keycloak 登录页（前端只有登录失败页 `/login?error`） |
+| 当前资源 | 主应用启动时 | shell | `GET /auth/current/resources`、`GET /auth/current/tenants` |
+| 工作台 | `/dashboard` | shell | 登录态与资源数据 |
+| 租户管理 | `/system/tenant` | system | `GET /auth/manage/tenants`、`GET /auth/manage/tenants/options`、`POST /auth/manage/tenants`、`PUT/DELETE /auth/manage/tenants/{id}` |
+| 部门管理 | `/system/dept` | system | `GET /auth/manage/depts`、`GET /auth/manage/depts/options`、`POST /auth/manage/depts`、`PUT/DELETE /auth/manage/depts/{id}` |
+| 用户管理 | `/system/user` | system | `GET /auth/manage/users`、`GET /auth/manage/users/options`、`POST /auth/manage/users`、`PUT/DELETE /auth/manage/users/{id}` |
+| 角色管理 | `/system/role` | system | `GET /auth/manage/roles`、`GET /auth/manage/roles/options`、`POST /auth/manage/roles`、`PUT/DELETE /auth/manage/roles/{id}` |
+| 权限资源 | `/system/resource` | system | `GET /auth/manage/resources`、`GET /auth/manage/resources/options`、`POST /auth/manage/resources`、`PUT/DELETE /auth/manage/resources/{id}` |
+| 用户绑定角色 | 用户管理弹窗 | system | `GET/PUT /auth/manage/users/{userId}/roles` |
+| 角色绑定资源 | 角色管理弹窗 | system | `GET/PUT /auth/manage/roles/{roleId}/resources` |
+| 角色数据范围 | 角色管理弹窗 | system | `GET/PUT /auth/manage/roles/{roleId}/data-scope-depts` |
+| 编码生成 | 租户/部门/角色/资源表单 | system | `POST /auth/manage/codes` |
+| 消息发送与铃铛 | `/message/send`、页头铃铛 | message | `/message/messages/**` |
+| AI 模型路由 | `/ai/model` | ai | `GET/PUT /api/ai/model-selection` |
+| 模型与能力 | `/configuration/models` | ai | `GET /api/ai/model-control-plane`；复用模型路由 |
+| 文件存储 | `/configuration/storage` | ai | `GET /api/ai/storage-capabilities`、`GET/POST /api/ai/storage-configurations`、`PUT/DELETE /{id}`、`GET/PUT /api/ai/storage-settings`、显式探测与操作只读查回 |
+| 知识文档 | `/rag-knowledge/documents` | rag | `POST/GET /api/rag/documents`、校验、停用、切片与检索接口 |
+| 知识图谱 | `/rag-knowledge/graph` | rag | `GET /api/rag/graphs`、`POST /api/rag/graphs/sync`、构建与提交查回 |
 
 ## 后端约定
 
@@ -127,57 +127,18 @@ interface ApiResponse<T> {
 }
 ```
 
-分页接口返回 MyBatis-Plus `Page<T>`，前端只消费：
+分页接口返回 MyBatis-Plus `Page<T>`，前端只消费 `records`、`total`、`current`、`size`。`@admin-web/api` 负责解包：`success` 为 false 时抛出带后端提示、状态与错误码的 `ApiError`，提示原样显示。
 
-```ts
-records: T[]
-total: number
-current: number
-size: number
-```
-
-后端默认数据：
-
-```text
-tenantId: 100
-tenantName: 默认租户
-username: admin
-password: 123456
-```
-
-前端展示租户时使用租户名称，不直接向用户展示租户 ID；提交后端时仍使用 `tenantId`。
-
-权限资源使用 `parentId` 组装树形结构。权限资源列表是树形表格，角色绑定资源是树形多选。
-
-部门使用 `parentId` 组装树形结构。部门列表是树形表格，用户所属部门和角色自定义数据范围都使用部门树。
-
-所有业务编码都由后端生成。前端表单只提供“生成”按钮调用 `POST /auth/manage/codes`，不在浏览器内拼接随机编码。
+- 展示租户用租户名称，`tenantId` 只作为接口内部字段。
+- 部门、权限资源按 `parentId` 组装树（树形表格、树形选择，按 WAI-ARIA 树形模式）。
+- 业务编码都由后端生成：表单只提供“生成”按钮调用 `POST /auth/manage/codes`，不在浏览器里拼随机编码。
+- 更新接口必须带后端返回的 `version`（MyBatis-Plus 乐观锁）。
 
 ## 权限模型
 
-`GET /auth/current/resources` 返回（按活动租户）：
+`GET /auth/current/resources` 返回（按活动租户）`permissions`（后端权限码）、`frontendResources`（前端菜单/页面资源）、`backendResources`（后端接口资源，工作台展示）。
 
-- `permissions`：后端权限码，用于接口访问判断。
-- `frontendResources`：前端菜单/页面资源，用于菜单展示控制。
-- `backendResources`：后端接口资源，用于工作台展示。
-
-当前管理台需要：
-
-```text
-user:auth:manage
-```
-
-前端菜单资源码：
-
-```text
-menu:tenant
-menu:dept
-menu:user
-menu:role
-menu:resource
-```
-
-权限判断集中在 `src/access.ts`。
+权限判断只在 `packages/auth/src/access.ts`：同时看权限码、`menu:*` 资源编码和管理员分类，产出 `canSeeTenant`、`canSeeRagGraph` 等标志；路由经 `RequireAccess`，菜单经 `MenuEntry.access`。用户中心管理页需要 `user:auth:manage` 与对应的 `menu:tenant`、`menu:dept`、`menu:user`、`menu:role`、`menu:resource`。
 
 RAG 页面采用独立权限，不继承用户中心管理权限：
 
@@ -188,164 +149,105 @@ menu:rag:graph + rag:graph:view
 rag:graph:manage
 ```
 
-前端只负责隐藏无权页面和动作；RAG 服务的 `@PreAuthorize` 仍是最终授权边界。
+统一配置（模型与能力、文件存储）要求平台超级管理员身份与 `user:auth:manage`。前端只负责隐藏无权页面和动作；后端（RAG 服务的 `@PreAuthorize` 等）仍是最终授权边界。
 
-## 目录说明
-
-```text
-src/
-  app.ts                    # Umi 运行时配置、登录态初始化、请求拦截、错误处理
-  access.ts                 # 路由权限判断
-  components/TenantSelect/  # 租户选择组件
-  constants/auth.ts         # 选中租户的存储 key、枚举映射、默认租户常量
-  hooks/useTenantOptions.ts # 租户名称展示与 valueEnum
-  pages/Dashboard/          # 工作台
-  pages/System/Tenant/      # 租户管理
-  pages/System/User/        # 用户管理和绑定角色
-  pages/System/Role/        # 角色管理和绑定资源
-  pages/System/Resource/    # 权限资源管理
-  pages/Rag/Document/       # 文档摄取、上传校验、文档版本、读回校验和检索试查
-  pages/Rag/Graph/          # 图谱查询、同步和节点来源展示
-  services/auth/            # 后端接口封装和 API 类型
-  services/rag/             # RAG 服务接口封装和 API 类型
-  utils/auth.ts             # 选中租户的存储与旧令牌清理
-  utils/table.ts            # ProTable 查询参数、payload 清理
-docs/
-  ai-coding/
-    README.md                       # AI 编码规范入口
-    AI_CODING_GUIDE.md              # AI 编码规则
-    AI_DIRECTORY_STRUCTURE_GUIDE.md # 目录管理规范
-    AI_COMMENT_STYLE_GUIDE.md       # 注释规范
-    AI_DESIGN_PATTERN_GUIDE.md      # 设计模式规范
-    AI_ENGINEERING_GUARDRAILS.md    # 工程门禁规范
-    SECURITY_CODING_SPEC.md         # 安全编码规范
-```
-
-## 本地启动
-
-安装依赖：
+## 本地开发
 
 ```bash
 pnpm install
+pnpm dev     # 同时起主应用（8000）与四个子应用（8101–8104）
 ```
 
-启动前端：
+打开 `http://localhost:8000`。开发与预览代理（`packages/config-vite/src/proxy.ts`）把业务接口前缀 `/auth`、`/user`、`/message`、`/report`、`/api` 与网关自己的 `/oauth2`、`/login/oauth2`、`/logout` 转给 `ADMIN_WEB_GATEWAY_URL`（本地 `http://localhost:7100`），保留 `Host`（网关据此生成回调地址 `http://localhost:8000/login/oauth2/code/keycloak`）；浏览器打开页面（Accept 含 `text/html`）不转发，交给单页应用路由（`/message` 既是页面也是接口前缀）。开发前先启动 `gateway`（依赖 NAS 上的 Keycloak）与 `user`。生产部署也必须让前端与网关同源，反向代理按同样的前缀转发，并让 `/login` 落到单页应用。
 
-```bash
-pnpm dev
-```
+| 应用    | 开发端口 | 预览端口 |
+| ------- | -------- | -------- |
+| shell   | 8000     | 8001     |
+| system  | 8101     | 8201     |
+| message | 8102     | 8202     |
+| ai      | 8103     | 8203     |
+| rag     | 8104     | 8204     |
 
-本地浏览器验收前，先停止当前 checkout 的开发服务，完成测试与 `pnpm build:dev`，再重新启动 `pnpm dev`。当前 utoo 开发服务和构建使用默认 `dist` 产物目录，在开发服务运行期间构建会替换其中的入口与资源，不应并行执行。若页面混入开发与构建资源、出现 `Unexpected token '<'` 或整页交互无响应，先检查脚本请求是否误返回 HTML；重启开发服务后禁用缓存重新加载，必要时用新标签页验证，不据此直接修改组件事件。
+只改一个子应用时可以单独跑它：`pnpm --filter @admin-web/system dev`，打开 `http://localhost:8101`；没有网关会话时页面提示先在主应用（8000）登录。
 
-IDEA 的 `.run/` 运行配置保留在本机，不纳入 Git。单独打开本项目和通过聚合工作区打开时，IDEA 的项目根目录不同，请在运行配置中选择本项目的 `package.json`，执行 `dev` 脚本。
-
-前端默认地址：
-
-```text
-http://localhost:8000
-```
-
-后端接口地址：
-
-```text
-.env.*  -> UMI_APP_BACKEND_BASE_URL=          # 空：与页面同源
-.env.*  -> ADMIN_WEB_GATEWAY_URL=http://localhost:7100   # 开发代理的目标
-```
-
-第5阶段起页面与接口同源：`request.baseURL` 为空，开发时 `.umirc.ts` 的代理把业务接口前缀（`/auth`、`/user`、`/message`、`/report`、`/api`，与网关路由一致）以及登录入口 `/oauth2`、Keycloak 回调 `/login/oauth2`、注销 `/logout` 转给网关，保留 `Host`（网关据此生成 Keycloak 回调地址 `http://localhost:8000/login/oauth2/code/keycloak`）。浏览器打开页面（Accept 含 `text/html`）不转发，交给单页应用路由（`/message` 既是页面也是接口前缀）。会话 Cookie 按主机共享，`localhost:8000` 与直连网关的 `localhost:7100` 是同一个网关会话。开发时先启动 `gateway`（依赖 NAS 上的 Keycloak）与 `user`。生产部署也必须让前端与网关同源（反向代理按同样的前缀转发）。
+各应用的构建环境变量在自己的 `.env.dev`、`.env.test`、`.env.prod`：`ADMIN_WEB_GATEWAY_URL`（只给代理，不进前端代码）、`VITE_RELEASE_VERSION`、`VITE_TRAFFIC_LANE`，按需再有灰度标签与权重。规则见 [ENVIRONMENT_CONFIG_SPEC.md](docs/ai-coding/ENVIRONMENT_CONFIG_SPEC.md)。IDEA 的运行配置保留在本机，不纳入 Git；运行配置选根目录 `package.json` 的 `dev` 脚本。
 
 ## 常用命令
 
 ```bash
-pnpm dev            # 使用 .env.dev 启动开发服务
-pnpm dev:test       # 使用 .env.test 启动开发服务
-pnpm build:test     # 使用 .env.test 构建
-pnpm build          # 使用 .env.prod 构建
-pnpm check          # 全套门禁：format:check、lint、typecheck、test、build:dev、固定数据一组浏览器测试
-pnpm format         # 格式化
-pnpm format:check   # 只检查格式
-pnpm lint           # ESLint，警告也算失败
-pnpm typecheck      # 类型检查
-pnpm test           # Vitest 单元测试
-pnpm test:e2e       # 浏览器测试：固定数据一组（端口 8001，浏览器里拦截接口）
+pnpm dev             # 开发服务（.env.dev）
+pnpm build:dev       # 全部应用按 .env.dev 构建（另有 build:test、build）
+pnpm check           # 全套门禁：格式、lint、类型（含 e2e）、单元测试、build:dev
+pnpm format          # 格式化（format:check 只检查）
+pnpm lint            # ESLint，警告也算失败
+pnpm typecheck       # 各包 tsc 与 e2e 的类型检查
+pnpm test            # Vitest：单元、页面（浏览器模式）、物料故事
+pnpm test:e2e        # Playwright 固定数据一组（build:dev 后起预览服务，主应用 8001）
+pnpm test:deploy     # 独立部署验证：只重建 system，主应用不变也能用上新版
+pnpm test:generator  # 新建子应用生成器检查（生成、typecheck、test、build 后还原）
 bash scripts/check-secrets.sh
+pnpm --filter @admin-web/ui storybook        # 物料文档与交互测试（6006）
+pnpm --filter @admin-web/ui registry:build   # 产出 shadcn 注册表到 packages/ui/public/r
+pnpm turbo gen remote                        # 新建子应用
 ```
 
-真实网关一组浏览器测试（`pnpm test:e2e:test`）只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行：脚本把测试账号口令放进环境变量，后端 9 个服务要先起好；8000 端口没有开发服务时 Playwright 自己起 `pnpm dev:test`。
+真实网关一组浏览器测试（`pnpm test:e2e:test`）只经维护者本机的全链路脚本 `run_chain_verify.py --admin-web-e2e` 运行：脚本把测试账号口令放进环境变量；后端服务要先起好；Playwright 先 `build:test`，主应用在 8000 端口（Keycloak 登记的回调地址）预览，8000 被占用时直接报错。
 
-## 工具链与门禁（1.2.2 起）
+## 物料、主题与插件
 
-- 本机需要 Node 26（`package.json` 的 `engines`）与 pnpm 12.21.0（`packageManager`）。pnpm 12 是原生二进制，用 npm 11 全局安装时要放行它的安装脚本：`npm install -g --allow-scripts=pnpm pnpm@12.21.0`。依赖的构建脚本按 `pnpm-workspace.yaml` 的 `allowBuilds` 逐个列明，新依赖带构建脚本时安装会失败，要先在那里写明允许或不允许。
-- TypeScript 6.0 只做类型检查（`pnpm typecheck`，即 `tsc --noEmit`），构建由 Umi 负责。
-- 代码检查用 ESLint 10 扁平配置（`eslint.config.mjs`：`@eslint/js`、typescript-eslint、eslint-plugin-react-hooks 的官方 recommended 预设，最后接 eslint-config-prettier，不自定义规则），格式用 Prettier 3（`.prettierrc`、`.prettierignore`）。全仓格式化的提交记在 `.git-blame-ignore-revs`，`git blame` 时跳过。
-- 单元测试用 Vitest（`vitest.config.mts`），浏览器测试用 Playwright（`playwright.config.ts`，固定数据与真实网关两组、不重试），规则见 [TESTING_SPEC.md](docs/ai-coding/TESTING_SPEC.md)。
-- 提交钩子：`pnpm install` 时 `prepare` 装好 husky，pre-commit 对暂存文件跑 `eslint --fix` 与 `prettier --write`（`.lintstagedrc`）。
-- CI（`.github/workflows/ci.yml`，Node 26，action 固定到完整提交 SHA）依次跑安装、`format:check`、`lint`、`typecheck`、`test`、`build:dev`、安装 Chromium、固定数据一组浏览器测试（失败时上传 `e2e-out/` 报告）与密钥扫描。
+- **物料**：`packages/ui` 按 shadcn/ui 官方单仓做法放组件源码，另有业务组件：页面容器、服务端分页数据表（TanStack Table）、表单弹窗与侧边面板（react-hook-form + zod）、编码输入、确认操作、空状态、树形选择、上传等。每个物料有 Storybook 故事（文档、交互测试、无障碍检查）。
+- **注册表**：`registry.json` 按 shadcn 注册表格式列出业务组件、增删改查页模板 `crud-page` 与两个主题；裂变出去的项目用 `npx shadcn add <注册表地址>/<条目>.json` 取用（托管地址以后再定）。
+- **主题**：令牌源文件 `packages/theme/tokens/*.json`（DTCG 格式，浅色、暗色），Style Dictionary 生成 `theme.css`（变量名与 shadcn/ui 一致，经 Tailwind 4 的 `@theme inline` 映射）与 `tokens.ts`（图表、图谱等非 CSS 场景）。应用样式入口引入哪个主题包就用哪套主题；浅色、暗色、跟随系统只是个人偏好，记在本地存储。
+- **插件**：构建时由 `@admin-web/config-vite` 的 `defineAppConfig({ name, role, exposes, devPort, previewPort })` 组合 React、Tailwind、Module Federation、代理与环境变量；运行时用 Module Federation 运行时插件重试加载。
+- **加一个子应用**：`pnpm turbo gen remote` 生成骨架（Vite 与 Module Federation 配置、路由、文案、测试与增删改查页）；在 `apps/shell/apps.<mode>.json` 登记；需要按权限显示时，后端加资源编码或权限码，并在 `access.ts` 加标志。
 
-## 依赖升级（1.2.3 起）
+## 工具链与门禁
 
-- React 19.3、antd 6.7（图标 6.3）、ProComponents 3.1.15-9（3.x 仍是 beta，`package.json` 精确锁定）、Umi Max 4.7.36；不加 overrides。Umi 自己的布局插件仍依赖 ProComponents 2.8.10，构建统计（`dist/stats.json`）核对过打进产物的只有 v3。
-- 页头右侧改用 ProLayout v3 的 `avatarProps` 与 `actionsRender`：v3 删了 `rightContentRender`，Umi 布局插件的 `rightRender` 不再生效。
-- 弃用写法按 antd 6 源码里各组件的弃用表迁移完；`List` 改用 `Listy`（经 `src/components/AppList`）；改 antd 内部样式用语义化 `classNames`、`styles`。浏览器测试的控制台允许清单为空，以后只收附上游 issue 链接的第三方条目。
-- 卡片按 ProComponents v3 的默认样式（带边框）。
+- Node 26（`engines`）与 pnpm 12.21.0（`packageManager`）。pnpm 12 是原生二进制，用 npm 11 全局安装时要放行安装脚本：`npm install -g --allow-scripts=pnpm pnpm@12.21.0`。依赖版本统一在 `pnpm-workspace.yaml` 的 catalog；带构建脚本的依赖按 `allowBuilds` 逐个列明。
+- TypeScript 6.0 只做类型检查，构建由 Vite 负责；`e2e/` 与 `playwright.config.ts` 由根任务 `typecheck:repo` 检查（Playwright 运行器本身不做类型检查）。
+- ESLint 10 扁平配置（`@admin-web/config-eslint`）：官方 recommended 预设，加子应用之间的引用边界（不能伸进别的子应用或共享包的源码）与“界面文案不写死中日韩文字”两条规则。格式用 Prettier 3。
+- 提交钩子：husky 加 lint-staged，对暂存文件跑 `eslint --fix` 与 `prettier --write`。
+- CI（`.github/workflows/ci.yml`，Node 26，action 固定到完整提交 SHA）：安装、格式、lint、类型、单元测试、`build:dev`、固定数据一组浏览器测试（失败时上传 `e2e-out/`）、生成器检查、独立部署验证、密钥扫描；`main` 与 `codex/**` 分支推送都会跑。
 
-如果开发服务异常退出后端口未释放：
+## 会话与安全
 
-```bash
-lsof -i :8000 -P -n
-kill -9 <PID>
-```
+请求认证由 `@admin-web/api` 的 `createHttpClient` 统一处理，每个应用各建一个客户端（`src/http.ts`）：前端不存也不发访问令牌（令牌只在网关会话里），请求去掉 `Authorization`、标成 XHR（`X-Requested-With`，未登录时网关回 401 JSON 而不是跳转），写请求带 `X-XSRF-TOKEN`，选中的租户放进 `X-Tenant-Id`，灰度头 `X-Release-Version`、`X-Traffic-Lane`（按需 `X-Canary-Tag`、`X-Canary-Weight`）取各应用自己的构建环境变量。任何请求 401 都整页跳网关登录入口（子应用单独运行时改为提示先在主应用登录）。
 
-## 开发规则
+`@admin-web/auth` 在主应用启动时读 `/auth/current/resources` 判断是否已登录，选中的租户不再可用（403）时清掉选择、按归属租户重读一次；会话读不到但网关在时进入恢复页（可重试、可退出）。退出：先清掉选中的租户，`POST /logout`，网关回 202 与 Keycloak 注销地址后整页导航过去。
 
-- 请求只写在 `src/services/auth/index.ts`。
-- 类型只补在 `src/services/auth/types.d.ts`。
-- 页面优先使用 `ProTable`、`ModalForm`、`ProForm*`。
-- 新增业务字段前先确认后端 `BO`、`Query`、`VO`。
-- 编辑接口必须携带后端返回的 `version`。
-- 租户内资源提交必须携带 `tenantId`。
-- 展示层尽量显示租户名称，避免直接暴露租户 ID。
-- 编码字段使用后端生成接口，禁止前端自行生成。
-- 不提交 `node_modules/`、`dist/`、`e2e-out/`、`.turbopack/`、`src/.umi*`、`.idea/`、`*.iml`。
+登录失败页：网关登录回调失败时跳到 `/login?error`，页面说明登录没有完成，只给“重新登录”按钮。这一页不读会话、不自动跳登录，否则回调一直失败时会在网关与 Keycloak 之间整页循环。
 
-更完整的 AI 编码规范见 [docs/ai-coding/AI_CODING_GUIDE.md](docs/ai-coding/AI_CODING_GUIDE.md)。
+更多规则见 [SECURITY_CODING_SPEC.md](docs/ai-coding/SECURITY_CODING_SPEC.md)。
 
-## 通用安全与架构同步
+## 功能说明
 
-请求认证由 `src/utils/requestAuth.ts` 统一处理：前端不存也不发访问令牌（令牌只在网关会话里），每个请求去掉 `Authorization`、标成 XHR（`X-Requested-With`，未登录时网关回 401 JSON 而不是跳转），写请求带 `X-XSRF-TOKEN`，选中的租户放进 `X-Tenant-Id`。任何请求 401 都整页跳到网关登录入口；`getInitialState` 读 `/auth/current/resources` 判断是否已登录，选中的租户不再可用（403）时清掉选择、按归属租户重读一次。退出走 `src/utils/sessionLogin.ts`：`POST /logout`，网关回 202 与 Keycloak 注销地址后整页导航过去。启动时清掉旧版留在本地的令牌键。
+### 统一配置
 
-登录失败页（1.2.1 起）：网关登录回调失败时跳到 `/login?error`（与网关 1.3.4 的约定），页面说明登录没有完成，只给“重新登录”按钮。这一页不进布局、`getInitialState` 不读会话、换页也不自动跳登录：否则读不到会话就跳回 Keycloak，回调一直失败时会在网关与 Keycloak 之间整页循环。开发代理只转 `/login/oauth2`，`/login` 本身由单页应用处理；生产的反向代理也要让 `/login` 落到单页应用。
+“模型与能力”只读 `GET /api/ai/model-control-plane` 返回的实际 deployment，按语言、向量、重排、OCR、语音、图片、视频分类；管理目录可读不等于模型健康，能力声明不等于业务接入。兼容 LiteLLM 原生别名：多个调用名称可以保留同一个 deployment ID，目录行按 `(id, modelName)` 稳定区分，页面分别显示去重的部署数与目录记录数。模型部署、供应商凭据、虚拟密钥、额度、用量与验证使用 LiteLLM 原生控制台的固定入口，不重做增删改查、不带令牌自动登录、不嵌 iframe。下方内嵌 AI 模型路由；RAG 索引绑定的模型与维度不提供热切换。
 
-`request-auth.test.ts` 覆盖不带 Authorization、写请求的 CSRF 头、XHR 标记、租户头与不改调用方配置；`session-login.test.ts` 覆盖 401 跳网关登录、注销走 `/logout`（带 CSRF）与回退、本地不存令牌；`session-bootstrap.test.tsx` 覆盖会话检查、失效租户重读、恢复页、退出与登录失败页不检查会话；`login-page.test.tsx` 覆盖登录失败页的说明、手动重新登录与不自动跳转。`pnpm test` 同时覆盖 RAG 与统一配置请求的最终路径、方法、分页参数、未知操作恢复、上传校验与评估报告读取。
+“文件存储”按后端 capabilities 提供 OSS、COS、MinIO/S3 兼容配置；位置创建后固定，迁移靠新建并切换默认。凭据 `KEEP` 不提交密钥字段，`REPLACE` 成对单向提交，关闭、提交、身份切换都清空表单；名称与上传开关没变且保留凭据时禁止保存。停用上传不关闭旧文件读取；默认或有引用的配置不能删除。保存版本、生效 revision 与实际读写探测分别显示，历史 revision 的成功不当作当前连接正常。默认平台、签名有效期（秒）与最大文件字节数经 settings 乐观锁更新，同时显示 MiB 与精确字节数；基础目录、旧空平台映射与私有访问只读。
 
-## RAG 文档上传
+存储的每次变更带 UUID v4 格式的 requestId（16 字节加密随机数），结果未知时只 `GET /api/ai/storage-operations/{requestId}` 查回，不自动重发。已知用户与租户时，同一标签页的 sessionStorage 只存 scope、requestId、动作与配置 ID，不存地址、表单或凭据；恢复时先查回，404 也不生成新提交，存储损坏或失败会阻止新写入。真实读写探测需要明确确认。探测与操作时间按浏览器本地时间显示 UTC 偏移与时区。
 
-上传入口接受 XLSX、DOCX、PDF、PNG、JPG/JPEG，单文件最多 20 MiB（界面显示 20 MB）。选择文件和提交时均校验扩展名、大小、文件名及浏览器报告的 MIME；没有可靠 MIME 信息时交给后端核对文件头。前置校验不替代后端权限、租户隔离和内容安全检查。
+### 知识文档
 
-XLSX/DOCX 使用既有 Java 解析；PDF/图片依赖配套 RAG 版本启用文档解析，扫描件还需可用 OCR 服务。前端允许选文件不表示目标环境已启用 OCR，未启用或解析失败沿用统一接口错误提示。上传继续使用原有 `POST /api/rag/documents` multipart 契约，不改变请求身份、租户或字段。
+列表工作台按知识库查询，可搜索标题、来源文件或编码，筛选状态与格式；上传、检索测试与命中来源使用独立的侧边面板。列表分页与筛选作用于已载入数据。检索必须明确提交，默认返回 6 条、可选 1–20 条；服务不可用不会显示成“没有匹配”。身份或知识库切换会中止旧请求并忽略迟到结果。
 
-## RAG 切片检视与评估报告
+上传接受 XLSX、DOCX、PDF、PNG、JPG/JPEG，单文件最多 20 MiB；选择与提交时都校验扩展名、大小、文件名与浏览器报告的 MIME，没有可靠 MIME 时交给后端核对文件头。前置校验不替代后端权限、租户隔离与内容安全检查。上传用 `POST /api/rag/documents` multipart 契约；配套后端可追加 `graphBuild/graphStatus`，向量成功与图谱排队或失败分别提示，超时不自动重发。
 
-文档列表中的「切片检视」读取 `GET /api/rag/documents/{documentId}/chunks?limit=20&cursor=...`，每次加载 20 条并按后端不透明游标续读。接口必须由配套 Java RAG 版本提供，沿用 `rag:document:manage` 和当前登录租户，不传入可由页面伪造的 `tenantId`。展示真实保存的来源名称、定位、章节、页码、区块类型、坐标、重复来源和切片正文；旧数据缺少元信息时显示「未提供」，不推测页码。关闭窗口会取消未完成的请求，读取失败可重试，不用模拟数据代替。
+“切片检视”读取 `GET /api/rag/documents/{documentId}/chunks?limit=20&cursor=...`，按后端不透明游标续读并缓存上一页，展示真实保存的来源名称、定位、章节、页码、区块类型、坐标、重复来源、OCR 能力（文字识别、表格结构、版面分析；`false` 显示“不支持”，缺失显示“未提供”）与切片正文。
 
-切片检视与图谱节点详情同时展示后端公开的 `ocr_capabilities`：文字识别（`textRecognition`）、表格结构（`tableStructure`）、版面分析（`layoutAnalysis`）。`false` 明确显示「不支持」，缺失或无效字段显示「未提供」；基础文字 OCR 不代表支持复杂表格或版面解析。页码和区块坐标仅在数值合法时显示，未知元信息字段不进入视图。
+“查看评估报告”在浏览器内读取 RAG 评估工具生成的 `schemaVersion=1` JSON（最大 2 MiB），也支持 `evaluation/live_compare.py` 的完整比较报告（Dense/Hybrid 并排）。文件不上传、不写入浏览器存储；读取器只接受报告定义的字段并核对计数与门禁结果，不合法的报告不回显内容。评估报告是历史记录，字段校验不等于来源真实性认证，门禁通过也不代表线上验收。
 
-「查看评估报告」在浏览器内读取 [RAG 评估工具](../rag/evaluation/README.md) 生成的 `schemaVersion=1` JSON，最大 2 MiB。文件不上传、不写入浏览器存储，关闭窗口即清除页面状态。读取器只接受报告定义字段，并核对明细数量、计数和门禁结果；单独的原始预测文件、查询、正文、凭据等额外字段会被拒绝。原评估器格式展示 Recall/MRR/nDCG、P50/P95、漏召回、误召回、越界命中、逐题结果和报告来源摘要，明确区分离线预测与真实接口采集。
+### 知识图谱
 
-同时支持 `evaluation/live_compare.py` 生成的完整比较报告（例如 `final-report.json`）：Dense/Hybrid 并排展示 Recall/MRR/nDCG、误召回、耗时、错误、泄漏和降级，显示报告实际记录的差值、全局验收检查及临时集合清理结果。报告内的脱敏预测仅用于统计一致性校验，不进入视图；不为单模式伪造 gate，也不会把执行完成当成验收通过。未完成报告、无穷大数值、矛盾计数、差值或清理结果均拒绝导入。该工具直接调用 Python 检索实现，耗时不包含 Java HTTP/RPC 与网络开销。
+图谱用 Cytoscape.js 绘制：当前结果节点定位、缩放、适配与全屏（原生全屏，不可用时最大化）；节点与关系详情分为来源证据、属性与当前结果关联；图例与截断信息靠近画布，构建状态区分任务与已发布结果。选择节点不重建画布，视图按钮不触发构建。
 
-评估报告是历史记录，字段校验不等于来源真实性认证，门禁通过也不代表线上环境验收。当前指标按来源文档统计；OCR、复杂表格、真实模型及业务文档质量需另配环境和样本验证。没有阈值检查的指标不视为达标。前端测试使用实际 Python 评估器对虚构样本生成的固定报告，不以测试数据声称模型效果。
+读到 `backend=neo4j` 后展示 LlamaIndex 抽取、Neo4j 保存的 `ENTITY` 实体与 `RELATED_TO` 关系（以 `label` 显示具体语义），只提供实体筛选；旧后端的总览继续查看文档与概念，结构明细展示区段与记录。来源证据读 `properties.sources[]`、`sourceCount`、`sourceTruncated`，每项最多显示 8 条公开来源，摘录按普通文本最多 2000 字，`evidenceTruncated`、`evidenceNormalized` 分别提示已截断、格式已归一。证据带 `documentId` 且有 `menu:rag:document + rag:document:manage` 时可打开文档切片。
 
-本批变更不增加菜单、认证方式或权限编码；回滚时恢复前端版本即可，切片与评估读取不修改已入库文档。
+“重新构建图谱”需要 `rag:graph:manage` 并二次确认。每次明确操作生成不透明提交键；结果不确定时保留同一身份、租户、知识库下的键（同一标签页 sessionStorage 只存 scope 与键），先经只读提交查询查回原任务，不自动重复 POST；新后端返回 `buildId/status` 时每 2 秒续读到终态，只有 `SUCCEEDED` 刷新图谱。更换知识库、再次查询与离开页面会取消旧请求，迟到响应不覆盖当前视图。接口与离线验收说明见 [RAG_NEO4J_GRAPH.md](docs/ai-coding/RAG_NEO4J_GRAPH.md)。
 
-## RAG 图谱来源追溯
+## 版本记录
 
-图谱沿用 `GET /api/rag/graphs` 和 `POST /api/rag/graphs/sync`，兼容原来源结构与规则概念图。配套 Java 开启新图后端后，语义图展示 LlamaIndex 抽取、Neo4j 保存的 `ENTITY` 实体及 `RELATED_TO` 关系；关系以 `label` 展示具体语义。读到 `backend=neo4j` 后，页面仅提供实体筛选并隐藏结构视图选项，旧结构筛选会清除并重查；首次未知后端时保留现有筛选。请求仍兼容 `OVERVIEW/DETAIL`，新模式两者返回语义图，不表示另有文档结构。旧后端的总览继续查看文档与概念，结构明细展示区段和记录。未知节点类型使用安全默认样式。`SECTION` 统一显示为「来源区段」，可对应 XLSX 工作表、DOCX 章节及 PDF / 图片页面；具体范围以已保存的章节、定位与元信息为准。
-
-点击节点或关系可查看来源证据。新图谱读取 `properties.sources[]`、`sourceCount`、`sourceTruncated`，每项最多显示 8 条公开来源；跨文档实体和关系不会被伪装为只有一个来源。来源字段及摘录使用白名单并以普通文本展示，摘录显示最多 2000 字符。每条来源的严格布尔 `evidenceTruncated=true` 会提示摘录已截断、需核对原文或完整切片，即使文本未达到前端上限；`evidenceNormalized=true` 显示「格式已归一」，说明定位使用了空白或字形规范化。前端自行裁短也会提示，不把局部摘录当完整证据。旧节点继续从 `properties.sourceName/sourceType/sourceMetadata` 展示来源文件、格式、页码、区块类型、坐标和 OCR 能力，保留已有 `chunkId/chunkType/sectionPath` 的追溯信息。缺少字段时显示「未提供」。切片坐标属于具体区块，不应当作整页坐标。
-
-证据含 `documentId` 时可通过「查看文档切片」打开与文档列表相同的分页检视窗口，入口同时要求 `menu:rag:document + rag:document:manage`；只有图谱查看权限的账号可读后端公开的图谱证据摘录，不显示完整文档切片入口。分页窗口不会自动定位到某个 `chunkId`。前端不伪造文档字段或租户，后端继续执行最终授权。
-
-「重新构建图谱」沿用 `rag:graph:manage`，二次确认后提交。旧后端返回同步计数时仍按完成处理；新后端返回 `buildId/status` 时仅表示任务已接收，页面调用 `GET /api/rag/graphs/builds/{buildId}?knowledgeBase=...` 读取完整状态，每 2 秒续读排队或运行中的任务，终态停止。图查询返回的可选 `build` 可恢复进行中的任务。构建卡的实体/关系出现次数按来源累计，当前图节点/关系数按查询范围聚合，两者不能直接等同。只有 `SUCCEEDED` 显示完成并刷新图谱，`FAILED/CANCELLED` 保留已显示结果并允许重试，状态读取失败可单独重试。更换知识库、再次查询和离开页面会取消对应旧请求，迟到响应不覆盖当前视图。
-
-上传继续使用原 multipart 契约。配套后端可追加 `graphBuild/graphStatus`，向量成功与图谱排队或失败分别提示，不把图谱失败解释为向量上传失败。前端不连接 Python、Neo4j 或 Qdrant，也不持有模型或数据库凭据。接口、实现与离线验收说明见 [图谱接入说明](docs/ai-coding/RAG_NEO4J_GRAPH.md)；真实模型、网关和浏览器验收需单独执行，前端构建通过不代表环境已启用新后端。
+- `1.2.5`：按国际主流整个重写（本文件开头）。对使用者：菜单、页面、接口、登录与权限不变；对开发者：技术栈、目录与命令全部更换，旧的 Umi 写法不再适用。回退即部署 1.2.4 的产物，后端与网关不需要配合改动。
+- `1.2.4` 及以前：Umi Max 与 Ant Design 应用。`1.2.4` 排序字段改名 `sort`；`1.2.2` 起 Node 26 与 pnpm 12 工具链；`1.2.1` 登录失败页；`1.1.x` 存储编辑与时间显示；`1.0.5`–`1.0.9` 图谱提交键、知识文档工作台、统一配置、LiteLLM 别名、requestId 对齐 UUID。详情见 Git 历史与 `docs/superpowers/` 下的设计与计划。

@@ -117,10 +117,10 @@
 
 ## 测试
 
-- [ ] `pnpm build` 和 `bash scripts/check-secrets.sh` 已执行或说明原因。
-- [ ] 权限判断、参数转换、枚举映射或小工具函数已有单元测试，或说明当前未引入测试栈。
-- [ ] 核心页面交互、表单校验、按钮权限和错误提示已有组件测试，或说明当前未引入测试栈。
-- [ ] `src/services/auth/index.ts` 请求路径、query/body、Token、版本号和流量泳道 header 已有 service/API 测试，或说明当前未引入测试栈。
+- [ ] `pnpm check`、`pnpm test:e2e` 和 `bash scripts/check-secrets.sh` 已执行或说明原因；改子应用接入、共享单例或构建配置时 `pnpm test:deploy` 已执行。
+- [ ] 权限判断、参数转换、枚举映射或纯逻辑已有单元测试。
+- [ ] 核心页面交互、表单校验、按钮权限和错误提示已有页面测试（真实浏览器里跑）。
+- [ ] 所改应用 `src/services` 的请求路径、query/body、会话头、版本号和流量泳道 header 已有 MSW 契约测试。
 - [ ] 登录、租户、用户、角色、权限资源核心链路需要发布时已执行 test 环境 E2E，或说明未执行原因。
 
 ## 回归
@@ -165,7 +165,7 @@
 - 数据权限：
 - 敏感字段：
 - XSS 输出：
-- Token/header：
+- 会话与请求头：
 
 ## 验证命令
 

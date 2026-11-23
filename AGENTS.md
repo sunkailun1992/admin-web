@@ -16,27 +16,23 @@
 ## 项目定位
 
 - 项目名称：`admin-web`
-- 项目类型：用户中心后台管理前端
-- 技术栈：Ant Design Pro、Umi Max 4.7、React 19、TypeScript、Ant Design 6、ProComponents 3（beta，精确锁定）
-- 工具链（1.2.2 起）：Node 26、pnpm 12.21.0、TypeScript 6.0（`tsc --noEmit` 只做类型检查）、ESLint 10 扁平配置与 Prettier 3、Vitest、Playwright（固定数据与真实网关两组）、husky 与 lint-staged
-- 包管理器：`pnpm`
-- 网关项目：同级仓库 `../gateway`
-- 用户服务项目：同级仓库 `../user`
-- 网关地址：开发代理的目标由 `.env.*` 中的 `ADMIN_WEB_GATEWAY_URL` 决定（本地 `http://localhost:7100`）；`UMI_APP_BACKEND_BASE_URL` 为空，接口与页面同源
-- 用户服务直连地址：`http://localhost:7500`
-- 请求方式：第5阶段起同源加 Umi 开发代理（`.umirc.ts`），网关是 BFF：登录、会话与令牌都在网关，前端不存不发访问令牌；页面和 service 不直接写环境地址
+- 项目类型：用户中心后台管理前端，也是可裂变的基础框架（各公司以后从这里裂变出自己的管理端），微前端、物料、主题、插件前期拆好
+- 技术栈（1.2.5 起）：pnpm 工作区加 Turborepo 单仓；Vite 8、React 19、React Router 8、TypeScript 6；Module Federation 2 微前端（主应用 `shell`，子应用 `system`、`message`、`ai`、`rag`）；shadcn/ui（Radix UI）与 Tailwind CSS 4 物料包，Storybook 10，shadcn 注册表；DTCG 设计令牌经 Style Dictionary 生成主题；TanStack Query、TanStack Table、react-hook-form 与 zod、axios；i18next
+- 工具链：Node 26、pnpm 12.21.0、ESLint 10 扁平配置与 Prettier 3、Vitest（jsdom 与浏览器模式）与 Testing Library、MSW、Playwright（固定数据与真实网关两组）、husky 与 lint-staged
+- 选型口径：只看国际主流（GitHub 上多个同类主流项目的多数做法、官方文档、标准与论文），依据记在维护者的第6阶段设计文档（国际主流重写设计）里
+- 网关项目：同级仓库 `../gateway`；用户服务：同级仓库 `../user`（直连 `http://localhost:7500`，前端不直连）
+- 网关地址：开发与预览代理的目标由各应用 `.env.*` 的 `ADMIN_WEB_GATEWAY_URL` 决定（本地 `http://localhost:7100`）；页面与接口同源，代码里不写环境地址
+- 请求方式：同源加 Vite 代理（`packages/config-vite/src/proxy.ts`），网关是 BFF：登录、会话与令牌都在网关，前端不存不发访问令牌
 
 ## 项目职责
 
-本项目负责管理 `user` 后端认证域能力：
+本项目负责：
 
-- 登录（跳网关的 Keycloak 登录入口，前端没有登录页）与退出
-- 租户管理
-- 用户管理
-- 角色管理
-- 权限资源管理
-- 用户角色绑定
-- 角色资源绑定
+- 登录（跳网关的 Keycloak 登录入口，前端只有登录失败页）与退出
+- 租户、部门、用户、角色、权限资源管理，以及用户角色、角色资源、角色数据范围绑定（子应用 `system`）
+- 消息发送与页头消息铃铛（子应用 `message`）
+- AI 模型路由与统一配置的模型与能力、文件存储（子应用 `ai`）
+- RAG 知识文档与知识图谱（子应用 `rag`）
 
 ## 修改前阅读顺序
 
@@ -55,11 +51,8 @@
 11. `docs/ai-coding/VERSIONING_SPEC.md`
 12. `docs/ai-coding/SECURITY_CODING_SPEC.md`
 13. `docs/ai-coding/TESTING_SPEC.md`
-14. `.umirc.ts`
-15. `src/app.ts`
-16. `src/access.ts`
-17. `src/services/auth/index.ts`
-18. `src/services/auth/types.d.ts`
+14. 要改的应用：`apps/<应用>/src/routes.tsx`（子应用的路由与菜单）或 `apps/shell/src`（主应用），以及它的 `src/services`
+15. 涉及共享能力时：`packages/auth/src/access.ts`、`packages/auth/src/types.ts`、`packages/api/src/client.ts`、`packages/config-vite/src`
 
 接口行为不明确时，必须阅读同级后端项目：
 
@@ -83,18 +76,17 @@ src/main/resources/db/migration
 - 可按独立写入边界分配 worker；未获当前任务授权不修改其他 worker 或用户文件，主智能体统一收口。
 - AI 开始功能开发前必须按 `docs/ai-coding/AI_AUTOMATION_WORKFLOW.md` 先整理需求说明、验收标准和开发手册；小改动可以简化输出，但检查项不能跳过。
 - AI 完成功能后必须按 `docs/ai-coding/AI_ENGINEERING_GUARDRAILS.md` 做风险分级、Definition of Done、测试证据、安全检查、风险和回滚说明。
-- AI 新增、移动或删除目录前必须按 `docs/ai-coding/AI_DIRECTORY_STRUCTURE_GUIDE.md` 判断 Umi、React、TypeScript 和 Ant Design Pro 目录边界。
-- 项目学习可以按前端页面、后端接口、权限资源、Gateway/Nacos 配置和构建脚本拆分 explorer。
+- AI 新增、移动或删除目录前必须按 `docs/ai-coding/AI_DIRECTORY_STRUCTURE_GUIDE.md` 判断应用与共享包的边界。
+- 项目学习可以按子应用、共享包、后端接口、权限资源、Gateway/Nacos 配置和构建脚本拆分 explorer。
 - 问题排查可以按前端请求、后端 Controller、配置权限、数据库日志和最近改动拆分 explorer，最终根因必须由主智能体判断。
 - 代码 Review 可以按安全风险、逻辑缺陷、测试缺口、性能问题和可维护性拆分 reviewer，最终结论必须由主智能体汇总。
 - 测试回归可以让一个 agent 跑测试、一个 agent 分析日志、一个 agent 检查最近 diff，但最终修复必须由主智能体或一个明确 worker 收口。
-- 只有写入边界清楚时才允许并行实现，例如一个 worker 只改前端页面、一个 worker 只改后端 API、一个 worker 只补测试。
-- 如果多个 worker 需要修改同一个核心页面、service 文件、路由文件、权限逻辑、SQL 脚本或共享配置，不允许并行写入，必须由主智能体串行处理。
+- 只有写入边界清楚时才允许并行实现：不同子应用（`apps/*`）天然是独立边界；同一个共享包、子应用接入契约、权限规则、根配置或 CI 不允许并行写入，必须由主智能体串行处理。
 - 前端仓库不设计、不生成、不维护后端业务表、数据库字段或 DDL；涉及新增表结构时必须回到对应 Java 后端项目，按其 AI 表设计规范处理。后端各服务的表结构（含 Seata AT 的 `undo_log`）只由该服务自己的 Flyway 迁移管理，新库保持空库，由首次启动时的 Flyway 建表，不手工执行任何公共脚本。
 
 ## 安全规则
 
-安全细则维护在 `docs/ai-coding/SECURITY_CODING_SPEC.md`。修改页面、按钮、请求服务、登录态、上传下载、富文本、脱敏和批量操作前，必须先阅读安全规范。
+安全细则维护在 `docs/ai-coding/SECURITY_CODING_SPEC.md`。修改页面、按钮、请求客户端、会话、路由守卫、上传下载、富文本、脱敏和批量操作前，必须先阅读安全规范。
 
 ## 注释规则
 
@@ -107,8 +99,9 @@ src/main/resources/db/migration
 ## 设计模式规则
 
 - 设计模式细则以 `docs/ai-coding/AI_DESIGN_PATTERN_GUIDE.md` 为准。
-- React/TypeScript 代码优先使用组件组合、Custom Hook、service adapter、Context 和状态映射，不照搬 Java 后端继承结构。
-- 新增页面前先判断是否能复用 ProComponents、现有 service 和常量映射；不要为了模式新增复杂状态库或全局事件。
+- 升级、选型和架构设计先查证主流做法：对照 GitHub 上多个同类主流项目（以多数为准），并查官方文档、RFC 与标准、权威指南和相关论文；不为了缩小改动范围采用偷懒的写法。
+- React/TypeScript 代码优先使用组件组合、Custom Hook、服务适配层、Context 和状态映射，不照搬 Java 后端继承结构。
+- 新增页面前先判断能否复用 `@admin-web/ui` 的物料与业务组件、现有 service 和常量映射；物料缺能力时先加进物料包（带故事与测试），不在应用里另起一套。
 - 前端模式不能替代后端鉴权、租户隔离、字段级授权或数据权限。
 
 ## 路径与本机环境规则
@@ -134,19 +127,28 @@ src/main/resources/db/migration
 - 角色资源：`GET|POST|PUT /auth/manage/roles/{roleId}/resources`
 - 角色数据范围部门：`GET|PUT /auth/manage/roles/{roleId}/data-scope-depts`
 - 编码生成：`POST /auth/manage/codes`
+- 消息、AI、RAG 接口见 `README.md`「业务范围」
 
-前端请求与页面同源，开发时 Umi 代理转给网关；当前 USER_SERVICE_PREFIX 为空，service 的 `/auth/**` 直接走同路径网关，不追加 `/user`，不直连后端服务。
+前端请求与页面同源，开发与预览时 Vite 代理转给网关；service 的 `/auth/**` 直接走同路径网关，不追加 `/user`，不直连后端服务。
 
-认证靠网关会话 Cookie（`__Host-SESSION`），请求拦截器统一处理：
+认证靠网关会话 Cookie（`__Host-SESSION`），每个应用经 `@admin-web/api` 的 `createHttpClient` 统一处理：
 
 ```text
 不带 Authorization（令牌只在网关会话里）
 X-Requested-With: XMLHttpRequest    # 未登录时网关回 401 JSON
 X-XSRF-TOKEN: <XSRF-TOKEN Cookie>   # 写请求
 X-Tenant-Id: <选中的租户>            # 能否访问由 user 核对
+X-Release-Version / X-Traffic-Lane  # 灰度头，取本应用构建时的 VITE_* 变量
 ```
 
-任何请求 401 都整页跳网关登录入口；本地存储只放选中的租户，不放令牌。
+任何请求 401 都整页跳网关登录入口；本地存储只放选中的租户与个人界面偏好（语言、主题），不放令牌。
+
+## 子应用接入契约
+
+- 子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes`（页面懒加载）与 `menu`（路径、`labelKey`、`access`、分组）。
+- 主应用按运行时配置 `apps/shell/apps.<mode>.json` 加载子应用；改子应用地址或加子应用不重新构建主应用。
+- 子应用之间不互相引用源码，只经 Module Federation 暴露的入口或共享包往来；共享包只从入口引用（ESLint 规则拦截）。
+- 共享单例的清单与版本只在 `packages/config-vite/src/shared.ts` 与 pnpm catalog 维护。
 
 ## 权限契约
 
@@ -160,24 +162,27 @@ user:auth:manage
 
 ```text
 menu:tenant
+menu:dept
 menu:user
 menu:role
 menu:resource
 ```
 
-权限判断统一维护在 `src/access.ts`。
+RAG 与统一配置的权限见 `README.md`「权限模型」。权限判断统一维护在 `packages/auth/src/access.ts`，路由用 `RequireAccess`，菜单用 `MenuEntry.access`。
 
 ## 编码约束
 
-- 请求服务必须集中在 `src/services/auth/index.ts`。
-- API 类型必须集中在 `src/services/auth/types.d.ts`。
-- 管理页面必须优先使用 ProComponents。
+- 每个应用的接口只写在自己的 `src/services`，类型写在相邻的 `types.ts`；请求客户端只用本应用的 `src/http.ts`（`createHttpClient`），不另建 axios 实例。
+- 跨应用共用的接口类型与会话类型放共享包（`@admin-web/auth`、`@admin-web/api`），不复制。
+- 界面优先用 `@admin-web/ui` 的物料与业务组件：数据表用 `DataTable`，表单弹窗与侧边面板用 `FormDialog`，确认操作用 `ConfirmAction`，编码输入用 `GeneratedCodeInput`，树形选择用 `TreeSelect`。
+- 界面文案一律走 i18n 键（`@admin-web/i18n` 的命名空间），不在应用源码里写死中日韩文字（ESLint 规则拦截）；后端返回的提示原样显示。
+- 样式用 Tailwind 工具类与主题变量（`--primary`、`--background` 等），不写死颜色；需要新令牌时改 `packages/theme/tokens`。
 - 不得凭空新增后端字段，必须匹配后端 `BO`、`Query` 和 `VO`。
 - 展示租户时使用租户名称，`tenantId` 只作为接口内部字段使用。
 - 业务编码必须调用后端编码生成接口，不允许浏览器随机生成业务编码。
 - 更新接口必须携带 `version`，保证后端 MyBatis-Plus 乐观锁生效。
-- 测试分层按 `docs/ai-coding/TESTING_SPEC.md` 执行；普通单元、组件和 service 测试默认不访问真实后端，E2E 只允许连接 test 环境。
-- 功能变更后执行 `pnpm check`（格式、lint、类型、单元测试、`build:dev`、固定数据一组浏览器测试）和 `bash scripts/check-secrets.sh`；改登录、会话、路由、请求拦截或核心管理页时，再按 `TESTING_SPEC.md` 跑真实网关一组。
+- 测试分层按 `docs/ai-coding/TESTING_SPEC.md` 执行；普通单元、组件和页面测试不访问真实后端，真实网关一组只连接 test 环境。
+- 功能变更后执行 `pnpm check`、`pnpm test:e2e` 和 `bash scripts/check-secrets.sh`；改登录、会话、路由、请求拦截或核心管理页时，再按 `TESTING_SPEC.md` 跑真实网关一组；改子应用接入、共享单例或构建配置时，再跑 `pnpm test:deploy`。
 
 ## 禁止提交
 
@@ -186,11 +191,16 @@ menu:resource
 ```text
 node_modules/
 dist/
+.turbo/
+coverage/
+storybook-static/
 e2e-out/
-.turbopack/
-src/.umi/
-src/.umi-production/
+.vitest/
+packages/ui/public/r/
+.env.local
+*.local
 .idea/
+.run/
 *.iml
 .DS_Store
 *.log
