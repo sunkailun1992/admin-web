@@ -105,7 +105,7 @@ function ResourceForm({
         path: z.string().optional(),
         method: z.string().optional(),
         parentId: z.string().optional(),
-        sort: z.number().int().min(0).optional(),
+        sort: z.number().int().min(0).nullish(),
         state: z.enum(AUTH_STATES).optional(),
       }),
     [t],
@@ -139,8 +139,10 @@ function ResourceForm({
             }
       }
       onSubmit={async (values) => {
+        // 清空的排序记为 null（见物料包 TextField），不提交：新建取后端默认 0，修改保持原值。
         const body = cleanPayload({
           ...values,
+          sort: values.sort ?? undefined,
           resourceCategory:
             values.resourceCategory as AuthResourceVO['category'],
         });

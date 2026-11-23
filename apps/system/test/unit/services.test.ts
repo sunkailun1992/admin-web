@@ -207,12 +207,12 @@ const cases: Array<[string, () => Promise<unknown>, Seen]> = [
   ],
   [
     'createDept',
-    () => createDept({ tenantId: 't1', code: 'D1', name: '研发部' }),
+    () => createDept({ tenantId: 't1', code: 'D1', name: '研发部', sort: 0 }),
     {
       method: 'POST',
       path: '/auth/manage/depts',
       params: {},
-      body: { tenantId: 't1', code: 'D1', name: '研发部' },
+      body: { tenantId: 't1', code: 'D1', name: '研发部', sort: 0 },
     },
   ],
   [

@@ -12,10 +12,7 @@ type Treeable = {
 
 export type TreeOf<T> = T & { children?: TreeOf<T>[] };
 
-/**
- * 按 parentId 建树，同级按 sort 升序（没有的按 0，相同时保持原顺序：部门没有 sort，就是后端返回的顺序）；
- * 找不到父节点的当作根。
- */
+/** 按 parentId 建树，同级按 sort 升序（没有的按 0，相同时保持原顺序）；找不到父节点的当作根。 */
 export function buildTree<T extends Treeable>(items: T[]): TreeOf<T>[] {
   const nodes = new Map<string, TreeOf<T>>();
   for (const item of items) nodes.set(item.id, { ...item, children: [] });

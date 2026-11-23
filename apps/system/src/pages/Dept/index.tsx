@@ -95,6 +95,7 @@ function DeptForm({
         code: z.string().trim().min(1, t('dept.codeRequired')),
         name: z.string().trim().min(1, t('dept.nameRequired')),
         parentId: z.string().optional(),
+        sort: z.number().int().min(0).nullish(),
         state: z.enum(AUTH_STATES).optional(),
       }),
     [t],
@@ -112,6 +113,7 @@ function DeptForm({
               code: record.code ?? '',
               name: record.name ?? '',
               parentId: record.parentId,
+              sort: record.sort,
               state: record.state,
             }
           : {
@@ -119,9 +121,12 @@ function DeptForm({
               code: '',
               name: '',
               state: AUTH_STATE.enabled,
+              sort: 0,
             }
       }
-      onSubmit={async (values) => {
+      onSubmit={async (form) => {
+        // 清空的排序记为 null（见物料包 TextField），不提交：新建取后端默认 0，修改保持原值。
+        const values = { ...form, sort: form.sort ?? undefined };
         if (record) {
           await updateDept(
             cleanPayload({
@@ -170,6 +175,13 @@ function DeptForm({
             />
             <TextField control={control} name="name" label={t('dept.name')} />
             <ParentField control={control} excludeId={record?.id} />
+            <TextField
+              control={control}
+              name="sort"
+              label={t('common.sort')}
+              type="number"
+              min={0}
+            />
             <SelectField
               control={control}
               name="state"
@@ -251,6 +263,11 @@ export default function DeptPage() {
             ) : (
               '-'
             ),
+        }),
+        helper.display({
+          id: 'sort',
+          header: t('common.sort'),
+          cell: ({ row }) => row.original.row.sort ?? 0,
         }),
         helper.display({
           id: 'actions',

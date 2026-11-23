@@ -25,6 +25,8 @@ import type { TreeNode } from './tree.ts';
 // 表单字段（shadcn 的 Field 写法：Controller 接 react-hook-form，标签、控件、错误信息成组），配合 FormDialog 用。
 // disabled 只禁用控件、不交给 Controller：react-hook-form 提交时会丢掉禁用 Controller 的值，
 // 而编辑时禁用的字段（如用户名、编码）要照样随请求提交（与 1.2.4 一致）。
+// 数字框清空时记 null：react-hook-form 的受控字段值为 undefined 时会退回默认值，记 undefined 旧值会跳回来；
+// 可选的数字在 zod 里写 nullish()，提交前按需换成 undefined。
 
 export type FormFieldProps<T extends FieldValues> = {
   control: Control<T, unknown, FieldValues>;
@@ -54,12 +56,12 @@ export function TextField<T extends FieldValues>({
             {...input}
             {...field}
             disabled={disabled}
-            value={(field.value as string | number | undefined) ?? ''}
+            value={(field.value as string | number | null | undefined) ?? ''}
             onChange={(event) =>
               field.onChange(
                 input.type === 'number'
                   ? event.target.value === ''
-                    ? undefined
+                    ? null
                     : Number(event.target.value)
                   : event.target.value,
               )

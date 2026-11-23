@@ -15,6 +15,7 @@ const depts = [
     name: '总部',
     tenantId: 't1',
     state: '启用',
+    sort: 0,
     version: 1,
   },
   {
@@ -24,6 +25,7 @@ const depts = [
     parentId: 'root',
     tenantId: 't1',
     state: '启用',
+    sort: 1,
     version: 1,
   },
   {
@@ -32,6 +34,7 @@ const depts = [
     name: '人事部',
     tenantId: 't1',
     state: '启用',
+    sort: 2,
     version: 1,
   },
 ];
@@ -71,7 +74,7 @@ test('the parent picker leaves out the department itself and its children', asyn
   expect(within(tree).queryByText('研发部（DEPT_0002）')).toBeNull();
 });
 
-test('a new department sends only what AuthDeptBO has, and the list has no sort column', async () => {
+test("the list shows each department's sort, and a new department sends sort 0 by default", async () => {
   const created: unknown[] = [];
   worker.use(
     http.get('/auth/manage/depts/options', () => HttpResponse.json(ok(depts))),
@@ -82,12 +85,15 @@ test('a new department sends only what AuthDeptBO has, and the list has no sort 
     }),
   );
   renderPage(<DeptPage />);
-  expect(await screen.findByText('研发部')).toBeVisible();
-  // 后端的 AuthDeptVO、AuthDeptBO 没有 sort：不显示恒为空的一列，也不提交会被丢掉的值。
-  expect(screen.queryByRole('columnheader', { name: '排序' })).toBeNull();
+  // user 1.5.8 起部门的 VO、BO 带 sort：列表显示排序值，新建默认 0。
+  const row = (await screen.findByText('人事部')).closest('tr')!;
+  expect(screen.getByRole('columnheader', { name: '排序' })).toBeVisible();
+  expect(within(row).getByRole('cell', { name: '2' })).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: '新建部门' }));
   const dialog = await screen.findByRole('dialog', { name: '新建部门' });
-  expect(within(dialog).queryByRole('spinbutton', { name: '排序' })).toBeNull();
+  expect(within(dialog).getByRole('spinbutton', { name: '排序' })).toHaveValue(
+    0,
+  );
   await userEvent.type(
     within(dialog).getByRole('textbox', { name: '部门名称' }),
     '财务部',
@@ -101,6 +107,35 @@ test('a new department sends only what AuthDeptBO has, and the list has no sort 
   await userEvent.click(within(dialog).getByRole('button', { name: '保存' }));
   await closed();
   expect(created).toStrictEqual([
-    { tenantId: 't1', code: 'DEPT_0004', name: '财务部', state: '启用' },
+    {
+      tenantId: 't1',
+      code: 'DEPT_0004',
+      name: '财务部',
+      state: '启用',
+      sort: 0,
+    },
   ]);
+});
+
+test('editing a department sends the changed sort with id and version', async () => {
+  const updated: Array<Record<string, unknown>> = [];
+  worker.use(
+    http.get('/auth/manage/depts/options', () => HttpResponse.json(ok(depts))),
+    http.put('/auth/manage/depts/hr', async ({ request }) => {
+      updated.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json(ok(true));
+    }),
+  );
+  renderPage(<DeptPage />);
+  const row = (await screen.findByText('人事部')).closest('tr')!;
+  await userEvent.click(within(row).getByRole('button', { name: '编辑' }));
+  const dialog = await screen.findByRole('dialog', { name: '编辑部门' });
+  const sort = within(dialog).getByRole('spinbutton', { name: '排序' });
+  expect(sort).toHaveValue(2);
+  await userEvent.clear(sort);
+  await userEvent.type(sort, '7');
+  await userEvent.click(within(dialog).getByRole('button', { name: '保存' }));
+  await closed();
+  expect(updated).toHaveLength(1);
+  expect(updated[0]).toMatchObject({ id: 'hr', version: 1, sort: 7 });
 });
