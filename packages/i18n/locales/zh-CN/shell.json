@@ -3,7 +3,8 @@
   "menu": {
     "label": "主菜单",
     "dashboard": "工作台",
-    "unavailable": "暂时无法加载"
+    "unavailable": "暂时无法加载",
+    "loading": "正在加载"
   },
   "remotes": {
     "system": "系统管理",
@@ -13,7 +14,9 @@
   },
   "remote": {
     "loadFailed": "{{name}}暂时无法加载",
-    "pageFailed": "页面加载出错"
+    "pageFailed": "页面加载出错",
+    "loading": "正在加载{{name}}…",
+    "registryFailed": "子应用清单暂时无法读取"
   },
   "header": {
     "toggleSidebar": "展开或收起侧边栏"

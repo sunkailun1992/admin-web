@@ -1,7 +1,15 @@
 import type { Access } from '@admin-web/auth';
 import type { LoadedRemote } from './loadRemotes.ts';
 
-export type SidebarItem = { path: string; labelKey: string; disabled: boolean };
+export type SidebarItem = {
+  path: string;
+  labelKey: string;
+  disabled: boolean;
+  /** 子应用还在加载（显示加载中，不可点）。 */
+  loading?: boolean;
+  /** 文案键没有登记时显示的名称（如新子应用的名称）。 */
+  defaultLabel?: string;
+};
 export type SidebarGroup = {
   key: string;
   labelKey: string;
@@ -10,7 +18,7 @@ export type SidebarGroup = {
 
 /**
  * 侧边栏：按子应用的菜单元数据与权限标志位生成，没有权限的菜单不显示，空的分组整个不显示；
- * 加载失败的子应用不知道它有哪些菜单，按它负责的路由前缀各放一项“不可用”的占位。
+ * 还在加载或加载失败的子应用不知道它有哪些菜单，放一项以子应用命名的占位（加载中或不可用）。
  */
 export function buildMenu(
   remotes: LoadedRemote[],
@@ -30,8 +38,13 @@ export function buildMenu(
   for (const remote of remotes) {
     if (remote.status !== 'ready' || !remote.module) {
       const labelKey = `shell:remotes.${remote.app.name}`;
-      for (const path of remote.app.routePrefixes)
-        add(remote.app.name, labelKey, { path, labelKey, disabled: true });
+      add(remote.app.name, '', {
+        path: remote.app.routePrefixes[0]!,
+        labelKey,
+        disabled: true,
+        loading: remote.status === 'loading',
+        defaultLabel: remote.app.name,
+      });
       continue;
     }
     for (const entry of remote.module.menu) {

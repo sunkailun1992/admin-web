@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, expect, test, vi } from 'vitest';
-import type { LoadedRemote } from '../src/remotes/loadRemotes.ts';
+import type { RemoteApp } from '../src/remotes/registry.ts';
 import { manager, renderApp } from './support.tsx';
 
 const worker = setupMswWorker();
@@ -50,25 +50,28 @@ const systemRoutes: RemoteRoutes = {
     },
   ],
 };
-const remotes: LoadedRemote[] = [
+const apps: RemoteApp[] = [
   {
-    app: {
-      name: 'system',
-      entry: 'http://localhost:8101/mf-manifest.json',
-      routePrefixes: ['/system'],
-    },
-    status: 'failed',
+    name: 'system',
+    entry: 'http://localhost:8101/mf-manifest.json',
+    routePrefixes: ['/system'],
   },
   {
-    app: {
-      name: 'rag',
-      entry: 'http://localhost:8104/mf-manifest.json',
-      routePrefixes: ['/rag-knowledge'],
-    },
-    status: 'ready',
-    module: rag,
+    name: 'rag',
+    entry: 'http://localhost:8104/mf-manifest.json',
+    routePrefixes: ['/rag-knowledge'],
   },
 ];
+
+/** 远程模块加载：rag 正常；system 按 systemUp 决定能不能加载（模拟停服与恢复）。 */
+function remoteModules(state: { systemUp: boolean }) {
+  return vi.fn(async (id: string) => {
+    if (id === 'rag/routes') return { default: rag };
+    if (id === 'system/routes' && state.systemUp)
+      return { default: systemRoutes };
+    throw new Error(`${id} is down`);
+  });
+}
 
 const resourcesFor = (tenantId: string) => ({
   success: true,
@@ -85,7 +88,13 @@ const resourcesFor = (tenantId: string) => ({
 });
 
 test('remote load failure only disables its own domain', async () => {
-  renderApp({ remotes, session: manager, route: '/system/tenant' });
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  renderApp({
+    apps,
+    loadModule: remoteModules({ systemUp: false }),
+    session: manager,
+    route: '/system/tenant',
+  });
   const main = screen.getByRole('main');
   expect(await within(main).findByText('系统管理暂时无法加载')).toBeVisible();
   expect(within(main).getByRole('button', { name: '重试' })).toBeVisible();
@@ -100,22 +109,66 @@ test('remote load failure only disables its own domain', async () => {
 });
 
 test('retrying a failed remote loads its routes and menu', async () => {
-  const loadModule = vi.fn(async (id: string) =>
-    id === 'system/routes'
-      ? { default: systemRoutes }
-      : Promise.reject(new Error(id)),
-  );
-  renderApp({ remotes, session: manager, route: '/system/tenant', loadModule });
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  const state = { systemUp: false };
+  const loadModule = remoteModules(state);
+  renderApp({ apps, session: manager, route: '/system/tenant', loadModule });
   const main = screen.getByRole('main');
-  await userEvent.click(
-    await within(main).findByRole('button', { name: '重试' }),
-  );
+  const retry = await within(main).findByRole('button', { name: '重试' });
+  state.systemUp = true;
+  await userEvent.click(retry);
   expect(await within(main).findByText('TENANT_PAGE')).toBeVisible();
   expect(loadModule).toHaveBeenCalledWith('system/routes');
   const navigation = screen.getByRole('navigation', { name: '主菜单' });
   expect(
     within(navigation).getByRole('link', { name: '租户管理' }),
   ).toBeVisible();
+});
+
+test('a remote that is still loading keeps only its own domain waiting', async () => {
+  const loadModule = vi.fn((id: string) =>
+    id === 'system/routes'
+      ? new Promise<never>(() => {})
+      : id === 'rag/routes'
+        ? Promise.resolve({ default: rag })
+        : Promise.reject(new Error(id)),
+  );
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  renderApp({ apps, loadModule, session: manager, route: '/system/tenant' });
+  const main = screen.getByRole('main');
+  // 布局与其它域不等它：system 的页面区域显示加载中，菜单里它的占位不可点。
+  expect(await within(main).findByText('正在加载系统管理…')).toBeVisible();
+  const navigation = screen.getByRole('navigation', { name: '主菜单' });
+  expect(
+    within(navigation).getByRole('button', { name: '系统管理' }),
+  ).toHaveAttribute('aria-disabled', 'true');
+  await userEvent.click(
+    await within(navigation).findByRole('link', { name: '知识图谱' }),
+  );
+  expect(await within(main).findByText('GRAPH_PAGE')).toBeVisible();
+});
+
+test('an unreadable apps.json offers a retry instead of "not found"', async () => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  let attempts = 0;
+  const registry = () => {
+    attempts += 1;
+    return attempts === 1
+      ? Promise.reject(new Error('apps.json unreachable'))
+      : Promise.resolve(apps);
+  };
+  renderApp({
+    registry,
+    loadModule: remoteModules({ systemUp: false }),
+    session: manager,
+    route: '/rag-knowledge/graph',
+  });
+  const main = screen.getByRole('main');
+  expect(await within(main).findByText('子应用清单暂时无法读取')).toBeVisible();
+  expect(within(main).queryByText('页面不存在')).toBeNull();
+  await userEvent.click(within(main).getByRole('button', { name: '重试' }));
+  expect(await within(main).findByText('GRAPH_PAGE')).toBeVisible();
+  expect(attempts).toBe(2);
 });
 
 test('switching tenant clears the shared query cache', async () => {
@@ -225,9 +278,27 @@ test('session recovery offers retry', async () => {
   expect(reads).toBe(2);
 });
 
+const message: RemoteApp = {
+  name: 'message',
+  entry: 'http://localhost:8102/mf-manifest.json',
+  routePrefixes: ['/message'],
+};
+
+function Bell({ userId, tenantId }: { userId: string; tenantId?: string }) {
+  return <span data-testid="bell">{`${userId}@${tenantId}`}</span>;
+}
+
+/** message 子应用：./routes 没有菜单，./Bell 是上面的铃铛。 */
+const messageModules = async (id: string) => {
+  if (id === 'message/routes') return { default: { routes: [], menu: [] } };
+  if (id === 'message/Bell') return { Bell };
+  throw new Error(`${id} is down`);
+};
+
 test('bell slot renders nothing when message/Bell fails to load', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   renderApp({
+    apps: [message],
     session: manager,
     loadModule: async () => Promise.reject(new Error('message is down')),
   });
@@ -238,14 +309,46 @@ test('bell slot renders nothing when message/Bell fails to load', async () => {
 });
 
 test('bell slot renders the message bell with the current user and tenant', async () => {
-  function Bell({ userId, tenantId }: { userId: string; tenantId?: string }) {
-    return <span data-testid="bell">{`${userId}@${tenantId}`}</span>;
-  }
+  renderApp({ apps: [message], session: manager, loadModule: messageModules });
+  expect(await screen.findByTestId('bell')).toHaveTextContent('u1@t1');
+});
+
+test('the message bell waits until apps.json is read, however late', async () => {
+  let readApps!: (apps: RemoteApp[]) => void;
   renderApp({
+    registry: () =>
+      new Promise((resolve) => {
+        readApps = resolve;
+      }),
     session: manager,
-    loadModule: async (id) =>
-      id === 'message/Bell' ? { Bell } : Promise.reject(new Error(id)),
+    loadModule: messageModules,
   });
+  expect(
+    await screen.findByRole('heading', { level: 1, name: '工作台' }),
+  ).toBeVisible();
+  expect(screen.queryByTestId('bell')).toBeNull();
+  readApps([message]);
+  expect(await screen.findByTestId('bell')).toHaveTextContent('u1@t1');
+});
+
+test('a bell that missed an unreadable apps.json loads after the retry', async () => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  let attempts = 0;
+  renderApp({
+    registry: () => {
+      attempts += 1;
+      return attempts === 1
+        ? Promise.reject(new Error('apps.json unreachable'))
+        : Promise.resolve([message]);
+    },
+    session: manager,
+    route: '/message/send',
+    loadModule: messageModules,
+  });
+  const main = screen.getByRole('main');
+  await userEvent.click(
+    await within(main).findByRole('button', { name: '重试' }),
+  );
   expect(await screen.findByTestId('bell')).toHaveTextContent('u1@t1');
 });
 

@@ -28,49 +28,74 @@ function parseEntry(value: unknown, index: number, base?: string): string {
   return url.href;
 }
 
+/** 校验一项；全部合格才记下它的名称与前缀，免得不合格的一项挡住后面合格的。 */
+function parseItem(
+  item: unknown,
+  index: number,
+  base: string | undefined,
+  names: Set<string>,
+  prefixes: Array<[string, string]>,
+): RemoteApp {
+  if (!item || typeof item !== 'object') return fail(index, 'is not an object');
+  const { name, entry, routePrefixes } = item as Record<string, unknown>;
+  if (typeof name !== 'string' || !NAME.test(name))
+    return fail(index, `invalid name: ${String(name)}`);
+  if (names.has(name)) return fail(index, `duplicate name: ${name}`);
+  if (!Array.isArray(routePrefixes) || routePrefixes.length === 0)
+    return fail(index, 'missing routePrefixes');
+  const own: string[] = [];
+  for (const prefix of routePrefixes) {
+    if (typeof prefix !== 'string' || !PREFIX.test(prefix))
+      return fail(index, `invalid route prefix: ${String(prefix)}`);
+    const overlaps = (other: string) =>
+      other === prefix ||
+      other.startsWith(`${prefix}/`) ||
+      prefix.startsWith(`${other}/`);
+    const clash = prefixes.find(([other]) => overlaps(other));
+    if (clash)
+      return fail(
+        index,
+        `route prefix ${prefix} overlaps ${clash[0]} of ${clash[1]}`,
+      );
+    if (own.some(overlaps))
+      return fail(index, `route prefix ${prefix} repeats in the same item`);
+    own.push(prefix);
+  }
+  const app = {
+    name,
+    entry: parseEntry(entry, index, base),
+    routePrefixes: own,
+  };
+  names.add(name);
+  for (const prefix of own) prefixes.push([prefix, name]);
+  return app;
+}
+
 /**
  * 校验注册表：名称为小写字母开头的小写字母、数字与连字符；地址只收 http(s) 或同源路径；
  * 路由前缀以 / 开头、不以 / 结尾，各子应用之间不重复也不互相包含（否则路由归属不清）。
+ * 不合格的一项交给 onInvalid：构建时缺省直接报错；运行时（部署后替换的 apps.json）记下并跳过，
+ * 其余子应用照常加载。
  */
 export function parseRegistry(
   json: unknown,
   base: string | undefined = globalThis.location?.origin,
+  onInvalid: (error: Error) => void = (error) => {
+    throw error;
+  },
 ): RemoteApp[] {
   if (!Array.isArray(json)) throw new Error('apps.json must be an array');
   const names = new Set<string>();
   const prefixes: Array<[string, string]> = [];
-  return json.map((item: unknown, index) => {
-    if (!item || typeof item !== 'object')
-      return fail(index, 'is not an object');
-    const { name, entry, routePrefixes } = item as Record<string, unknown>;
-    if (typeof name !== 'string' || !NAME.test(name))
-      return fail(index, `invalid name: ${String(name)}`);
-    if (names.has(name)) return fail(index, `duplicate name: ${name}`);
-    names.add(name);
-    if (!Array.isArray(routePrefixes) || routePrefixes.length === 0)
-      return fail(index, 'missing routePrefixes');
-    for (const prefix of routePrefixes) {
-      if (typeof prefix !== 'string' || !PREFIX.test(prefix))
-        return fail(index, `invalid route prefix: ${String(prefix)}`);
-      const clash = prefixes.find(
-        ([other]) =>
-          other === prefix ||
-          other.startsWith(`${prefix}/`) ||
-          prefix.startsWith(`${other}/`),
-      );
-      if (clash)
-        return fail(
-          index,
-          `route prefix ${prefix} overlaps ${clash[0]} of ${clash[1]}`,
-        );
-      prefixes.push([prefix, name]);
+  const apps: RemoteApp[] = [];
+  json.forEach((item: unknown, index) => {
+    try {
+      apps.push(parseItem(item, index, base, names, prefixes));
+    } catch (error) {
+      onInvalid(error instanceof Error ? error : new Error(String(error)));
     }
-    return {
-      name,
-      entry: parseEntry(entry, index, base),
-      routePrefixes: [...(routePrefixes as string[])],
-    };
   });
+  return apps;
 }
 
 /** 读运行时配置 apps.json（不走缓存：换子应用地址不用重新构建主应用）。 */
@@ -78,5 +103,7 @@ export async function loadRegistry(url = '/apps.json'): Promise<RemoteApp[]> {
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok)
     throw new Error(`failed to read ${url}: HTTP ${response.status}`);
-  return parseRegistry(await response.json(), window.location.origin);
+  return parseRegistry(await response.json(), window.location.origin, (error) =>
+    console.error('[shell] skipped an invalid apps.json item', error),
+  );
 }

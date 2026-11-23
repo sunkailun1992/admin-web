@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@admin-web/ui';
+import { LoaderCircle } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router';
@@ -34,16 +35,21 @@ function MenuLink({ path, label }: { path: string; label: string }) {
 
 function MenuItem({ item }: { item: SidebarItem }) {
   const { t } = useTranslation();
-  const label = t(item.labelKey);
+  const label = t(item.labelKey, { defaultValue: item.defaultLabel });
   if (!item.disabled) return <MenuLink path={item.path} label={label} />;
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         aria-disabled="true"
-        title={t('shell:menu.unavailable')}
+        title={t(
+          item.loading ? 'shell:menu.loading' : 'shell:menu.unavailable',
+        )}
         className="cursor-not-allowed opacity-60"
       >
         {label}
+        {item.loading ? (
+          <LoaderCircle aria-hidden className="ml-auto size-4 animate-spin" />
+        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

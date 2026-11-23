@@ -9,7 +9,7 @@ import type { RemoteApp } from './registry.ts';
 
 export type LoadedRemote = {
   app: RemoteApp;
-  status: 'ready' | 'failed';
+  status: 'loading' | 'ready' | 'failed';
   module?: RemoteRoutes;
 };
 
@@ -19,12 +19,12 @@ export type FederationRuntime = {
   loadRemote: (id: string) => Promise<unknown>;
 };
 
-/** 单个子应用的加载时限：超过就按失败处理，主应用照常显示（该域可以点“重试”）。 */
+/** 单个子应用的加载时限：超过就按失败处理（该域可以点“重试”），别的域不受影响。 */
 export const REMOTE_LOAD_TIMEOUT_MS = 8000;
 
 let retryRegistered = false;
 
-function federationRuntime(): FederationRuntime {
+export function federationRuntime(): FederationRuntime {
   if (!retryRegistered) {
     // 清单与脚本取不到时重试两次（@module-federation/retry-plugin）。
     registerPlugins([RetryPlugin({ retryTimes: 2, retryDelay: 1000 })]);
@@ -35,10 +35,6 @@ function federationRuntime(): FederationRuntime {
     loadRemote: (id) => loadRemote(id),
   };
 }
-
-/** 主应用里按 “<子应用>/<模块>” 加载远程模块（如 message/Bell）。 */
-export const loadFederatedModule = (id: string): Promise<unknown> =>
-  federationRuntime().loadRemote(id);
 
 function isRemoteRoutes(value: unknown): value is RemoteRoutes {
   if (!value || typeof value !== 'object') return false;
@@ -83,13 +79,100 @@ export async function loadRemoteRoutes(
   }
 }
 
-/** 登记全部子应用，并行加载各自的 ./routes。 */
-export async function loadRemotes(
-  apps: RemoteApp[],
-  runtime: FederationRuntime = federationRuntime(),
-): Promise<LoadedRemote[]> {
-  runtime.registerRemotes(apps.map(({ name, entry }) => ({ name, entry })));
-  return Promise.all(
-    apps.map((app) => loadRemoteRoutes(app, runtime.loadRemote)),
-  );
+export type RemotesSnapshot = {
+  /** 子应用清单 apps.json：读取中、已读到、读不到。 */
+  registry: 'loading' | 'ready' | 'failed';
+  remotes: LoadedRemote[];
+};
+
+export type RemoteStore = {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => RemotesSnapshot;
+  /** 读清单、登记并各自加载全部子应用；读不到清单时也可以再调一次（重试）。 */
+  start: () => Promise<void>;
+  /** 重新加载一个失败的子应用。 */
+  retry: (app: RemoteApp) => Promise<void>;
+  /**
+   * 按 “<子应用>/<模块>” 加载远程模块（如 message/Bell）：等清单读到、子应用登记好再加载
+   * （清单读不到时一直等到重试读到）；清单里没有的子应用直接失败。
+   */
+  loadModule: (id: string) => Promise<unknown>;
+};
+
+/**
+ * 子应用的加载状态（React 外部的 store，组件经 useSyncExternalStore 订阅）：主应用先渲染，
+ * 清单与各子应用在后台各自加载，谁好了谁先挂上，慢的、坏的只影响它自己的域。
+ */
+export function createRemoteStore({
+  readRegistry,
+  runtime,
+  timeoutMs = REMOTE_LOAD_TIMEOUT_MS,
+}: {
+  readRegistry: () => Promise<RemoteApp[]>;
+  runtime: FederationRuntime;
+  timeoutMs?: number;
+}): RemoteStore {
+  let snapshot: RemotesSnapshot = { registry: 'loading', remotes: [] };
+  const listeners = new Set<() => void>();
+  const registered = new Set<string>();
+  // 第一次读到清单、登记好子应用时完成；之前要的远程模块都等着它。
+  let markRegistered!: () => void;
+  const registeredOnce = new Promise<void>((resolve) => {
+    markRegistered = resolve;
+  });
+  const publish = (next: RemotesSnapshot) => {
+    snapshot = next;
+    for (const listener of listeners) listener();
+  };
+  const settle = (result: LoadedRemote) =>
+    publish({
+      ...snapshot,
+      remotes: snapshot.remotes.map((remote) =>
+        remote.app.name === result.app.name ? result : remote,
+      ),
+    });
+  const load = async (app: RemoteApp) => {
+    settle({ app, status: 'loading' });
+    settle(await loadRemoteRoutes(app, runtime.loadRemote, timeoutMs));
+  };
+
+  return {
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot: () => snapshot,
+    start: async () => {
+      publish({ registry: 'loading', remotes: [] });
+      let apps: RemoteApp[];
+      try {
+        apps = await readRegistry();
+      } catch (error) {
+        console.error('[shell] failed to read apps.json', error);
+        publish({ registry: 'failed', remotes: [] });
+        return;
+      }
+      // 同一个子应用只登记一次（再次读清单时不重复登记）。
+      const fresh = apps.filter((app) => !registered.has(app.name));
+      for (const app of fresh) registered.add(app.name);
+      if (fresh.length)
+        runtime.registerRemotes(
+          fresh.map(({ name, entry }) => ({ name, entry })),
+        );
+      publish({
+        registry: 'ready',
+        remotes: apps.map((app) => ({ app, status: 'loading' })),
+      });
+      markRegistered();
+      await Promise.all(apps.map(load));
+    },
+    retry: load,
+    loadModule: async (id) => {
+      await registeredOnce;
+      const name = id.split('/', 1)[0] ?? '';
+      if (!registered.has(name))
+        throw new Error(`remote ${name} is not in apps.json`);
+      return runtime.loadRemote(id);
+    },
+  };
 }

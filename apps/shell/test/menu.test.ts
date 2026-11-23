@@ -97,27 +97,33 @@ test('buildMenu hides entries the user cannot access', () => {
   ]);
 });
 
-test('buildMenu marks every route prefix of a failed remote as unavailable', () => {
-  const failed: LoadedRemote = {
-    app: {
-      name: 'ai',
-      entry: 'http://localhost/ai/mf-manifest.json',
-      routePrefixes: ['/ai', '/configuration'],
-    },
-    status: 'failed',
+test('a remote that is not ready gets one placeholder named after it, loading or unavailable', () => {
+  const app = {
+    name: 'ai',
+    entry: 'http://localhost/ai/mf-manifest.json',
+    routePrefixes: ['/ai', '/configuration'],
   };
-  expect(buildMenu([failed], computeAccess(undefined))).toStrictEqual([
+  // 还不知道它有哪些菜单：只放一项，指向它的第一个路由前缀，文案键没登记时显示子应用名。
+  const placeholder = (loading: boolean) => [
     {
       key: 'ai',
-      labelKey: 'shell:remotes.ai',
+      labelKey: '',
       items: [
-        { path: '/ai', labelKey: 'shell:remotes.ai', disabled: true },
         {
-          path: '/configuration',
+          path: '/ai',
           labelKey: 'shell:remotes.ai',
           disabled: true,
+          loading,
+          defaultLabel: 'ai',
         },
       ],
     },
-  ]);
+  ];
+  const access = computeAccess(undefined);
+  expect(buildMenu([{ app, status: 'failed' }], access)).toStrictEqual(
+    placeholder(false),
+  );
+  expect(buildMenu([{ app, status: 'loading' }], access)).toStrictEqual(
+    placeholder(true),
+  );
 });

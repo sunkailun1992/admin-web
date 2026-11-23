@@ -3,12 +3,20 @@ import { getSelectedTenantId, type SessionState } from '@admin-web/auth';
 import { render } from '@testing-library/react';
 import { vi } from 'vitest';
 import { App } from '../src/App.tsx';
-import type { LoadedRemote } from '../src/remotes/loadRemotes.ts';
+import {
+  createRemoteStore,
+  type FederationRuntime,
+} from '../src/remotes/loadRemotes.ts';
+import type { RemoteApp } from '../src/remotes/registry.ts';
 
 export type RenderAppOptions = {
-  remotes?: LoadedRemote[];
+  /** 子应用清单（apps.json 的内容）。 */
+  apps?: RemoteApp[];
+  /** 读清单的函数（测“清单读不到”时用），缺省返回 apps。 */
+  registry?: () => Promise<RemoteApp[]>;
   session?: SessionState;
   route?: string;
+  /** 加载远程模块（子应用的 ./routes 与消息铃铛共用）。 */
   loadModule?: (id: string) => Promise<unknown>;
 };
 
@@ -22,20 +30,37 @@ export function renderApp(options: RenderAppOptions = {}) {
     notify: () => {},
   });
   const navigation = { assign: vi.fn<(url: string) => void>() };
+  const loadModule =
+    options.loadModule ?? (() => Promise.reject(new Error('NOT_MOCKED')));
+  const apps = options.apps ?? [];
+  // 与 Module Federation 一样：没登记的子应用找不到（RUNTIME-004）。
+  const registered = new Set<string>();
+  const runtime: FederationRuntime = {
+    registerRemotes: (list) => {
+      for (const { name } of list) registered.add(name);
+    },
+    loadRemote: (id) =>
+      registered.has(id.split('/', 1)[0] ?? '')
+        ? loadModule(id)
+        : Promise.reject(new Error(`Failed to locate remote ${id}`)),
+  };
+  // 与 main.tsx 一样：主应用先渲染，清单与子应用在后台加载。
+  const remotes = createRemoteStore({
+    readRegistry: options.registry ?? (() => Promise.resolve(apps)),
+    runtime,
+  });
+  void remotes.start();
   const view = render(
     <App
       client={client}
       queryClient={queryClient}
-      remotes={options.remotes ?? []}
+      remotes={remotes}
       session={options.session}
       initialEntries={[options.route ?? '/dashboard']}
-      loadModule={
-        options.loadModule ?? (() => Promise.reject(new Error('NOT_MOCKED')))
-      }
       navigation={navigation}
     />,
   );
-  return { ...view, queryClient, client, navigation };
+  return { ...view, queryClient, client, navigation, remotes };
 }
 
 export const manager: SessionState = {

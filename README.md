@@ -82,9 +82,9 @@ docs/ai-coding/    AI 编码规范
 ## 微前端接入契约
 
 - **子应用清单**：主应用启动时取运行时配置 `/apps.json`（来源 `apps/shell/apps.<mode>.json`，开发服务器直接给，构建时写进产物，部署时可按环境替换），每项是子应用名、`mf-manifest.json` 地址和负责的路由前缀。加子应用、换子应用地址都不用重新构建主应用。
-- **路由与菜单**：每个子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes` 是路由对象（页面懒加载），`menu` 是菜单元数据（路径、文案键 `labelKey`、所需权限标志 `access`、分组）。主应用并行加载各子应用的 `./routes`，建出唯一的路由器和侧边栏。
+- **路由与菜单**：每个子应用经 Module Federation 暴露 `./routes`，默认导出 `RemoteRoutes`（`packages/auth/src/types.ts`）：`routes` 是路由对象（页面懒加载），`menu` 是菜单元数据（路径、文案键 `labelKey`、所需权限标志 `access`、分组）。主应用先渲染布局与工作台，清单和各子应用的 `./routes` 在后台并行加载，谁好了谁的路由与菜单先挂上；路由器只建一次，子应用的页面由兜底路由按地址交给负责的子应用。
 - **共享单例**：react、react-dom、react-router、@tanstack/react-query、i18next、react-i18next、sonner 与 `@admin-web/{ui,api,auth,i18n}`，版本由 pnpm catalog 统一（`singleton` 加 `requiredVersion`），见 `packages/config-vite/src/shared.ts`。
-- **故障隔离**：某个子应用加载失败时只有它的域不可用（菜单标为不可用，路由显示错误页与“重试”），其它域照常；加载用运行时插件 @module-federation/retry-plugin 重试。
+- **故障隔离**：慢的、坏的子应用只影响它自己的域：还在加载时菜单与页面显示加载中，加载失败或 8 秒没加载好时菜单标为不可用、页面显示错误页与“重试”，其它域照常；清单读不到时页面显示“重试”，不当成页面不存在；清单里格式不对的一项记日志跳过，不连累别的子应用。加载用运行时插件 @module-federation/retry-plugin 重试；主应用里加载远程模块（如消息铃铛）等清单读到、子应用登记好再加载。
 - **独立部署**：只重建一个子应用，主应用 `dist` 不变，运行中的主应用就用上新版子应用；`pnpm test:deploy` 验证这一点（CI 也跑）。
 - **单独运行**：每个子应用有一个只在开发时用的最小外壳（`src/dev/main.tsx`，经 `StandaloneShell`），配同样的代理；登录统一到主应用的 8000 端口完成，localhost 的 Cookie 不分端口。
 - **样式**：主题变量与 Tailwind 基础样式只由主应用加载一次；子应用只带自己用到的工具类，配置相同，重复不冲突。

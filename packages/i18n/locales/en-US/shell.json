@@ -3,7 +3,8 @@
   "menu": {
     "label": "Main menu",
     "dashboard": "Dashboard",
-    "unavailable": "Unavailable right now"
+    "unavailable": "Unavailable right now",
+    "loading": "Loading"
   },
   "remotes": {
     "system": "System",
@@ -13,7 +14,9 @@
   },
   "remote": {
     "loadFailed": "{{name}} is unavailable right now",
-    "pageFailed": "This page failed to load"
+    "pageFailed": "This page failed to load",
+    "loading": "Loading {{name}}…",
+    "registryFailed": "The app list could not be loaded"
   },
   "header": {
     "toggleSidebar": "Toggle sidebar"
